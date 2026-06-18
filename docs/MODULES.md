@@ -18,7 +18,7 @@ Módulos encargados de la ejecución en la placa ESP32:
     *   `sensor_updater()`: Corrutina que lee a 20Hz el sonar y la IMU y actualiza el estado inercial global.
     *   `locomotion_loop()`: Corrutina de toma de decisiones de movimiento y freno de emergencia por colisión inminente.
     *   `main_async()`: Punto de entrada asíncrono para orquestar la concurrencia.
-*   **Dependencias Internas:** Importa [state.py](state.py), [pca9685.py](pca9685.py), [mpu6050.py](mpu6050.py), [sonar_sensor.py](sonar_sensor.py), [buzzer_alert.py](buzzer_alert.py), [web_server.py](web_server.py).
+*   **Dependencias Internas:** Importa [state.py](../firmware/state.py), [pca9685.py](../firmware/pca9685.py), [mpu6050.py](../firmware/mpu6050.py), [sonar_sensor.py](../firmware/sonar_sensor.py), [buzzer_alert.py](../firmware/buzzer_alert.py), [web_server.py](../firmware/web_server.py).
 
 ### 2. [web_server.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/web_server.py)
 *   **Propósito:** Inicializa las funciones Wi-Fi y levanta un servidor HTTP no bloqueante en socket TCP (puerto 80).
@@ -29,7 +29,7 @@ Módulos encargados de la ejecución en la placa ESP32:
         *   `/telemetry`: Entrega datos en formato JSON de Pitch, Roll, comando actual y distancia.
         *   `/api/control`: Controla la dirección (`cmd=...`) y la estabilización (`stabilize=...`).
     *   `start_server_task(ip)`: Inicia el socket HTTP no bloqueante.
-*   **Dependencias Internas:** Importa [state.py](state.py).
+*   **Dependencias Internas:** Importa [state.py](../firmware/state.py).
 
 ### 3. [state.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/state.py)
 *   **Propósito:** Módulo de almacenamiento global (Singleton). Centraliza el estado físico medido y las órdenes de control del robot.
@@ -38,7 +38,7 @@ Módulos encargados de la ejecución en la placa ESP32:
 
 ### 4. [index.html](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/index.html)
 *   **Propósito:** Código frontend de la interfaz web del operador. Diseñado para operar 100% offline, con diseño responsive Glassmorphism y visualizaciones SVG en tiempo real para inclinación y sensores.
-*   **Dependencias Internas:** Se comunica mediante Fetch asíncrono con los endpoints expuestos en [web_server.py](web_server.py).
+*   **Dependencias Internas:** Se comunica mediante Fetch asíncrono con los endpoints expuestos en [web_server.py](../firmware/web_server.py).
 
 ### 5. [pca9685.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/pca9685.py)
 *   **Propósito:** Driver de bajo nivel para el expansor PWM PCA9685 mediante I2C.

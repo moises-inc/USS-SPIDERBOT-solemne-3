@@ -2,7 +2,7 @@
 
 Bienvenido a la wiki técnica del **USS SpiderBot**, un robot caminador cuadrúpedo de **8 grados de libertad (8-DoF)** desarrollado para la asignatura de **Taller de Programación I (Universidad San Sebastián)**. 
 
-Este robot ha sido diseñado con estabilidad inercial activa para desplazarse de forma segura sobre terrenos rugosos o inclonados, prevención reactiva de colisiones frontales y un panel de control remoto web asíncrono y offline accesible desde cualquier navegador.
+Este robot ha sido diseñado con estabilidad inercial activa para desplazarse de forma segura sobre terrenos rugosos o inclinados, prevención reactiva de colisiones frontales y un panel de control remoto web asíncrono y offline accesible desde cualquier navegador.
 
 ---
 
