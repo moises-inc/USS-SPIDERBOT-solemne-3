@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USS SpiderBot - Control Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #00f2fe;
+            --primary-glow: rgba(0, 242, 254, 0.4);
+            --accent: #9b51e0;
+            --accent-glow: rgba(155, 81, 224, 0.4);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 1100px;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .connection-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            transition: all 0.3s ease;
+        }
+        .connection-status.online {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+        @media (max-width: 850px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* Controles */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 12px;
+            margin: 10px 0;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            color: var(--text-color);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            outline: none;
+        }
+        .btn:hover:not(.empty) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .btn:active:not(.empty) {
+            transform: scale(0.95);
+        }
+        .btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-color: transparent;
+            box-shadow: 0 0 15px var(--primary-glow);
+            color: #000;
+            font-weight: bold;
+        }
+        .btn.empty {
+            visibility: hidden;
+            cursor: default;
+        }
+        .btn-stop {
+            grid-column: 2;
+            grid-row: 2;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 50%;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        .btn-stop:hover {
+            background: var(--danger) !important;
+            color: white !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .action-btn.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: #fff;
+        }
+        /* Telemetria */
+        .telemetry-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .telemetry-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+        }
+        .telemetry-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .telemetry-lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .telemetry-item.alert .telemetry-val {
+            color: var(--danger);
+        }
+        /* IMU Visualizer (SVG Crosshair) */
+        .imu-visualizer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+            flex-grow: 1;
+        }
+        .imu-svg {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+        }
+        /* Sonar Progress */
+        .sonar-container {
+            margin-top: 15px;
+        }
+        .sonar-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            height: 12px;
+            border-radius: 6px;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .sonar-bar-fg {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.2s ease, background-color 0.2s ease;
+        }
+        .sonar-bar-fg.alert {
+            background: var(--danger) !important;
+        }
+        .keyboard-hint {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 15px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>USS SPIDERBOT</h1>
+        <p>Dashboard de Control Remoto & Telemetría en Tiempo Real</p>
+        <span id="conn-status" class="connection-status">Desconectado</span>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- Tarjeta de Controles -->
+        <div class="card">
+            <div class="card-title">Mando de Control</div>
+            <div class="controls-container">
+                <div class="dpad">
+                    <button class="btn empty"></button>
+                    <button id="btn-forward" class="btn" onclick="sendCommand('forward')">&#9650;</button>
+                    <button class="btn empty"></button>
+                    
+                    <button id="btn-left" class="btn" onclick="sendCommand('left')">&#9664;</button>
+                    <button id="btn-stop" class="btn btn-stop" onclick="sendCommand('stop')">Stop</button>
+                    <button id="btn-right" class="btn" onclick="sendCommand('right')">&#9654;</button>
+                    
+                    <button class="btn empty"></button>
+                    <button id="btn-backward" class="btn" onclick="sendCommand('backward')">&#9660;</button>
+                    <button class="btn empty"></button>
+                </div>
+                
+                <div class="action-bar">
+                    <button id="btn-stabilize" class="action-btn" onclick="toggleStabilization()">Estabilización</button>
+                    <button id="btn-stand" class="action-btn" onclick="sendCommand('reposo')">Pose Reposo</button>
+                </div>
+                
+                <div class="keyboard-hint">
+                    <strong>Teclas:</strong> W (Adelante) | S (Atrás) | A (Izquierda) | D (Derecha) | Espacio (Parar) | R (Reposo)
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tarjeta de Telemetría -->
+        <div class="card">
+            <div class="card-title">Telemetría de Navegación</div>
+            
+            <div class="telemetry-row">
+                <div class="telemetry-item" id="item-pitch">
+                    <div class="telemetry-val" id="val-pitch">0.0°</div>
+                    <div class="telemetry-lbl">Pitch (Frontal)</div>
+                </div>
+                <div class="telemetry-item" id="item-roll">
+                    <div class="telemetry-val" id="val-roll">0.0°</div>
+                    <div class="telemetry-lbl">Roll (Lateral)</div>
+                </div>
+                <div class="telemetry-item" id="item-distance">
+                    <div class="telemetry-val" id="val-distance">-- cm</div>
+                    <div class="telemetry-lbl">Distancia Sonar</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; margin-bottom: 10px;">Eje de Inclinación Activo</div>
+            <div class="imu-visualizer-container">
+                <!-- SVG de Retícula Inercial -->
+                <svg width="200" height="200" class="imu-svg">
+                    <!-- Retícula -->
+                    <circle cx="100" cy="100" r="90" fill="none" stroke="var(--border)" stroke-width="1" />
+                    <circle cx="100" cy="100" r="60" fill="none" stroke="var(--border)" stroke-width="1" />
+                    <circle cx="100" cy="100" r="30" fill="none" stroke="var(--border)" stroke-width="1" />
+                    <line x1="100" y1="5" x2="100" y2="195" stroke="var(--border)" stroke-width="1" />
+                    <line x1="5" y1="100" x2="195" y2="100" stroke="var(--border)" stroke-width="1" />
+                    
+                    <!-- Límite de inclinación crítica (15 grados) -->
+                    <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(239, 68, 68, 0.25)" stroke-width="1.5" stroke-dasharray="4" />
+                    
+                    <!-- Punto de inclinación del robot -->
+                    <circle id="imu-dot" cx="100" cy="100" r="8" fill="var(--primary)" filter="drop-shadow(0 0 6px var(--primary))" style="transition: cx 0.1s ease, cy 0.1s ease;" />
+                </svg>
+            </div>
+            
+            <div class="sonar-container">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); font-weight: bold; margin-bottom: 8px;">
+                    <span>Radar de Proximidad</span>
+                    <span id="txt-proximity">Normal</span>
+                </div>
+                <div class="sonar-bar-bg">
+                    <div id="sonar-bar-fg" class="sonar-bar-fg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const host = window.location.host;
+        let isOnline = false;
+        let activeStabilize = true;
+        
+        function updateConnection(online) {
+            isOnline = online;
+            const statusEl = document.getElementById("conn-status");
+            if (online) {
+                statusEl.textContent = "Conectado";
+                statusEl.className = "connection-status online";
+            } else {
+                statusEl.textContent = "Desconectado";
+                statusEl.className = "connection-status";
+                document.getElementById("val-distance").textContent = "-- cm";
+                document.getElementById("sonar-bar-fg").style.width = "0%";
+            }
+        }
+        
+        function sendCommand(cmd) {
+            fetch(`http://${host}/api/control?cmd=${cmd}`)
+                .then(r => r.json())
+                .then(data => {
+                    updateActiveCommandInUI(data.comando);
+                    updateConnection(true);
+                })
+                .catch(e => {
+                    console.error("Error enviando comando:", e);
+                    updateConnection(false);
+                });
+        }
+        
+        function toggleStabilization() {
+            const nextStab = activeStabilize ? 0 : 1;
+            fetch(`http://${host}/api/control?stabilize=${nextStab}`)
+                .then(r => r.json())
+                .then(data => {
+                    activeStabilize = (data.stabilize === 1);
+                    updateStabilizationUI(activeStabilize);
+                    updateConnection(true);
+                })
+                .catch(e => {
+                    console.error("Error toggle estabilización:", e);
+                    updateConnection(false);
+                });
+        }
+        
+        function updateStabilizationUI(active) {
+            const btn = document.getElementById("btn-stabilize");
+            if (active) {
+                btn.className = "action-btn active";
+                btn.textContent = "Estabilización: ON";
+            } else {
+                btn.className = "action-btn";
+                btn.textContent = "Estabilización: OFF";
+            }
+        }
+        
+        function updateActiveCommandInUI(cmd) {
+            document.querySelectorAll(".dpad .btn").forEach(b => b.classList.remove("active"));
+            document.getElementById("btn-stand").classList.remove("active");
+            
+            if (cmd === "forward") document.getElementById("btn-forward").classList.add("active");
+            else if (cmd === "backward") document.getElementById("btn-backward").classList.add("active");
+            else if (cmd === "left") document.getElementById("btn-left").classList.add("active");
+            else if (cmd === "right") document.getElementById("btn-right").classList.add("active");
+            else if (cmd === "stop") document.getElementById("btn-stop").classList.add("active");
+            else if (cmd === "reposo") document.getElementById("btn-stand").classList.add("active");
+        }
+        
+        function pollTelemetry() {
+            fetch(`http://${host}/telemetry`)
+                .then(r => r.json())
+                .then(data => {
+                    updateConnection(true);
+                    
+                    const pitch = data.pitch;
+                    const roll = data.roll;
+                    document.getElementById("val-pitch").textContent = `${pitch.toFixed(1)}°`;
+                    document.getElementById("val-roll").textContent = `${roll.toFixed(1)}°`;
+                    
+                    document.getElementById("item-pitch").className = Math.abs(pitch) > 15 ? "telemetry-item alert" : "telemetry-item";
+                    document.getElementById("item-roll").className = Math.abs(roll) > 15 ? "telemetry-item alert" : "telemetry-item";
+                    
+                    const maxGrad = 30;
+                    const scale = 90 / maxGrad;
+                    let dx = -roll * scale;
+                    let dy = -pitch * scale;
+                    
+                    const distCenter = Math.sqrt(dx*dx + dy*dy);
+                    if (distCenter > 90) {
+                        dx = (dx / distCenter) * 90;
+                        dy = (dy / distCenter) * 90;
+                    }
+                    
+                    const dot = document.getElementById("imu-dot");
+                    dot.setAttribute("cx", 100 + dx);
+                    dot.setAttribute("cy", 100 + dy);
+                    
+                    if (Math.abs(pitch) > 15 || Math.abs(roll) > 15) {
+                        dot.setAttribute("fill", "var(--danger)");
+                        dot.style.filter = "drop-shadow(0 0 6px var(--danger))";
+                    } else {
+                        dot.setAttribute("fill", "var(--primary)");
+                        dot.style.filter = "drop-shadow(0 0 6px var(--primary))";
+                    }
+                    
+                    const distance = data.distance;
+                    const distEl = document.getElementById("val-distance");
+                    const barEl = document.getElementById("sonar-bar-fg");
+                    const txtProx = document.getElementById("txt-proximity");
+                    const itemDistance = document.getElementById("item-distance");
+                    
+                    if (distance <= 0) {
+                        distEl.textContent = "Error/Fuera Rango";
+                        barEl.style.width = "0%";
+                        barEl.className = "sonar-bar-fg";
+                        txtProx.textContent = "Desconocido";
+                        itemDistance.className = "telemetry-item";
+                    } else {
+                        distEl.textContent = `${distance.toFixed(1)} cm`;
+                        let percentage = Math.max(0, Math.min(100, (distance / 60) * 100));
+                        barEl.style.width = `${percentage}%`;
+                        
+                        if (distance < 15.0) {
+                            barEl.className = "sonar-bar-fg alert";
+                            txtProx.textContent = "¡PELIGRO COLISIÓN!";
+                            txtProx.style.color = "var(--danger)";
+                            itemDistance.className = "telemetry-item alert";
+                        } else if (distance < 30.0) {
+                            barEl.className = "sonar-bar-fg";
+                            txtProx.textContent = "Advertencia de Obstáculo";
+                            txtProx.style.color = "var(--accent)";
+                            itemDistance.className = "telemetry-item";
+                        } else {
+                            barEl.className = "sonar-bar-fg";
+                            txtProx.textContent = "Seguro";
+                            txtProx.style.color = "var(--success)";
+                            itemDistance.className = "telemetry-item";
+                        }
+                    }
+                    
+                    updateActiveCommandInUI(data.cmd);
+                    activeStabilize = (data.stabilize === 1);
+                    updateStabilizationUI(activeStabilize);
+                })
+                .catch(e => {
+                    console.error("Error polling telemetría:", e);
+                    updateConnection(false);
+                });
+        }
+        
+        window.addEventListener("keydown", (e) => {
+            if (!isOnline) return;
+            const key = e.key.toLowerCase();
+            if (key === "w") sendCommand("forward");
+            else if (key === "s") sendCommand("backward");
+            else if (key === "a") sendCommand("left");
+            else if (key === "d") sendCommand("right");
+            else if (key === " ") {
+                e.preventDefault();
+                sendCommand("stop");
+            }
+            else if (key === "r") sendCommand("reposo");
+        });
+        
+        pollTelemetry();
+        setInterval(pollTelemetry, 250);
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "author": "Antigravity",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-mpu6050", "id": "imu", "top": 120, "left": -120, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sonar", "top": -120, "left": 120, "attrs": {} },
+    { "type": "wokwi-buzzer", "id": "buzzer", "top": 150, "left": 120, "attrs": { "volume": "1.0", "mode": "smooth" } }
+  ],
+  "connections": [
+    [ "esp:GND.1", "imu:GND", "black", [] ],
+    [ "esp:3V3", "imu:VCC", "red", [] ],
+    [ "esp:21", "imu:SDA", "blue", [] ],
+    [ "esp:22", "imu:SCL", "yellow", [] ],
+    
+    [ "esp:GND.2", "sonar:GND", "black", [] ],
+    [ "esp:5V", "sonar:VCC", "red", [] ],
+    [ "esp:18", "sonar:TRIG", "green", [] ],
+    [ "esp:19", "sonar:ECHO", "orange", [] ],
+    
+    [ "esp:GND.2", "buzzer:1", "black", [] ],
+    [ "esp:14", "buzzer:2", "purple", [] ]
+  ]
+}

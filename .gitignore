@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local configuration and calibration files
+firmware/mpu_offsets.txt
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
