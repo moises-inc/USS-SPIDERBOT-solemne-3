@@ -8,6 +8,8 @@
 from machine import I2C, Pin, PWM
 import time
 import uasyncio as asyncio
+import sys
+import select
 import state
 from pca9685 import PCA9685
 from mpu6050 import MPU6050
@@ -108,22 +110,18 @@ estado_coxas = [90, 90, 90, 90]
 estado_femures = [60, 120, 120, 60]
 
 def pos_reposo():
-    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático."""
+    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático aplicando estabilización activa."""
     global estado_coxas, estado_femures
     if not servos: return
     
     estado_coxas = [90, 90, 90, 90]
     estado_femures = [60, 120, 120, 60]
     
-    # Mover caderas a 90 grados
-    for ch in COXA_CHANNELS:
-        servos.set_servo_angle(ch, ANGULO_COXA_BASE)
-        
-    # Mover muslos a sus ángulos base
-    servos.set_servo_angle(1, ANGULO_FEMUR_DER_BASE)
-    servos.set_servo_angle(7, ANGULO_FEMUR_DER_BASE)
-    servos.set_servo_angle(3, ANGULO_FEMUR_IZQ_BASE)
-    servos.set_servo_angle(5, ANGULO_FEMUR_IZQ_BASE)
+    # Mover patas aplicando la función de estabilización inercial activa
+    establecer_angulo_pata(0, 90, 60)
+    establecer_angulo_pata(1, 90, 120)
+    establecer_angulo_pata(2, 90, 120)
+    establecer_angulo_pata(3, 90, 60)
 
 # Establecer pose inicial al arrancar
 pos_reposo()
@@ -398,9 +396,37 @@ async def locomotion_loop():
             while state.comando_actual == "reposo":
                 await asyncio.sleep_ms(100)
         else:
-            # Comando "stop" o apagado
+            # Comando "stop" o apagado: aplicar pose de reposo (auto-estabilizada en loop)
             pos_reposo()
             await asyncio.sleep_ms(100)
+
+async def serial_listener():
+    """Escucha comandos de consola serie (Thonny/Wokwi) de forma no bloqueante."""
+    # Esperar un momento a que las otras tareas inicien e impriman sus mensajes
+    await asyncio.sleep_ms(1000)
+    print("\n====================================================================")
+    print("[SERIAL] Consola serie activa para control directo de simulación.")
+    print("         Escribe: 'forward', 'backward', 'left', 'right', 'stop'")
+    print("                  'reposo' o 'stabilize' y pulsa Enter.")
+    print("====================================================================\n")
+    
+    spoll = select.poll()
+    spoll.register(sys.stdin, select.POLLIN)
+    
+    while True:
+        if spoll.poll(0):
+            line = sys.stdin.readline().strip().lower()
+            if line in ["forward", "backward", "left", "right", "stop", "reposo"]:
+                state.comando_actual = line
+                print(f"[CONSOLA] Comando cambiado a: {line}")
+                alarma.beep(100)
+            elif line == "stabilize":
+                state.estabilizacion_activa = not state.estabilizacion_activa
+                print(f"[CONSOLA] Estabilización activa set a: {state.estabilizacion_activa}")
+                alarma.beep(100)
+            else:
+                print(f"[CONSOLA] Comando desconocido: '{line}'")
+        await asyncio.sleep_ms(100)
 
 async def main_async():
     """Punto de entrada principal para orquestar la concurrencia."""
@@ -417,11 +443,12 @@ async def main_async():
     task_sensors = asyncio.create_task(sensor_updater())
     task_locomotion = asyncio.create_task(locomotion_loop())
     task_server = asyncio.create_task(start_server_task(ip))
+    task_serial = asyncio.create_task(serial_listener())
     
     print("\n[OK] USS SpiderBot completamente operativo e interactivo.")
     
     # Unir tareas para ejecución indeterminada
-    await asyncio.gather(task_sensors, task_locomotion, task_server)
+    await asyncio.gather(task_sensors, task_locomotion, task_server, task_serial)
 
 # ── 7. Ejecución del Bucle de Eventos ──────────────────────────────
 try:
@@ -434,5 +461,9 @@ except KeyboardInterrupt:
     print("\n[INFO] Ejecución detenida por teclado por el operador.")
 finally:
     print("Apagando motores y liberando puertos...")
-    pos_reposo()
+    # Intento de llevar a reposo (puede fallar si no hay PWM ya activo)
+    try:
+        pos_reposo()
+    except:
+        pass
     alarma.apagar()
