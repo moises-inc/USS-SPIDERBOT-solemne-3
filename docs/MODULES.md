@@ -9,15 +9,25 @@ Esta sección detalla cada archivo del repositorio, describiendo su propósito, 
 Módulos encargados de la ejecución en la placa ESP32:
 
 ### 1. [main.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/main.py)
-*   **Propósito:** Orquestador principal del robot. Levanta los drivers físicos, gestiona las tareas asíncronas concurrentes de lectura inercial, el bucle de control de locomoción, la evasión reactiva por ultrasonido y los algoritmos de marcha.
+*   **Propósito:** Orquestador principal del robot. Levanta los drivers físicos, gestiona las tareas asíncronas de lectura inercial, locomoción y evasión reactiva, y maneja el inicio del Wi-Fi en modo AP (físico) o STA (simulador).
+*   **Clases Auxiliares:**
+    *   `ESP32ServoDirect`: Emulador de la API del PCA9685. Si la ESP32 no encuentra el PCA9685 en I2C, se instancia esta clase y se configuran 8 señales PWM directas hacia los GPIOs del simulador:
+        *   Canal 0 (FR Coxa) $\rightarrow$ GPIO 13
+        *   Canal 1 (FR Fémur) $\rightarrow$ GPIO 12
+        *   Canal 2 (FL Coxa) $\rightarrow$ GPIO 15
+        *   Canal 3 (FL Fémur) $\rightarrow$ GPIO 2
+        *   Canal 4 (RL Coxa) $\rightarrow$ GPIO 4
+        *   Canal 5 (RL Fémur) $\rightarrow$ GPIO 5
+        *   Canal 6 (RR Coxa) $\rightarrow$ GPIO 23
+        *   Canal 7 (RR Fémur) $\rightarrow$ GPIO 25
 *   **Funciones Principales:**
     *   `pos_reposo()`: Posiciona todos los canales de servos a sus ángulos base estándar.
-    *   `establecer_angulo_pata(indice, coxa, femur)`: Calcula y aplica el factor de compensación proporcional inercial de Pitch y Roll sobre los fémures en fase de apoyo y los escribe en los servos correspondientes con límites físicos de seguridad.
+    *   `establecer_angulo_pata(indice, coxa, femur)`: Calcula y aplica la compensación inercial proporcional sobre los fémures en apoyo.
     *   `mover_suave_ciclo(coxa_targets, femur_targets)`: Interpola de forma asíncrona no bloqueante los ángulos de reposo a los objetivos usando `await asyncio.sleep_ms(delay_ms)`.
-    *   `caminar_adelante()` / `caminar_atras()` / `girar_izquierda()` / `girar_derecha()`: Ejecutan ciclos completos de la marcha de gateo (Crawl Gait) mediante secuencias de movimiento en espejo de cadera (Coxa) y muslo (Fémur).
-    *   `sensor_updater()`: Corrutina que lee a 20Hz el sonar y la IMU y actualiza el estado inercial global.
-    *   `locomotion_loop()`: Corrutina de toma de decisiones de movimiento y freno de emergencia por colisión inminente.
-    *   `main_async()`: Punto de entrada asíncrono para orquestar la concurrencia.
+    *   `caminar_adelante()` / `caminar_atras()` / `girar_izquierda()` / `girar_derecha()`: Ejecutan ciclos completos de la marcha de gateo (Crawl Gait).
+    *   `sensor_updater()`: Corrutina que lee a 20Hz el sonar y la IMU y actualiza el estado.
+    *   `locomotion_loop()`: Corrutina de toma de decisiones de movimiento y freno de emergencia.
+    *   `main_async()`: Punto de entrada asíncrono. Gestiona la conexión Wi-Fi adaptativa: modo AP (`USS_SpiderBot_AP`) en físico, y modo Estación conectado a `Wokwi-GUEST` en simulación.
 *   **Dependencias Internas:** Importa [state.py](../firmware/state.py), [pca9685.py](../firmware/pca9685.py), [mpu6050.py](../firmware/mpu6050.py), [sonar_sensor.py](../firmware/sonar_sensor.py), [buzzer_alert.py](../firmware/buzzer_alert.py), [web_server.py](../firmware/web_server.py).
 
 ### 2. [web_server.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/web_server.py)
@@ -74,7 +84,7 @@ Módulos encargados de la ejecución en la placa ESP32:
 *   **Propósito:** Validador estático que verifica que todos los archivos Python del directorio compilen correctamente en Python local mediante el análisis AST.
 
 ### 11. [diagram.json](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/diagram.json)
-*   **Propósito:** Configuración del cableado virtual para simulaciones en Wokwi.
+*   **Propósito:** Configuración del cableado virtual para simulaciones en Wokwi. Incluye la conexión de los 8 servomotores virtuales.
 
 ---
 

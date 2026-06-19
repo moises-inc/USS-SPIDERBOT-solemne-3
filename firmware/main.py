@@ -5,7 +5,7 @@
 # Lenguaje: MicroPython
 # ============================================================
 
-from machine import I2C, Pin
+from machine import I2C, Pin, PWM
 import time
 import uasyncio as asyncio
 import state
@@ -14,6 +14,36 @@ from mpu6050 import MPU6050
 from sonar_sensor import SonarSensor
 from buzzer_alert import BuzzerAlert
 
+class ESP32ServoDirect:
+    """
+    Controlador fallback de servos conectado directamente a pines GPIO de la ESP32.
+    Se utiliza en el simulador Wokwi para emular el comportamiento del chip PCA9685.
+    """
+    def __init__(self, channels_pins):
+        self.pwms = {}
+        for ch, pin_num in channels_pins.items():
+            try:
+                # Frecuencia de 50Hz para servomotores analógicos estándar
+                pwm = PWM(Pin(pin_num), freq=50)
+                self.pwms[ch] = pwm
+            except Exception as e:
+                print(f"[WARNING] No se pudo iniciar PWM en GPIO {pin_num}:", e)
+
+    def set_servo_angle(self, channel, angle):
+        if channel in self.pwms:
+            # 50Hz -> Período = 20ms.
+            # Ciclo de trabajo típico para servos SG90 (0.5ms a 2.5ms de ancho de pulso):
+            # 0.5ms / 20ms = 2.5% -> 0.025 * 65535 = 1638 ticks
+            # 2.5ms / 20ms = 12.5% -> 0.125 * 65535 = 8192 ticks
+            min_duty = 1638
+            max_duty = 8192
+            
+            # Clampear ángulo entre 0 y 180
+            angle = max(0, min(180, angle))
+            
+            duty = int(min_duty + (angle / 180.0) * (max_duty - min_duty))
+            self.pwms[channel].duty_u16(duty)
+
 # ── 1. Inicialización de Interfaces ──────────────────────────────
 print("Iniciando bus I2C (SDA=21, SCL=22)...")
 i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
@@ -21,13 +51,25 @@ i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
 dispositivos = i2c.scan()
 print("Dispositivos I2C detectados: ", [hex(d) for d in dispositivos])
 
+# Bandera para identificar si estamos en modo simulación (GPIO directo) o hardware real (PCA9685)
+modo_simulacion = False
+
 # ── 2. Inicialización de Drivers ────────────────────────────────
 try:
     servos = PCA9685(i2c, address=0x40)
-    print("[OK] Servomotores (PCA9685) configurados.")
+    print("[OK] Servomotores (PCA9685) configurados en hardware real.")
 except Exception as e:
-    print("[ERROR] No se pudo iniciar el PCA9685: ", e)
-    servos = None
+    print("[WARNING] PCA9685 no detectado. Utilizando controlador de servos directo por GPIO para Simulación.")
+    # Mapeo de canales del PCA9685 a pines GPIO físicos en la ESP32 para Wokwi:
+    # Ch 0 -> Pata 0 Coxa, Ch 1 -> Pata 0 Fémur, etc.
+    channels_pins = {
+        0: 13, 1: 12, # Pata 0 (FR)
+        2: 15, 3: 2,  # Pata 1 (FL)
+        4: 4,  5: 5,  # Pata 2 (RL)
+        6: 23, 7: 25  # Pata 3 (RR)
+    }
+    servos = ESP32ServoDirect(channels_pins)
+    modo_simulacion = True
 
 try:
     imu = MPU6050(i2c, address=0x68)
@@ -51,13 +93,6 @@ alarma = BuzzerAlert(pin_number=14)
 alarma.beep(300) # Beep de encendido exitoso
 
 # ── 3. Definición de Canales de Servos y Poses ─────────────────────
-# Patas: 0 (Delantera Derecha), 1 (Delantera Izquierda), 2 (Trasera Izquierda), 3 (Trasera Derecha)
-# Canales PCA9685:
-# Pata 0 -> Coxa: Ch 0, Femur: Ch 1
-# Pata 1 -> Coxa: Ch 2, Femur: Ch 3
-# Pata 2 -> Coxa: Ch 4, Femur: Ch 5
-# Pata 3 -> Coxa: Ch 6, Femur: Ch 7
-
 COXA_CHANNELS = [0, 2, 4, 6]
 FEMUR_CHANNELS = [1, 3, 5, 7]
 
@@ -149,11 +184,9 @@ async def mover_suave_ciclo(coxa_targets, femur_targets, pasos=4, delay_ms=25):
 
 async def caminar_adelante():
     """Ejecuta un ciclo completo de marcha de gateo (Crawl Gait) hacia adelante."""
-    # 1. Fase de empuje del cuerpo (Stance Shift): todos los Coxas van hacia atrás
     if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 60], pasos=5):
         return False
         
-    # 2. Paso Pata 0 (FR): Levantar, avanzar Coxa, apoyar
     if not await mover_suave_ciclo([70, 110, 110, 70], [90, 120, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 110, 110, 70], [90, 120, 120, 60], pasos=3):
@@ -161,7 +194,6 @@ async def caminar_adelante():
     if not await mover_suave_ciclo([110, 110, 110, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 3. Paso Pata 3 (RR): Levantar, avanzar Coxa, apoyar
     if not await mover_suave_ciclo([110, 110, 110, 70], [60, 120, 120, 90], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 90], pasos=3):
@@ -169,7 +201,6 @@ async def caminar_adelante():
     if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 4. Paso Pata 1 (FL): Levantar, avanzar Coxa, apoyar
     if not await mover_suave_ciclo([110, 110, 110, 110], [60, 90, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 70, 110, 110], [60, 90, 120, 60], pasos=3):
@@ -177,7 +208,6 @@ async def caminar_adelante():
     if not await mover_suave_ciclo([110, 70, 110, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 5. Paso Pata 2 (RL): Levantar, avanzar Coxa, apoyar
     if not await mover_suave_ciclo([110, 70, 110, 110], [60, 120, 90, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 90, 60], pasos=3):
@@ -189,11 +219,9 @@ async def caminar_adelante():
 
 async def caminar_atras():
     """Ejecuta un ciclo completo de marcha de gateo (Crawl Gait) hacia atrás."""
-    # 1. Stance Shift: cuerpo se desplaza hacia atrás (caderas se mueven adelante)
     if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 60], pasos=5):
         return False
         
-    # 2. Paso Pata 0 (FR): Levantar, retroceder Coxa, apoyar
     if not await mover_suave_ciclo([110, 70, 70, 110], [90, 120, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 70, 70, 110], [90, 120, 120, 60], pasos=3):
@@ -201,7 +229,6 @@ async def caminar_atras():
     if not await mover_suave_ciclo([70, 70, 70, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 3. Paso Pata 3 (RR): Levantar, retroceder Coxa, apoyar
     if not await mover_suave_ciclo([70, 70, 70, 110], [60, 120, 120, 90], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 90], pasos=3):
@@ -209,7 +236,6 @@ async def caminar_atras():
     if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 4. Paso Pata 1 (FL): Levantar, retroceder Coxa, apoyar
     if not await mover_suave_ciclo([70, 70, 70, 70], [60, 90, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 110, 70, 70], [60, 90, 120, 60], pasos=3):
@@ -217,7 +243,6 @@ async def caminar_atras():
     if not await mover_suave_ciclo([70, 110, 70, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 5. Paso Pata 2 (RL): Levantar, retroceder Coxa, apoyar
     if not await mover_suave_ciclo([70, 110, 70, 70], [60, 120, 90, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 90, 60], pasos=3):
@@ -229,11 +254,9 @@ async def caminar_atras():
 
 async def girar_izquierda():
     """Ejecuta un ciclo de rotación sobre su propio eje en sentido antihorario."""
-    # 1. Stance Shift rotacional: Coxas van a 70
     if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 60], pasos=5):
         return False
         
-    # 2. Paso Pata 0 (FR): Levantar, avanzar, apoyar
     if not await mover_suave_ciclo([70, 70, 70, 70], [90, 120, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 70, 70, 70], [90, 120, 120, 60], pasos=3):
@@ -241,7 +264,6 @@ async def girar_izquierda():
     if not await mover_suave_ciclo([110, 70, 70, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 3. Paso Pata 3 (RR): Levantar, avanzar, apoyar
     if not await mover_suave_ciclo([110, 70, 70, 70], [60, 120, 120, 90], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 90], pasos=3):
@@ -249,7 +271,6 @@ async def girar_izquierda():
     if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 4. Paso Pata 1 (FL): Levantar, retroceder, apoyar
     if not await mover_suave_ciclo([110, 70, 70, 110], [60, 90, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 110, 70, 110], [60, 90, 120, 60], pasos=3):
@@ -257,7 +278,6 @@ async def girar_izquierda():
     if not await mover_suave_ciclo([110, 110, 70, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 5. Paso Pata 2 (RL): Levantar, retroceder, apoyar
     if not await mover_suave_ciclo([110, 110, 70, 110], [60, 120, 90, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 90, 60], pasos=3):
@@ -269,11 +289,9 @@ async def girar_izquierda():
 
 async def girar_derecha():
     """Ejecuta un ciclo de rotación sobre su propio eje en sentido horario."""
-    # 1. Stance Shift rotacional: Coxas van a 110
     if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 60], pasos=5):
         return False
         
-    # 2. Paso Pata 0 (FR): Levantar, retroceder, apoyar
     if not await mover_suave_ciclo([110, 110, 110, 110], [90, 120, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 110, 110, 110], [90, 120, 120, 60], pasos=3):
@@ -281,7 +299,6 @@ async def girar_derecha():
     if not await mover_suave_ciclo([70, 110, 110, 110], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 3. Paso Pata 3 (RR): Levantar, retroceder, apoyar
     if not await mover_suave_ciclo([70, 110, 110, 110], [60, 120, 120, 90], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 90], pasos=3):
@@ -289,7 +306,6 @@ async def girar_derecha():
     if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 4. Paso Pata 1 (FL): Levantar, avanzar, apoyar
     if not await mover_suave_ciclo([70, 110, 110, 70], [60, 90, 120, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 70, 110, 70], [60, 90, 120, 60], pasos=3):
@@ -297,7 +313,6 @@ async def girar_derecha():
     if not await mover_suave_ciclo([70, 70, 110, 70], [60, 120, 120, 60], pasos=3):
         return False
         
-    # 5. Paso Pata 2 (RL): Levantar, avanzar, apoyar
     if not await mover_suave_ciclo([70, 70, 110, 70], [60, 120, 90, 60], pasos=3):
         return False
     if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 90, 60], pasos=3):
@@ -391,15 +406,19 @@ async def main_async():
     """Punto de entrada principal para orquestar la concurrencia."""
     from web_server import iniciar_wifi, start_server_task
     
-    # Inicializar interfaz de red Wi-Fi en modo AP
-    ip = iniciar_wifi(ssid="USS_SpiderBot_AP", modo_ap=True)
+    # Configuración de Wi-Fi adaptativa
+    if modo_simulacion:
+        print("[INFO] Simulación detectada. Conectando a red virtual Wokwi (SSID: Wokwi-GUEST)...")
+        ip = iniciar_wifi(ssid="Wokwi-GUEST", password=None, modo_ap=False)
+    else:
+        ip = iniciar_wifi(ssid="USS_SpiderBot_AP", modo_ap=True)
     
     # Crear tareas concurrentes en el event loop
     task_sensors = asyncio.create_task(sensor_updater())
     task_locomotion = asyncio.create_task(locomotion_loop())
     task_server = asyncio.create_task(start_server_task(ip))
     
-    print("\n[OK] USS SpiderBot completamente operativo e interactivo por Wi-Fi.")
+    print("\n[OK] USS SpiderBot completamente operativo e interactivo.")
     
     # Unir tareas para ejecución indeterminada
     await asyncio.gather(task_sensors, task_locomotion, task_server)

@@ -1,12 +1,17 @@
 # Arquitectura General y Flujos — USS SpiderBot
 
-Esta sección describe la arquitectura lógica del firmware, el flujo de procesamiento de señales en paralelo y los patrones de diseño de software aplicados para lograr el control dinámico del robot cuadrúpedo.
+Esta sección describe la arquitectura lógica del firmware, el flujo de procesamiento de señales en paralelo, las modalidades adaptativas para simulación en Wokwi y los patrones de diseño de software aplicados.
 
 ---
 
 ## 1. Diagrama de Bloques de la Arquitectura (Mermaid.js)
 
-El firmware utiliza la concurrencia asíncrona cooperativa en MicroPython. Tres hilos o corrutinas corren de forma concurrente, comunicándose a través de un registro de estado centralizado:
+El firmware utiliza la concurrencia asíncrona cooperativa en MicroPython. Tres corrutinas corren de forma concurrente, comunicándose a través de un registro de estado centralizado. 
+
+### Ejecución Adaptativa (Detección del Entorno)
+El sistema detecta automáticamente si se encuentra en el robot físico o en Wokwi:
+1.  **Modo Hardware Real (I2C detecta `0x40`):** Instancia `PCA9685` para gobernar los servos y configura el Wi-Fi como **Access Point (AP)** privado (`USS_SpiderBot_AP`).
+2.  **Modo Simulación (I2C no detecta `0x40`):** Instancia `ESP32ServoDirect` (que gobierna los servos por PWM directo desde la ESP32) y configura el Wi-Fi como **Estación (STA)** conectándose a `Wokwi-GUEST`.
 
 ```mermaid
 graph TD
@@ -24,22 +29,34 @@ graph TD
         F[main.py - Tarea Sensores 20Hz]
     end
 
-    %% Componentes Físicos (Hardware)
-    subgraph Actuadores y Sensores
-        G[PCA9685 - Driver Servos]
-        H[MPU6050 - IMU Inercial]
-        I[HC-SR04 - Sonar Ultrasonido]
+    %% Doble Ruta de Actuación
+    subgraph Modo Actuación Detectado
+        G1[PCA9685 - Driver Servos I2C]
+        G2[ESP32ServoDirect - Servos GPIO Directos Wokwi]
     end
 
-    %% Flujos de Comunicación
+    %% Sensores e Interfaces de Red
+    subgraph Sensores e interfaces
+        H[MPU6050 - IMU Inercial]
+        I[HC-SR04 - Sonar Ultrasonido]
+        J1[AP Wi-Fi Local - Físico]
+        J2[Wokwi-GUEST - Wi-Fi Virtual]
+    end
+
+    %% Flujos de Red
     A <-->|HTTP GET/POST /telemetry| C
     B -->|HTTP GET /api/control?cmd=...| C
-    C <-->|Lee y Escribe Estado| D
+    C <-->|Lee/Escribe Estado| D
     E <-->|Monitorea comando / actualiza| D
     F <-->|Escribe Pitch/Roll/Distancia| D
     
-    %% Acciones de Hardware
-    E -->|Fórmula Cinemática + Compensación| G
+    %% Ruta de Wi-Fi según entorno
+    C <-->|Modo AP| J1
+    C <-->|Modo STA| J2
+    
+    %% Acciones de Hardware/Simulación
+    E -->|Fórmula Gait + Compensación| G1
+    E -->|Mapeo de Canales a GPIO| G2
     F -->|Lectura I2C| H
     F -->|Lectura GPIO Pulso| I
 ```
@@ -65,3 +82,4 @@ La información fluye a través del sistema mediante un modelo desacoplado por e
 *   **Multitarea Cooperativa (Cooperative Multitasking):** Implementada a través del bucle de eventos asíncrono de `uasyncio`. En lugar de utilizar retardos bloqueantes (`time.sleep_ms`) o hilos físicos del procesador (que consumen demasiados recursos de memoria y son inestables en MicroPython), las tareas liberan la CPU cediéndola voluntariamente a otras mediante `await asyncio.sleep_ms()`.
 *   **Patrón Shared Registry (Estado Singleton):** Centralizado en [state.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/state.py). Permite desacoplar por completo la ejecución física de los servomotores de las peticiones de red del servidor HTTP, solucionando la importación circular de módulos.
 *   **Control Reactivo Proporcional (P-Control):** La estabilización inercial activa calcula la corrección mediante un factor de escala estático multiplicativo respecto a la desviación angular ($\Delta \text{Ángulo} \times \text{Factor}$). Esto imita la lógica básica de control proporcional industrial, brindando respuestas inmediatas y suaves sin sobrecarga matemática.
+*   **Patrón Adapter / Fallback (Abstracción de Hardware):** La clase `ESP32ServoDirect` actúa como un adaptador de hardware, permitiendo que el bucle de locomoción interactúe con una interfaz unificada `.set_servo_angle()` sin preocuparse de si la señal viaja físicamente por el chip I2C PCA9685 o a través del generador PWM directo integrado en los pines de la ESP32 en el entorno simulado de Wokwi.
