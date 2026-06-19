@@ -364,35 +364,61 @@
         const host = window.location.host;
         let isOnline = false;
         let activeStabilize = true;
+        let consecutiveFailures = 0;
+        let modoDemo = false;
+        let demoCommand = "stop";
         
-        function updateConnection(online) {
+        function updateConnection(online, isDemo = false) {
             isOnline = online;
             const statusEl = document.getElementById("conn-status");
-            if (online) {
+            if (isDemo) {
+                statusEl.textContent = "Modo Demo (Offline)";
+                statusEl.className = "connection-status";
+                statusEl.style.background = "rgba(155, 81, 224, 0.15)";
+                statusEl.style.color = "var(--accent)";
+                statusEl.style.borderColor = "rgba(155, 81, 224, 0.3)";
+            } else if (online) {
                 statusEl.textContent = "Conectado";
                 statusEl.className = "connection-status online";
+                statusEl.style.background = "";
+                statusEl.style.color = "";
+                statusEl.style.borderColor = "";
             } else {
                 statusEl.textContent = "Desconectado";
                 statusEl.className = "connection-status";
+                statusEl.style.background = "";
+                statusEl.style.color = "";
+                statusEl.style.borderColor = "";
                 document.getElementById("val-distance").textContent = "-- cm";
                 document.getElementById("sonar-bar-fg").style.width = "0%";
             }
         }
         
         function sendCommand(cmd) {
+            if (modoDemo || !host) {
+                demoCommand = cmd;
+                updateActiveCommandInUI(cmd);
+                return;
+            }
             fetch(`http://${host}/api/control?cmd=${cmd}`)
                 .then(r => r.json())
                 .then(data => {
                     updateActiveCommandInUI(data.comando);
                     updateConnection(true);
+                    consecutiveFailures = 0;
                 })
                 .catch(e => {
                     console.error("Error enviando comando:", e);
-                    updateConnection(false);
+                    handleFailure();
                 });
         }
         
         function toggleStabilization() {
+            if (modoDemo || !host) {
+                activeStabilize = !activeStabilize;
+                updateStabilizationUI(activeStabilize);
+                return;
+            }
             const nextStab = activeStabilize ? 0 : 1;
             fetch(`http://${host}/api/control?stabilize=${nextStab}`)
                 .then(r => r.json())
@@ -400,11 +426,22 @@
                     activeStabilize = (data.stabilize === 1);
                     updateStabilizationUI(activeStabilize);
                     updateConnection(true);
+                    consecutiveFailures = 0;
                 })
                 .catch(e => {
                     console.error("Error toggle estabilización:", e);
-                    updateConnection(false);
+                    handleFailure();
                 });
+        }
+        
+        function handleFailure() {
+            consecutiveFailures++;
+            if (consecutiveFailures >= 3 || !host) {
+                modoDemo = true;
+                updateConnection(false, true);
+            } else {
+                updateConnection(false);
+            }
         }
         
         function updateStabilizationUI(active) {
@@ -430,90 +467,130 @@
             else if (cmd === "reposo") document.getElementById("btn-stand").classList.add("active");
         }
         
+        function renderTelemetry(pitch, roll, distance, cmd, stabilize) {
+            document.getElementById("val-pitch").textContent = `${pitch.toFixed(1)}°`;
+            document.getElementById("val-roll").textContent = `${roll.toFixed(1)}°`;
+            
+            document.getElementById("item-pitch").className = Math.abs(pitch) > 15 ? "telemetry-item alert" : "telemetry-item";
+            document.getElementById("item-roll").className = Math.abs(roll) > 15 ? "telemetry-item alert" : "telemetry-item";
+            
+            const maxGrad = 30;
+            const scale = 90 / maxGrad;
+            let dx = -roll * scale;
+            let dy = -pitch * scale;
+            
+            const distCenter = Math.sqrt(dx*dx + dy*dy);
+            if (distCenter > 90) {
+                dx = (dx / distCenter) * 90;
+                dy = (dy / distCenter) * 90;
+            }
+            
+            const dot = document.getElementById("imu-dot");
+            dot.setAttribute("cx", 100 + dx);
+            dot.setAttribute("cy", 100 + dy);
+            
+            if (Math.abs(pitch) > 15 || Math.abs(roll) > 15) {
+                dot.setAttribute("fill", "var(--danger)");
+                dot.style.filter = "drop-shadow(0 0 6px var(--danger))";
+            } else {
+                dot.setAttribute("fill", "var(--primary)");
+                dot.style.filter = "drop-shadow(0 0 6px var(--primary))";
+            }
+            
+            const distEl = document.getElementById("val-distance");
+            const barEl = document.getElementById("sonar-bar-fg");
+            const txtProx = document.getElementById("txt-proximity");
+            const itemDistance = document.getElementById("item-distance");
+            
+            if (distance <= 0) {
+                distEl.textContent = "Error/Fuera Rango";
+                barEl.style.width = "0%";
+                barEl.className = "sonar-bar-fg";
+                txtProx.textContent = "Desconocido";
+                itemDistance.className = "telemetry-item";
+            } else {
+                distEl.textContent = `${distance.toFixed(1)} cm`;
+                let percentage = Math.max(0, Math.min(100, (distance / 60) * 100));
+                barEl.style.width = `${percentage}%`;
+                
+                if (distance < 15.0) {
+                    barEl.className = "sonar-bar-fg alert";
+                    txtProx.textContent = "¡PELIGRO COLISIÓN!";
+                    txtProx.style.color = "var(--danger)";
+                    itemDistance.className = "telemetry-item alert";
+                } else if (distance < 30.0) {
+                    barEl.className = "sonar-bar-fg";
+                    txtProx.textContent = "Advertencia de Obstáculo";
+                    txtProx.style.color = "var(--accent)";
+                    itemDistance.className = "telemetry-item";
+                } else {
+                    barEl.className = "sonar-bar-fg";
+                    txtProx.textContent = "Seguro";
+                    txtProx.style.color = "var(--success)";
+                    itemDistance.className = "telemetry-item";
+                }
+            }
+            
+            updateActiveCommandInUI(cmd);
+            updateStabilizationUI(stabilize === 1);
+        }
+        
         function pollTelemetry() {
+            if (!host) {
+                modoDemo = true;
+                consecutiveFailures = 3;
+            }
+            
+            if (modoDemo) {
+                updateConnection(false, true);
+                const t = Date.now() / 1000;
+                let pitch = 0.0;
+                let roll = 0.0;
+                let distance = 40.0;
+                
+                if (demoCommand !== "stop" && demoCommand !== "reposo") {
+                    pitch = Math.sin(t * 5) * 8.0 + Math.sin(t * 1.2) * 2.0;
+                    roll = Math.cos(t * 5) * 4.0;
+                    distance = 35.0 + Math.sin(t * 0.5) * 15.0;
+                } else {
+                    pitch = Math.sin(t * 0.5) * 1.5;
+                    roll = Math.cos(t * 0.3) * 1.0;
+                    distance = 45.0 + Math.sin(t * 0.1) * 2.0;
+                }
+                
+                if (demoCommand === "forward") {
+                    distance = 12.0 + Math.abs((t * 5) % 80 - 40);
+                }
+                
+                renderTelemetry(pitch, roll, distance, demoCommand, activeStabilize ? 1 : 0);
+                
+                if (host && Math.floor(t) % 5 === 0) {
+                    fetch(`http://${host}/telemetry`)
+                        .then(r => r.json())
+                        .then(data => {
+                            modoDemo = false;
+                            consecutiveFailures = 0;
+                        })
+                        .catch(() => {});
+                }
+                return;
+            }
+            
             fetch(`http://${host}/telemetry`)
                 .then(r => r.json())
                 .then(data => {
                     updateConnection(true);
-                    
-                    const pitch = data.pitch;
-                    const roll = data.roll;
-                    document.getElementById("val-pitch").textContent = `${pitch.toFixed(1)}°`;
-                    document.getElementById("val-roll").textContent = `${roll.toFixed(1)}°`;
-                    
-                    document.getElementById("item-pitch").className = Math.abs(pitch) > 15 ? "telemetry-item alert" : "telemetry-item";
-                    document.getElementById("item-roll").className = Math.abs(roll) > 15 ? "telemetry-item alert" : "telemetry-item";
-                    
-                    const maxGrad = 30;
-                    const scale = 90 / maxGrad;
-                    let dx = -roll * scale;
-                    let dy = -pitch * scale;
-                    
-                    const distCenter = Math.sqrt(dx*dx + dy*dy);
-                    if (distCenter > 90) {
-                        dx = (dx / distCenter) * 90;
-                        dy = (dy / distCenter) * 90;
-                    }
-                    
-                    const dot = document.getElementById("imu-dot");
-                    dot.setAttribute("cx", 100 + dx);
-                    dot.setAttribute("cy", 100 + dy);
-                    
-                    if (Math.abs(pitch) > 15 || Math.abs(roll) > 15) {
-                        dot.setAttribute("fill", "var(--danger)");
-                        dot.style.filter = "drop-shadow(0 0 6px var(--danger))";
-                    } else {
-                        dot.setAttribute("fill", "var(--primary)");
-                        dot.style.filter = "drop-shadow(0 0 6px var(--primary))";
-                    }
-                    
-                    const distance = data.distance;
-                    const distEl = document.getElementById("val-distance");
-                    const barEl = document.getElementById("sonar-bar-fg");
-                    const txtProx = document.getElementById("txt-proximity");
-                    const itemDistance = document.getElementById("item-distance");
-                    
-                    if (distance <= 0) {
-                        distEl.textContent = "Error/Fuera Rango";
-                        barEl.style.width = "0%";
-                        barEl.className = "sonar-bar-fg";
-                        txtProx.textContent = "Desconocido";
-                        itemDistance.className = "telemetry-item";
-                    } else {
-                        distEl.textContent = `${distance.toFixed(1)} cm`;
-                        let percentage = Math.max(0, Math.min(100, (distance / 60) * 100));
-                        barEl.style.width = `${percentage}%`;
-                        
-                        if (distance < 15.0) {
-                            barEl.className = "sonar-bar-fg alert";
-                            txtProx.textContent = "¡PELIGRO COLISIÓN!";
-                            txtProx.style.color = "var(--danger)";
-                            itemDistance.className = "telemetry-item alert";
-                        } else if (distance < 30.0) {
-                            barEl.className = "sonar-bar-fg";
-                            txtProx.textContent = "Advertencia de Obstáculo";
-                            txtProx.style.color = "var(--accent)";
-                            itemDistance.className = "telemetry-item";
-                        } else {
-                            barEl.className = "sonar-bar-fg";
-                            txtProx.textContent = "Seguro";
-                            txtProx.style.color = "var(--success)";
-                            itemDistance.className = "telemetry-item";
-                        }
-                    }
-                    
-                    updateActiveCommandInUI(data.cmd);
-                    activeStabilize = (data.stabilize === 1);
-                    updateStabilizationUI(activeStabilize);
+                    consecutiveFailures = 0;
+                    renderTelemetry(data.pitch, data.roll, data.distance, data.cmd, data.stabilize);
                 })
                 .catch(e => {
                     console.error("Error polling telemetría:", e);
-                    updateConnection(false);
+                    handleFailure();
                 });
         }
         
         window.addEventListener("keydown", (e) => {
-            if (!isOnline) return;
+            if (!isOnline && !modoDemo) return;
             const key = e.key.toLowerCase();
             if (key === "w") sendCommand("forward");
             else if (key === "s") sendCommand("backward");
