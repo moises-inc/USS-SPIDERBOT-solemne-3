@@ -10,14 +10,17 @@ spacer_r = 55.0;    // Radio para pilares espaciadores
 
 module soporte_servo_cadera() {
     difference() {
-        // Bloque estructural principal (ensanchado a 28mm)
+        // Bloque estructural principal (ensanchado a 28mm de ancho y 36mm de largo)
         translate([0, 0, 7.5])
             cube([36, 28, 15], center=true);
         
-        // 1. Cavidad ensanchada para el cuerpo del servo SG90
-        // Holgura ajustada para impresión FDM (tolerancia ~2.2mm de largo y ~1.4mm de alto)
-        translate([0, 0, 7.5])
-            cube([25.0, 24.2, 13.4], center=true);
+        // 1. Cavidad para el cuerpo del servo SG90 (dual-depth para salida de cables y soporte de tornillos)
+        // Parte inferior ensanchada a 30.0mm para cables (Z = 0.8 a 5.0)
+        translate([0, 0, 2.9])
+            cube([30.0, 24.2, 4.2], center=true);
+        // Parte superior estrecha a 25.0mm para dar soporte roscado a los tornillos M2 (Z = 5.0 a 14.0)
+        translate([0, 0, 9.5])
+            cube([25.0, 24.2, 9.0], center=true);
             
         // 2. Ranura ensanchada para las orejas/bridas del servo (Y = 5.5)
         translate([0, 5.5, 7.5])
@@ -30,7 +33,7 @@ module soporte_servo_cadera() {
         translate([14.25, 0, 7.5])
             rotate([90, 0, 0])
                 cylinder(r=1.0, h=35, center=true);
-                  
+                   
         // 4. Abertura delantera (Y+) para corona de salida del servo (trasladada a Y=12.0)
         translate([5.5, 12.0, 7.5])
             rotate([90, 0, 0])
