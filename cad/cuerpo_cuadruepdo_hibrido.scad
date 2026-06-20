@@ -1,0 +1,112 @@
+// Cuerpo Central Híbrido (USS SpiderBot + SP-8)
+// Placas base/superior con cuna de protoboard 400 ptos, XL6009E1, pasacables y HC-SR04.
+// Los brackets de cadera son robustos de 36mm con bolsillos de doble profundidad.
+
+$fn = 50;
+
+cuerpo_r = 65.0;
+cuerpo_t = 3.0;
+spacer_r = 55.0;
+
+module soporte_servo_cadera() {
+    difference() {
+        translate([0, 0, 7.5])
+            cube([36, 28, 15], center=true);
+        translate([0, 0, 2.9])
+            cube([30.0, 24.2, 4.2], center=true);
+        translate([0, 0, 9.5])
+            cube([25.0, 24.2, 9.0], center=true);
+        translate([0, 5.5, 7.5])
+            cube([34.5, 3.2, 13.5], center=true);
+        translate([-14.25, 0, 7.5])
+            rotate([90, 0, 0])
+                cylinder(r=1.0, h=35, center=true);
+        translate([14.25, 0, 7.5])
+            rotate([90, 0, 0])
+                cylinder(r=1.0, h=35, center=true);
+        translate([5.5, 12.0, 7.5])
+            rotate([90, 0, 0])
+                cylinder(r=6.2, h=15, center=true);
+        translate([6.5, 12.0, 7.5])
+            cube([23, 5, 16], center=true);
+    }
+}
+
+module placa_base_cuadruepodo() {
+    difference() {
+        cylinder(r = cuerpo_r, h = cuerpo_t, center=true);
+        for (a = [0, 90, 180, 270]) {
+            rotate([0, 0, a])
+                translate([spacer_r, 0, 0])
+                    cylinder(r=1.6, h=cuerpo_t+2, center=true);
+        }
+        translate([-20, -10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
+        translate([20, -10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
+        translate([-20, 10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
+        translate([20, 10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
+        translate([0, -25, 0]) {
+            translate([-28, -10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
+            translate([28, -10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
+            translate([-28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
+            translate([28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
+        }
+    }
+    for (a = [45, 135, 225, 315]) {
+        rotate([0, 0, a])
+            translate([cuerpo_r - 7, 0, cuerpo_t/2])
+                rotate([0, 0, -90])
+                    soporte_servo_cadera();
+    }
+}
+
+module placa_superior() {
+    difference() {
+        union() {
+            cylinder(r = cuerpo_r, h = cuerpo_t, center=true);
+            translate([0, 0, cuerpo_t/2 + 1.5]) {
+                difference() {
+                    cube([88.0, 60.0, 3.0], center=true);
+                    cube([84.0, 56.0, 3.1], center=true);
+                }
+            }
+            translate([0, -42, cuerpo_t/2 + 1.5]) {
+                difference() {
+                    cube([47.6, 25.6, 3.0], center=true);
+                    cube([43.6, 21.6, 3.1], center=true);
+                }
+            }
+            translate([0, cuerpo_r - 1.25, 11]) {
+                cube([47.0, 2.5, 22.0], center=true);
+            }
+            translate([-22.25, cuerpo_r - 5.0, 5.5]) {
+                rotate([0, -90, 0])
+                    linear_extrude(height = 2.0)
+                        polygon(points = [[0, 0], [11, 0], [0, 5]]);
+            }
+            translate([24.25, cuerpo_r - 5.0, 5.5]) {
+                rotate([0, -90, 0])
+                    linear_extrude(height = 2.0)
+                        polygon(points = [[0, 0], [11, 0], [0, 5]]);
+            }
+        }
+        for (a = [0, 90, 180, 270]) {
+            rotate([0, 0, a])
+                translate([spacer_r, 0, 0])
+                    cylinder(r=1.6, h=30, center=true);
+        }
+        translate([-13, cuerpo_r - 1.25, 11])
+            rotate([90, 0, 0])
+                cylinder(r=8.25, h=10, center=true);
+        translate([13, cuerpo_r - 1.25, 11])
+            rotate([90, 0, 0])
+                cylinder(r=8.25, h=10, center=true);
+        for (x = [-40, 40]) {
+            for (y = [-39, 39]) {
+                translate([x, y, 0])
+                    cylinder(r=7.0, h=30, center=true);
+            }
+        }
+    }
+}
+
+placa_base_cuadruepodo();
