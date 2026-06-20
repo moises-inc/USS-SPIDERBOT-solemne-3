@@ -40,10 +40,10 @@ module tibia() {
         }
         
         // 1. Acople para el horn del servo de Rodilla (Knee Pitch) en el origen (0,0)
-        // Desplazado a Z=1.8 para cortar limpiamente la cara exterior (Z=3.0) sin dejar pared residual
         translate([0, 0, 1.8]) {
-            cylinder(r = 6.2, h = 2.6, center=true);
-            // Agujero para el tornillo central del servo
+            cylinder(r = 4.0, h = 2.6, center=true);
+            translate([0, -8.0, 0])
+                cube([5.2, 16.0, 2.6], center=true);
             cylinder(r = 1.2, h = 10, center=true);
         }
         

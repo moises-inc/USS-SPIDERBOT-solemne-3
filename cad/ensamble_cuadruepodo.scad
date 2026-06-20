@@ -8,6 +8,7 @@ use <tibia_pata.scad>
 
 $fn = 20;
 
+cuerpo_r = 65.0;
 deck_spacing = 22.0;
 
 module dummy_servo() {
@@ -83,10 +84,34 @@ module ensamble_completo() {
         translate([0, 0, deck_spacing])
             placa_superior();
             
-    // 4. ESP32 DevKit V1
+    // ESP32 DevKit V1 (38 pines)
     color("Silver")
         translate([0, 0, deck_spacing + 3])
-            cube([25.5, 48.5, 4], center=true);
+            cube([28.0, 51.5, 4], center=true);
+            
+    // MPU6050 (GY-521)
+    color("DarkBlue")
+        translate([-36, 0, deck_spacing + 3])
+            cube([21.2, 16.4, 3], center=true);
+            
+    // Convertidor XL6009E1
+    color("Navy")
+        translate([36, 0, deck_spacing + 4])
+            cube([21.0, 43.0, 8], center=true);
+            
+    // Sensor de Ultrasonido HC-SR04
+    color("CadetBlue")
+        translate([0, cuerpo_r - 2.5, deck_spacing + 11])
+            rotate([90, 0, 0])
+                cube([45.0, 20.0, 2], center=true);
+    color("Silver") {
+        translate([-13, cuerpo_r - 7.5, deck_spacing + 11])
+            rotate([90, 0, 0])
+                cylinder(r=8.0, h=10, center=true);
+        translate([13, cuerpo_r - 7.5, deck_spacing + 11])
+            rotate([90, 0, 0])
+                cylinder(r=8.0, h=10, center=true);
+    }
             
     // 5. Las 4 Patas montadas en los soportes perimetrales (a 45, 135, 225, 315 grados)
     for (a = [45, 135, 225, 315]) {

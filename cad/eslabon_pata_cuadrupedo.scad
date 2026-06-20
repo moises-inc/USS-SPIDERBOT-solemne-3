@@ -32,9 +32,10 @@ module eslabon_completo() {
         }
         
         // 1. Acople para el horn del servo Cadera (Hip Pitch) en el origen (X=0, Z = +1.8)
-        // Desplazado para que el bolsillo de profundidad 2.5mm corte limpiamente la cara exterior (Z=3.0) sin dejar paredes fantasma
         translate([0, 0, 1.8]) {
-            cylinder(r=6.2, h=2.6, center=true);
+            cylinder(r=4.0, h=2.6, center=true);
+            translate([8.0, 0, 0])
+                cube([16.0, 5.2, 2.6], center=true);
             cylinder(r=1.2, h=10, center=true);
         }
         
@@ -43,11 +44,11 @@ module eslabon_completo() {
         // Tolerancia de 0.3mm total (0.15mm por lado) para un calce a presión firme y sin oscilaciones
         translate([link_len - 5.5, -11.25, 0]) {
             // Bolsillo del cuerpo del servo
-            cube([23.3, 22.8, 12.8], center=true);
+            cube([24.2, 23.2, 13.4], center=true);
             
             // Ranura para orejas/bridas (paralela a XZ, en Y = 5.5)
             translate([0, 5.5, 0])
-                cube([33.0, 2.8, 13.5], center=true);
+                cube([34.0, 3.2, 13.5], center=true);
                 
             // Agujeros para tornillos de orejas (paso estandar de 28.5mm)
             translate([-14.25, 0, 0])
