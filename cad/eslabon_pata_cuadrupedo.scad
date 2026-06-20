@@ -22,17 +22,18 @@ module eslabon_completo() {
             hull() {
                 // Junta de cadera (acople al horn del servo cadera)
                 cylinder(r = 9, h = 6, center=true);
-                // Transición al bloque del servo
-                translate([link_len/2, -3, 0])
+                // Transición al bloque del servo (alineado a Z=-3 para base plana)
+                translate([link_len/2, -3, 1])
                     cube([12, 12, 8], center=true);
             }
-            // Bloque que aloja el servo de rodilla (al final del fémur)
-            translate([link_len - 12, -4, 0])
-                cube([30, 26, link_t], center=true);
+            // Bloque que aloja el servo de rodilla (al final del fémur, trasladado a Y=-8, ancho 28)
+            translate([link_len - 12, -8, 0])
+                cube([30, 28, link_t], center=true);
         }
         
-        // 1. Acople para el horn del servo Cadera (Hip Pitch) en el origen (X=0, Z = +1.8)
-        translate([0, 0, 1.8]) {
+        // 1. Acople para el horn del servo Cadera (Hip Pitch) en el origen (X=0, Z = -1.8)
+        // Tallado en la cara inferior (Z-) que mira hacia el cuerpo del robot
+        translate([0, 0, -1.8]) {
             cylinder(r=4.0, h=2.6, center=true);
             translate([8.0, 0, 0])
                 cube([16.0, 5.2, 2.6], center=true);
@@ -41,14 +42,14 @@ module eslabon_completo() {
         
         // 2. Bolsillo (pocket) para el servo de Rodilla (Knee Pitch)
         // Se coloca de forma que el eje del servo coincida exactamente con X = link_len (55)
-        // Tolerancia de 0.3mm total (0.15mm por lado) para un calce a presión firme y sin oscilaciones
+        // Holgura ajustada para impresión FDM (tolerancia ~2.2mm de largo y ~1.4mm de alto)
         translate([link_len - 5.5, -11.25, 0]) {
             // Bolsillo del cuerpo del servo
-            cube([24.2, 23.2, 13.4], center=true);
+            cube([25.0, 24.2, 13.4], center=true);
             
             // Ranura para orejas/bridas (paralela a XZ, en Y = 5.5)
             translate([0, 5.5, 0])
-                cube([34.0, 3.2, 13.5], center=true);
+                cube([34.5, 3.2, 13.5], center=true);
                 
             // Agujeros para tornillos de orejas (paso estandar de 28.5mm)
             translate([-14.25, 0, 0])
@@ -62,7 +63,7 @@ module eslabon_completo() {
         // 3. Abertura delantera (Y+) para que sobresalga el engranaje del servo de rodilla (en X=55)
         translate([link_len, 0, 0])
             rotate([90, 0, 0])
-                cylinder(r=6, h=30, center=true);
+                cylinder(r=6, h=35, center=true);
                 
         // 4. Alivios de peso estéticos triangulares en el brazo
         translate([18, -2, 0])

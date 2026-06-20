@@ -10,34 +10,34 @@ spacer_r = 55.0;    // Radio para pilares espaciadores
 
 module soporte_servo_cadera() {
     difference() {
-        // Bloque estructural principal
+        // Bloque estructural principal (ensanchado a 28mm)
         translate([0, 0, 7.5])
-            cube([36, 26, 15], center=true);
+            cube([36, 28, 15], center=true);
         
         // 1. Cavidad ensanchada para el cuerpo del servo SG90
-        // Holgura ajustada para impresión FDM (tolerancia ~0.9mm de largo y ~0.9mm de ancho/alto)
+        // Holgura ajustada para impresión FDM (tolerancia ~2.2mm de largo y ~1.4mm de alto)
         translate([0, 0, 7.5])
-            cube([24.2, 23.2, 13.4], center=true);
+            cube([25.0, 24.2, 13.4], center=true);
             
         // 2. Ranura ensanchada para las orejas/bridas del servo (Y = 5.5)
         translate([0, 5.5, 7.5])
-            cube([34.0, 3.2, 13.5], center=true);
+            cube([34.5, 3.2, 13.5], center=true);
             
         // 3. Agujeros para los tornillos M2 (pasantes en Y)
         translate([-14.25, 0, 7.5])
             rotate([90, 0, 0])
-                cylinder(r=1.0, h=30, center=true);
+                cylinder(r=1.0, h=35, center=true);
         translate([14.25, 0, 7.5])
             rotate([90, 0, 0])
-                cylinder(r=1.0, h=30, center=true);
+                cylinder(r=1.0, h=35, center=true);
                   
-        // 4. Abertura delantera (Y+) para corona de salida del servo
-        translate([5.5, 11, 7.5])
+        // 4. Abertura delantera (Y+) para corona de salida del servo (trasladada a Y=12.0)
+        translate([5.5, 12.0, 7.5])
             rotate([90, 0, 0])
-                cylinder(r=6.2, h=10, center=true);
+                cylinder(r=6.2, h=15, center=true);
                 
-        // 5. Rebaje frontal-derecho para rotación libre del fémur
-        translate([6.5, 11, 7.5])
+        // 5. Rebaje frontal-derecho para rotación libre del fémur (trasladado a Y=12.0)
+        translate([6.5, 12.0, 7.5])
             cube([23, 5, 16], center=true);
     }
 }
@@ -70,9 +70,10 @@ module placa_base_cuadruepodo() {
     }
     
     // Añadir los 4 soportes de servo de cadera en la periferia (orientados tangencialmente, eje hacia afuera)
+    // Traslación corregida a cuerpo_r - 7 para compensar el ensanchamiento a 28mm
     for (a = [45, 135, 225, 315]) {
         rotate([0, 0, a])
-            translate([cuerpo_r - 6, 0, cuerpo_t/2])
+            translate([cuerpo_r - 7, 0, cuerpo_t/2])
                 rotate([0, 0, -90])
                     soporte_servo_cadera();
     }
@@ -85,27 +86,18 @@ module placa_superior() {
             // Placa superior circular principal
             cylinder(r = cuerpo_r, h = cuerpo_t, center=true);
             
-            // Cuna para ESP32 DevKit V1 (38 pines) en el centro (0,0)
-            // Dimensiones internas: 52.5mm x 29.0mm. Altura: 3.0mm. Paredes: 2.0mm.
+            // Cuna para Protoboard de 400 puntos en el centro (0,0)
+            // Dimensiones internas: 84.0mm x 56.0mm. Altura: 3.0mm. Paredes: 2.0mm.
             translate([0, 0, cuerpo_t/2 + 1.5]) {
                 difference() {
-                    cube([56.5, 33.0, 3.0], center=true);
-                    cube([52.5, 29.0, 3.1], center=true);
+                    cube([88.0, 60.0, 3.0], center=true);
+                    cube([84.0, 56.0, 3.1], center=true);
                 }
             }
             
-            // Cuna para MPU6050 (GY-521) en X = -36, Y = 0
-            // Dimensiones internas: 21.8mm x 17.0mm. Altura: 3.0mm. Paredes: 2.0mm.
-            translate([-36, 0, cuerpo_t/2 + 1.5]) {
-                difference() {
-                    cube([25.8, 21.0, 3.0], center=true);
-                    cube([21.8, 17.0, 3.1], center=true);
-                }
-            }
-            
-            // Cuna para Regulador XL6009E1 en X = 36, Y = 0
+            // Cuna para Regulador XL6009E1 desplazado al área trasera (X = 0, Y = -42)
             // Dimensiones internas: 43.6mm x 21.6mm. Altura: 3.0mm. Paredes: 2.0mm.
-            translate([36, 0, cuerpo_t/2 + 1.5]) {
+            translate([0, -42, cuerpo_t/2 + 1.5]) {
                 difference() {
                     cube([47.6, 25.6, 3.0], center=true);
                     cube([43.6, 21.6, 3.1], center=true);
@@ -141,19 +133,7 @@ module placa_superior() {
                     cylinder(r=1.6, h=30, center=true);
         }
         
-        // 2. Agujeros de montaje para la ESP32 (48.5mm x 25.5mm)
-        translate([0, 0, 0]) {
-            translate([-12.75, -24.25, 0]) cylinder(r=1.5, h=30, center=true);
-            translate([12.75, -24.25, 0]) cylinder(r=1.5, h=30, center=true);
-            translate([-12.75, 24.25, 0]) cylinder(r=1.5, h=30, center=true);
-            translate([12.75, 24.25, 0]) cylinder(r=1.5, h=30, center=true);
-        }
-        
-        // 3. Agujeros de montaje para MPU6050 (GY-521) - un agujero en X = -36, Y = 7.5
-        translate([-36, 7.5, 0])
-            cylinder(r=1.5, h=30, center=true);
-            
-        // 4. Orificios para los transductores ("ojos") del HC-SR04 (16.5mm diámetro, espaciados 26mm)
+        // 2. Orificios para los transductores ("ojos") del HC-SR04 (16.5mm diámetro, espaciados 26mm)
         translate([-13, cuerpo_r - 1.25, 11])
             rotate([90, 0, 0])
                 cylinder(r=8.25, h=10, center=true);
@@ -161,13 +141,12 @@ module placa_superior() {
             rotate([90, 0, 0])
                 cylinder(r=8.25, h=10, center=true);
                 
-        // 5. Alivios estéticos triangulares traseros (Truss design)
-        // Reducidos a dos orientados a 210 y 330 grados para no tocar las cunas laterales
-        for (a = [210, 330]) {
-            rotate([0, 0, a]) {
-                translate([32, 0, 0])
-                    rotate([0, 0, 30])
-                        cylinder(r=10, h=30, $fn=3, center=true);
+        // 3. Orificios de paso de cables (wire routing) en las 4 esquinas de la protoboard (r=7.0)
+        // Permite pasar los cables Dupont desde los servos y PCA9685 al deck superior
+        for (x = [-40, 40]) {
+            for (y = [-39, 39]) {
+                translate([x, y, 0])
+                    cylinder(r=7.0, h=30, center=true);
             }
         }
     }

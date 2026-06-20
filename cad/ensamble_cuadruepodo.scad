@@ -84,20 +84,25 @@ module ensamble_completo() {
         translate([0, 0, deck_spacing])
             placa_superior();
             
-    // ESP32 DevKit V1 (38 pines)
+    // Protoboard de 400 puntos en el centro
+    color("LightGray")
+        translate([0, 0, deck_spacing + 6.0])
+            cube([84.0, 56.0, 9.0], center=true);
+            
+    // ESP32 DevKit V1 (38 pines) pinchada en la protoboard
     color("Silver")
-        translate([0, 0, deck_spacing + 3])
+        translate([0, 0, deck_spacing + 10.5 + 2.0])
             cube([28.0, 51.5, 4], center=true);
             
-    // MPU6050 (GY-521)
+    // MPU6050 (GY-521) pinchada en la protoboard
     color("DarkBlue")
-        translate([-36, 0, deck_spacing + 3])
+        translate([-20, 10, deck_spacing + 10.5 + 1.5])
             cube([21.2, 16.4, 3], center=true);
             
-    // Convertidor XL6009E1
+    // Convertidor XL6009E1 en su cuna trasera
     color("Navy")
-        translate([36, 0, deck_spacing + 4])
-            cube([21.0, 43.0, 8], center=true);
+        translate([0, -42, deck_spacing + 5.5])
+            cube([43.0, 21.0, 8], center=true);
             
     // Sensor de Ultrasonido HC-SR04
     color("CadetBlue")
