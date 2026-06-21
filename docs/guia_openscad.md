@@ -182,6 +182,47 @@ translate([30, 0, 0])
         cube([10, 10, 10]);
 ```
 
+### `mirror([x, y, z])` — Reflejo especular
+
+Refleja el objeto como si lo miraras a través de un plano que pasa por el origen, dado por el vector normal:
+
+```openscad
+// Reflejar en X (como un espejo en el plano YZ)
+mirror([1, 0, 0])
+    cube([10, 20, 5]);
+
+// Reflejar en diagonal (plano a 45°)
+mirror([1, 1, 0])
+    cube([10, 20, 5]);
+```
+
+### `color("nombre")` o `color([r, g, b])` — Color para preview
+
+Asigna color a los hijos. Solo visible en Preview (F5), no afecta la exportación STL:
+
+```openscad
+color("RoyalBlue")
+    cube([10, 10, 10]);
+
+color([1.0, 0.5, 0])   // Naranja en RGB [0-1]
+    sphere(r = 5);
+
+color("LightGray", 0.5) // Gris semitransparente
+    cube([20, 5, 5]);
+```
+
+OpenSCAD acepta nombres de color SVG (red, green, blue, RoyalBlue, Silver, Tomato, etc.), valores hexadecimales `"#FF8800"`, y RGBA con alpha para transparencia.
+
+### `resize([x, y, z])` — Redimensionar a tamaño exacto
+
+A diferencia de `scale()` que multiplica, `resize()` fuerza dimensiones absolutas:
+
+```openscad
+// Una esfera de radio 10 redimensionada a un elipsoide de 30x60x10
+resize([30, 60, 10])
+    sphere(r = 10);
+```
+
 ### 🕷️ Caso Real: Rotaciones y traslaciones de los soportes de servo
 
 En `cad/cuerpo_cuadruepdo.scad`, los 4 soportes de cadera se posicionan con una cadena de transformaciones:
@@ -202,6 +243,27 @@ Lee la cadena de adentro hacia afuera:
 2. Se rota -90° en Z para que quede tangente al círculo.
 3. Se traslada al radio del chasis.
 4. Se rota al ángulo de cada pata (45°, 135°, 225°, 315°).
+
+### 🕷️ Caso Real 2: Código de colores en el ensamble
+
+En `cad/ensamble_cuadruepodo.scad` se usa `color()` extensivamente para distinguir componentes en preview:
+
+```openscad
+// Archivo: cad/ensamble_cuadruepodo.scad — líneas 14-27
+module dummy_servo() {
+    color("RoyalBlue") {         // Cuerpo del servo en azul
+        cube([12.5, 23.0, 22.5], center=true);
+        translate([0, 0, 5.5])
+            cube([12.5, 32.5, 2.5], center=true);
+    }
+    color("White") {             // Engranaje de salida en blanco
+        translate([0, 5.5, 14])
+            cylinder(r=6, h=1.5, center=true);
+    }
+}
+```
+
+Los colores ayudan a visualizar el ensamble antes de imprimir. El negro se usa para piezas estructurales, azul para servos, plata para electrónica.
 
 ---
 
@@ -371,6 +433,62 @@ difference() {
 resolucion = (usar_agujeros ? 50 : 20);
 ```
 
+### `let()` — Variables locales en un bloque
+
+`let()` asigna variables locales dentro de un sub-árbol. Es útil para cálculos intermedios sin contaminar el ámbito global:
+
+```openscad
+// Con let() creamos variables locales solo para este bloque
+let (ancho = 30, largo = ancho * 1.5) {
+    cube([ancho, largo, 5]);
+}
+```
+
+### `assert()` — Validación de parámetros
+
+Detiene la ejecución con un error si la condición no se cumple. Ideal para verificar parámetros en módulos:
+
+```openscad
+module soporte(alto, ancho) {
+    assert(alto > 0, "El alto debe ser positivo");
+    assert(ancho > 0, "El ancho debe ser positivo");
+    cube([ancho, ancho, alto]);
+}
+// soporte(-5, 10);  // Error: "El alto debe ser positivo"
+```
+
+### `function` — Funciones definidas por el usuario
+
+A diferencia de los módulos (que generan geometría), las funciones devuelven valores:
+
+```openscad
+function area_circulo(radio) = PI * radio * radio;
+function volumen_cilindro(radio, alto) = area_circulo(radio) * alto;
+
+r = 10;
+h = 20;
+echo(volumen_cilindro(r, h));  // 6283.19
+
+// También soportan recursión (con límite)
+function factorial(n) = n == 0 ? 1 : n * factorial(n - 1);
+```
+
+### Funciones de string y lista: `str()`, `concat()`, `len()`
+
+```openscad
+// str() — Convierte a string y concatena
+etiqueta = str("Pieza-", 3, ".stl");  // "Pieza-3.stl"
+
+// concat() — Une listas (vectores)
+a = [1, 2, 3];
+b = [4, 5];
+c = concat(a, b);  // [1, 2, 3, 4, 5]
+
+// len() — Longitud de lista o string
+largo = len([10, 20, 30]);  // 3
+texto = len("SpiderBot");   // 9
+```
+
 ### Constantes especiales
 
 - `PI` = 3.14159...
@@ -445,6 +563,26 @@ tornillo(20);            // L=20, D=4 (usa valor por defecto)
 tornillo(30, 6);         // L=30, D=6
 tornillo(diametro=5, longitud=15);  // Argumentos nombrados
 ```
+
+### `children()` — Módulos que envuelven geometría
+
+Un módulo puede operar sobre objetos que se le pasan entre llaves usando `children()`:
+
+```openscad
+module envolvente(radio_borde = 2) {
+    minkowski() {
+        children();  // Toma lo que se pase entre llaves
+        sphere(r = radio_borde);
+    }
+}
+
+// Uso: el cubo se pasa como child del módulo
+envolvente(3) {
+    cube([20, 20, 5], center=true);
+}
+```
+
+Esto permite crear modificadores genéricos (redondeadores, biseladores, etc.) que funcionan con cualquier geometría.
 
 ### DRY en CAD
 
@@ -558,6 +696,37 @@ for (angulo = [0 : 60 : 300]) {
 }
 ```
 
+### `intersection_for()` — Intersección iterativa
+
+Similar a `for()` pero la operación combinada es `intersection()` en vez de `union()`:
+
+```openscad
+// Crea una estrella por intersección de 6 cilindros rotados
+intersection_for(n = [0 : 5]) {
+    rotate([0, 0, n * 60])
+        translate([5, 0, 0])
+            cylinder(r = 3, h = 10);
+}
+```
+
+### List Comprehensions — Generar listas al vuelo
+
+Disponible desde OpenSCAD 2019.05, permite crear listas usando sintaxis similar a `for`:
+
+```openscad
+// Cuadrados de 0 a 10
+cuadrados = [for (i = [0:10]) i * i];
+echo(cuadrados);  // [0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+
+// Filtrar con if
+pares = [for (i = [0:20]) if (i % 2 == 0) i];
+echo(pares);  // [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+
+// Generar puntos para polygon()
+puntos = [for (a = [0:30:330]) [10 * cos(a), 10 * sin(a)]];
+polygon(puntos);
+```
+
 ### Cuadrícula con `for` anidado
 
 ```openscad
@@ -660,6 +829,46 @@ linear_extrude(height = 3) {
 }
 ```
 
+### `text()` — Texto 2D
+
+Crea texto como geometría 2D, combinable con `linear_extrude()` para texto 3D:
+
+```openscad
+// Texto 2D simple
+text("SpiderBot", size = 10, font = "Arial:style=Bold");
+
+// Texto 3D extruido
+linear_extrude(height = 2)
+    text("USS SpiderBot", size = 8, halign = "center");
+```
+
+### `offset()` — Desplazamiento de contornos 2D
+
+Expande o contrae un perfil 2D. Sirve para crear filetes y paredes delgadas:
+
+```openscad
+// Expandir un cuadrado (radio 3, esquinas redondeadas)
+offset(r = 3)
+    square([20, 20], center = true);
+    
+// Contraer (negativo) y luego expandir para simular filete interno
+offset(r = -2) offset(delta = 2)
+    square([20, 20], center = true);
+```
+
+### `projection()` — Proyección 3D a 2D
+
+Proyecta un objeto 3D a un perfil 2D en el plano XY. Útil para crear guías de corte:
+
+```openscad
+// Obtén la silueta 2D de un objeto 3D
+projection(cut = false)  // Proyección ortográfica (sombra)
+    sphere(r = 10);
+
+projection(cut = true)   // Corte transversal en Z=0
+    sphere(r = 10);
+```
+
 ### `rotate_extrude()` — Revolución
 
 Gira un perfil 2D alrededor del eje Z para crear formas de revolución:
@@ -728,6 +937,24 @@ use <tornillo.scad>
 tornillo(20);  // Funciona — el módulo está disponible
 ```
 
+### `import()` — Importar STL, SVG, DXF, 3MF
+
+Para incorporar piezas existentes en formato binario o de malla:
+
+```openscad
+// Importar un STL (no editable, solo posicionable)
+import("pieza_externa.stl");
+
+// Importar un SVG como perfil 2D
+linear_extrude(height = 3)
+    import("logo.svg");
+
+// Importar un DXF para perfiles de corte
+import("perfil.dxf");
+```
+
+Los archivos STL no se pueden modificar paramétricamente, solo trasladar, rotar y escalar.
+
 ### `include <archivo.scad>`
 
 Importa **todo** el contenido: módulos **y** código de nivel superior. Es menos usado porque puede ejecutar código no deseado:
@@ -784,7 +1011,7 @@ placa_base_cuadruepodo();  // Esto SÍ se ejecuta al abrir este archivo
 
 ---
 
-## Capítulo 9: Renderizado y Exportación a STL
+## Capítulo 9: Renderizado, Debug y Exportación a STL
 
 ### Preview (F5) vs Render (F6)
 
@@ -796,6 +1023,78 @@ placa_base_cuadruepodo();  // Esto SÍ se ejecuta al abrir este archivo
 | Exportable a STL | No | Sí |
 
 **Flujo típico:** Usa F5 mientras desarrollas (iteración rápida) → F6 antes de exportar (geometría final).
+
+### Modifier Characters — Debug visual en Preview
+
+Cuatro prefijos ayudan a depurar modelos sin borrar código:
+
+| Carácter | Nombre | Efecto en Preview (F5) |
+|----------|--------|----------------------|
+| `%` | Background | Muestra el objeto en gris transparente y lo excluye de booleanas |
+| `#` | Debug | Muestra el objeto en rosa translúcido encima de la geometría final |
+| `!` | Root | Ignora todo lo demás, muestra solo este sub-árbol |
+| `*` | Disable | Comenta todo el sub-árbol (no se renderiza) |
+
+```openscad
+difference() {
+    cube([30, 30, 10], center=true);
+    
+    // Debug: este agujero se ve en rosa para verificar posición
+    #translate([0, 0, -1])
+        cylinder(r = 5, h = 12);
+    
+    // Background: este agujero se ve gris, no participa en la resta
+    %translate([10, 0, -1])
+        cylinder(r = 3, h = 12);
+        
+    // Disable: este está completamente ignorado
+    *translate([-10, 0, -1])
+        cylinder(r = 3, h = 12);
+}
+```
+
+> `%` es ideal para ver la posición de huecos sin que afecten la booleanas; `#` para verificar que un elemento está donde debe; `!` para aislar un elemento específico del modelo completo; `*` para deshabilitar temporalmente partes del diseño.
+
+### `render()` — Forzar cálculo CGAL en preview
+
+Fuerza la generación de malla CGAL incluso en modo Preview, mejorando la visualización de booleanas complejas:
+
+```openscad
+render(convexity = 4)  // convexity = máx. intersecciones de una línea con la superficie
+    difference() {
+        cube([20, 20, 10], center=true);
+        sphere(r = 8);
+    }
+```
+
+### `$t` y animación
+
+OpenSCAD puede animar modelos usando la variable especial `$t`, que oscila entre 0 y 1:
+
+```openscad
+// Vista > Animación > FPS=10, Steps=100
+// $t va de 0 a 0.99 cíclicamente
+
+// Oscilación vertical
+translate([0, 0, 10 * sin($t * 360)])
+    sphere(r = 5);
+
+// Rotación continua
+rotate([0, 0, $t * 360])
+    cube([20, 5, 5], center=true);
+```
+
+### `$preview` — Diferenciar preview de render final
+
+Permite usar distinta resolución para preview y render, ahorrando tiempo:
+
+```openscad
+// En preview (F5): $fn = 12 (rápido)
+// En render (F6):  $fn = 72 (calidad)
+$fn = $preview ? 12 : 72;
+
+cylinder(r = 10, h = 20);
+```
 
 ### Exportar a STL (F7)
 
@@ -955,14 +1254,19 @@ openscad -o mi_tibia.stl -D "\$fn=50" tibia.scad
 
 ## Apéndice A: Hoja de Referencia Rápida (Cheat Sheet)
 
-| Comando | Sintaxis | Descripción |
-|---------|----------|-------------|
+| Comando / Función | Sintaxis | Descripción |
+|-------------------|----------|-------------|
 | `cube` | `cube([w, d, h], center=false)` | Cubo o prisma rectangular |
 | `sphere` | `sphere(r)` | Esfera |
 | `cylinder` | `cylinder(r, h)` / `cylinder(r1, r2, h)` | Cilindro o cono truncado |
+| `polyhedron` | `polyhedron(points, faces)` | Poliedro con caras arbitrarias |
 | `translate` | `translate([x, y, z])` | Desplazar objeto |
-| `rotate` | `rotate([x, y, z])` | Rotar objeto (grados) |
+| `rotate` | `rotate([x, y, z])` o `rotate(a, [x,y,z])` | Rotar objeto (grados) |
 | `scale` | `scale([x, y, z])` | Escalar objeto |
+| `mirror` | `mirror([x, y, z])` | Reflejo especular |
+| `resize` | `resize([x, y, z])` | Redimensionar a tamaño exacto |
+| `color` | `color("nombre")` o `color([r,g,b])` | Asignar color (solo preview) |
+| `multmatrix` | `multmatrix(m = [...])` | Transformación por matriz 4x3 |
 | `union` | `union() { ... }` | Fusionar sólidos |
 | `difference` | `difference() { A; B; }` | Restar B de A |
 | `intersection` | `intersection() { ... }` | Intersección de sólidos |
@@ -970,13 +1274,36 @@ openscad -o mi_tibia.stl -D "\$fn=50" tibia.scad
 | `minkowski` | `minkowski() { ... }` | Suma de Minkowski (redondeo) |
 | `linear_extrude` | `linear_extrude(h)` | Extruir 2D a 3D |
 | `rotate_extrude` | `rotate_extrude()` | Revolución de perfil 2D |
+| `text` | `text("str", size, font)` | Texto 2D |
 | `polygon` | `polygon(points=[...])` | Polígono 2D |
-| `for` | `for (i = [inicio:fin])` | Bucle iterativo |
+| `offset` | `offset(r)` / `offset(delta)` | Expandir/contraer perfil 2D |
+| `projection` | `projection(cut)` | Proyectar 3D a 2D |
+| `for` | `for (i = [inicio:fin])` | Bucle iterativo (unión) |
+| `intersection_for` | `intersection_for(i = [inicio:fin])` | Bucle con intersección |
+| `if` | `if (cond) { } else { }` | Condicional |
+| `let` | `let (var = val) { }` | Variables locales en bloque |
+| `assert` | `assert(cond, "msg")` | Validación en tiempo de compilación |
 | `module` | `module nombre(p) { }` | Definir módulo |
-| `use` | `use <archivo.scad>` | Importar módulos |
-| `include` | `include <archivo.scad>` | Importar todo |
-| `$fn` | `$fn = N;` | Resolución de curvas |
+| `function` | `function nombre(p) = expr` | Definir función (devuelve valor) |
+| `children` | `children(i)` | Acceder a hijos pasados al módulo |
+| `use` | `use <archivo.scad>` | Importar solo módulos |
+| `include` | `include <archivo.scad>` | Importar todo el archivo |
+| `import` | `import("archivo.stl")` | Importar STL/SVG/DXF |
 | `echo` | `echo(valor)` | Imprimir en consola |
+| `str` | `str(a, b, ...)` | Convertir a string y concatenar |
+| `concat` | `concat(a, b, ...)` | Concatenar listas |
+| `len` | `len(lista)` | Longitud de lista o string |
+| `list comprehension` | `[for (i = [0:N]) expr]` | Generar lista con bucle inline |
+| `$fn` | `$fn = N;` | Fragmentos de resolución |
+| `$fa` | `$fa = angulo;` | Ángulo mínimo entre fragmentos |
+| `$fs` | `$fs = tamaño;` | Tamaño mínimo del fragmento |
+| `$t` | `$t` (lectura) | Variable de animación (0 a 1) |
+| `$preview` | `$preview` (lectura) | `true` en F5, `false` en F6 |
+| `render` | `render(convexity=N)` | Forzar malla CGAL en preview |
+| `%` | `% { ... }` | Background modifier (gris, excluido) |
+| `#` | `# { ... }` | Debug modifier (rosa, incluido) |
+| `!` | `! { ... }` | Root modifier (solo este) |
+| `*` | `* { ... }` | Disable modifier (ignorado) |
 
 ---
 
