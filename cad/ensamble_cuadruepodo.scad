@@ -121,7 +121,7 @@ module ensamble_completo() {
     // 5. Las 4 Patas montadas en los soportes perimetrales (a 45, 135, 225, 315 grados)
     for (a = [45, 135, 225, 315]) {
         rotate([0, 0, a])
-            translate([65 - 6, 0, 1.5]) // Radio del chasis cuerpo_r = 65, centrado en el soporte de servo
+            translate([cuerpo_r - 7, 0, 1.5]) // Centrado exacto con el soporte de servo de cadera (cuerpo_r - 7)
                 rotate([0, 0, -90])     // Rotar para alinear con el bracket perimetral (eje hacia afuera)
                     pata_articulada(15, -45); // Pose de pie
     }
