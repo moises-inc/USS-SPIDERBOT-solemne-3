@@ -3,20 +3,17 @@
 % USS SpiderBot — Taller de Programación I, Universidad San Sebastián
 % Compilar con: xelatex guia_openscad.tex
 % =============================================================================
-
 \documentclass[12pt, oneside, a4paper]{report}
 
 % ─── Paquetes ────────────────────────────────────────────────────────────────
-\usepackage[utf8]{inputenc}
-\usepackage[spanish]{babel}
 \usepackage{fontspec}
+\usepackage[spanish,es-noshorthands,es-noquoting]{babel}
 \usepackage{geometry}
 \geometry{margin=2.5cm, top=3cm, bottom=3cm}
 \usepackage{setspace}
 \setstretch{1.15}
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage{tcolorbox}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{longtable}
@@ -31,7 +28,7 @@
     linkcolor=blue!70!black,
     urlcolor=blue!70!black,
     citecolor=blue!70!black,
-    pdftitle={Guía Completa de OpenSCAD: Del Cubo al Robot Cuadrúpedo},
+    pdftitle={Guia Completa de OpenSCAD: Del Cubo al Robot Cuadrupedo},
     pdfauthor={USS SpiderBot Project},
 }
 
@@ -46,7 +43,7 @@
 \lstdefinestyle{openscadstyle}{
     language={},
     backgroundcolor=\color{backcolour},
-    basicstyle=\small\ttfamily,
+    basicstyle=\footnotesize\ttfamily,
     commentstyle=\color{commentcolor}\itshape,
     keywordstyle=\color{codeblue}\bfseries,
     stringstyle=\color{codepurple},
@@ -63,8 +60,13 @@
     tabsize=2,
     frame=single,
     rulecolor=\color{lightgray},
+    literate={$fn}{{\textdollar fn}}1 {$fa}{{\textdollar fa}}1
+             {$fs}{{\textdollar fs}}1 {$t}{{\textdollar t}}1
+             {$preview}{{\textdollar preview}}1
+             {$vpr}{{\textdollar vpr}}1 {$vpt}{{\textdollar vpt}}1
+             {$vpd}{{\textdollar vpd}}1,
     morekeywords={
-        module, function, use, include, for, intersection_for,
+        module, function, use, include, for, intersection,
         if, else, let, assert, echo, import, children,
         cube, sphere, cylinder, polyhedron,
         translate, rotate, scale, mirror, resize, color, multmatrix,
@@ -73,26 +75,16 @@
         render, surface, search, concat, str, len,
         true, false, undef, PI,
         center, r, d, h, s1, s2, r1, r2,
-        points, faces, paths, convexity,
-        $fn, $fa, $fs, $t, $preview, $vpr, $vpt, $vpd
+        points, faces, paths, convexity
     },
     sensitive=true,
     morecomment=[l]{//},
     morecomment=[s]{/*}{*/},
 }
 
-\lstnewenvironment{openscad}{\lstset{style=openscadstyle}}{}
-
-\newtcolorbox{openscadbox}{
-    colback=backcolour,
-    colframe=lightgray,
-    arc=2mm,
-    boxrule=0.5pt,
-    left=6pt,
-    right=6pt,
-    top=4pt,
-    bottom=4pt,
-}
+\lstnewenvironment{openscad}{
+    \lstset{style=openscadstyle}
+}{}
 
 % ─── Configuración de encabezados ────────────────────────────────────────────
 \pagestyle{fancy}
@@ -113,17 +105,21 @@
     {\normalfont\large\bfseries\color{blue!50!black}}
     {\thesubsection}{1em}{}
 
+% ─── Atajos ──────────────────────────────────────────────────────────────────
+\newcommand{\openscadlogo}{\texttt{OpenSCAD}}
+\newcommand{\codigo}[1]{\texttt{#1}}
+
 % ─── Información del documento ───────────────────────────────────────────────
 \title{
     \vspace{3cm}
-    {\Huge\bfseries Guía Completa de OpenSCAD\\[0.5cm]
-    \large Del Cubo al Robot Cuadrúpedo}\\[1.5cm]
-    {\large Basada en el diseño del \textbf{USS SpiderBot}}\\[0.5cm]
-    {\large Robot cuadrúpedo de 8 grados de libertad}\\[2cm]
+    {\Huge\bfseries Guia Completa de \openscadlogo\\[0.5cm]
+    \large Del Cubo al Robot Cuadrupedo}\\[1.5cm]
+    {\large Basada en el diseno del \textbf{USS SpiderBot}}\\[0.5cm]
+    {\large Robot cuadrupedo de 8 grados de libertad}\\[2cm]
 }
 \author{
-    Taller de Programación I\\
-    Universidad San Sebastián\\
+    Taller de Programacion I\\
+    Universidad San Sebastian\\
     \texttt{https://github.com/moises-inc/USS-SPIDERBOT-solemne-3}
 }
 \date{2026}
@@ -142,57 +138,57 @@
 % ═════════════════════════════════════════════════════════════════════════════
 % INTRODUCCIÓN
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter*{Introducción}
-\addcontentsline{toc}{chapter}{Introducción}
+\chapter*{Introduccion}
+\addcontentsline{toc}{chapter}{Introduccion}
 
-\textbf{OpenSCAD} es un modelador CAD 3D basado exclusivamente en código (CSG --- Constructive Solid Geometry). A diferencia de herramientas como Fusion 360 o TinkerCAD, aquí no arrastras mouse: escribes instrucciones y el programa las evalúa para generar geometría.
+\textbf{\openscadlogo} es un modelador CAD 3D basado exclusivamente en codigo (CSG --- Constructive Solid Geometry). A diferencia de herramientas como Fusion 360 o TinkerCAD, aqui no arrastras mouse: escribes instrucciones y el programa las evalua para generar geometria.
 
-\section*{¿Por qué OpenSCAD para robótica?}
+\section*{Por que \openscadlogo\ para robotica?}
 \begin{itemize}
-    \item \textbf{Totalmente paramétrico}: cambias un número y todo el modelo se actualiza.
-    \item \textbf{Versionable}: los archivos \texttt{.scad} son texto plano, ideales para Git.
+    \item \textbf{Totalmente parametrico}: cambias un numero y todo el modelo se actualiza.
+    \item \textbf{Versionable}: los archivos \codigo{.scad} son texto plano, ideales para Git.
     \item \textbf{Preciso}: las operaciones booleanas son exactas, no hay errores de manifold.
     \item \textbf{Gratuito y open-source}.
     \item \textbf{CLI headless}: puedes exportar STLs desde scripts.
 \end{itemize}
 
-\section*{Instalación}
+\section*{Instalacion}
 \begin{center}
 \begin{tabular}{ll}
 \toprule
 Sistema & Comando / Enlace \\
 \midrule
 Windows & Descargar installer desde \url{https://openscad.org} \\
-macOS   & \texttt{brew install openscad} o descargar .dmg \\
-Linux   & \texttt{sudo apt install openscad} (Debian/Ubuntu) \\
-        & \texttt{sudo pacman -S openscad} (Arch) \\
+macOS   & \codigo{brew install openscad} o descargar .dmg \\
+Linux   & \codigo{sudo apt install openscad} (Debian/Ubuntu) \\
+        & \codigo{sudo pacman -S openscad} (Arch) \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \section*{Interfaz}
-Al abrir OpenSCAD ves tres paneles:
+Al abrir \openscadlogo{} ves tres paneles:
 \begin{enumerate}
-    \item \textbf{Editor de código} (izquierda) --- aquí escribes.
-    \item \textbf{Vista 3D} (derecha) --- aquí ves el resultado.
+    \item \textbf{Editor de codigo} (izquierda) --- aqui escribes.
+    \item \textbf{Vista 3D} (derecha) --- aqui ves el resultado.
     \item \textbf{Consola} (abajo) --- muestra errores, advertencias y outputs.
 \end{enumerate}
 
 \section*{Flujo de trabajo}
 \begin{enumerate}
-    \item Escribes código en el editor.
-    \item Presionas \textbf{F5} --- \textit{Preview} (vista rápida, usa OpenCSG).
-    \item Presionas \textbf{F6} --- \textit{Render} (cálculo CGAL completo, geometría exacta).
-    \item Archivo > Exportar > Exportar como STL (o \textbf{F7}) --- obtienes el archivo para impresión 3D.
+    \item Escribes codigo en el editor.
+    \item Presionas \textbf{F5} --- \textit{Preview} (vista rapida, usa OpenCSG).
+    \item Presionas \textbf{F6} --- \textit{Render} (calculo CGAL completo, geometria exacta).
+    \item Archivo $>$ Exportar $>$ Exportar como STL (o \textbf{F7}) --- obtienes el archivo para impresion 3D.
 \end{enumerate}
 
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 1
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Fundamentos Geométricos}
+\chapter{Fundamentos Geometricos}
 
 \section{Formas primitivas 3D}
-OpenSCAD tiene cuatro formas sólidas básicas:
+\openscadlogo{} tiene cuatro formas solidas basicas:
 
 \begin{openscad}
 // Cubo: cube([ancho, fondo, alto], center);
@@ -210,15 +206,15 @@ cylinder(r1 = 5, r2 = 3, h = 10);
 \end{openscad}
 
 \section{Sistema de coordenadas}
-OpenSCAD usa coordenadas cartesianas diestras:
+\openscadlogo\ usa coordenadas cartesianas diestras:
 \begin{itemize}
     \item \textbf{Eje X}: horizontal (derecha = positivo)
-    \item \textbf{Eje Y}: profundidad (atrás = positivo)
+    \item \textbf{Eje Y}: profundidad (atras = positivo)
     \item \textbf{Eje Z}: vertical (arriba = positivo)
 \end{itemize}
 
-\section{El parámetro \texttt{center}}
-Por defecto, \texttt{cube()}, \texttt{cylinder()} y \texttt{sphere()} se posicionan con una esquina o base en el origen.
+\section{El parametro \codigo{center}}
+Por defecto, \codigo{cube()}, \codigo{cylinder()} y \codigo{sphere()} se posicionan con una esquina o base en el origen.
 
 \begin{openscad}
 // Sin center: el cubo crece desde (0,0,0) hacia (10,20,30)
@@ -228,23 +224,23 @@ cube([10, 20, 30]);
 cube([10, 20, 30], center=true);
 \end{openscad}
 
-\section{Resolución de curvas: \texttt{\$fn}, \texttt{\$fa}, \texttt{\$fs}}
-Las formas curvas se aproximan con polígonos:
+\section{Resolucion de curvas: \codigo{\$fn}, \codigo{\$fa}, \codigo{\$fs}}
+Las formas curvas se aproximan con poligonos:
 
 \begin{openscad}
-// $fn controla el número de fragmentos (lados)
-cylinder(r = 10, h = 20, $fn = 6);    // Hexágono — baja calidad
+// $fn controla el numero de fragmentos (lados)
+cylinder(r = 10, h = 20, $fn = 6);    // Hexagono - baja calidad
 cylinder(r = 10, h = 20, $fn = 50);   // Calidad media
-cylinder(r = 10, h = 20, $fn = 100);  // Muy suave — render lento
+cylinder(r = 10, h = 20, $fn = 100);  // Muy suave - render lento
 
-// También se puede definir globalmente
-$fn = 50;  // Todas las curvas usarán 50 fragmentos
+// Tambien se puede definir globalmente
+$fn = 50;  // Todas las curvas usaran 50 fragmentos
 \end{openscad}
 
-\Regla práctica: \texttt{\$fn = 30} para preview rápido, \texttt{\$fn = 50--80} para exportación a STL.
+\textbf{Regla practica:} \codigo{\$fn = 30} para preview rapido, \codigo{\$fn = 50--80} para exportacion a STL.
 
 \section{Caso Real: Primitivas en el SpiderBot}
-En \texttt{cad/cuerpo\_cuadruepdo.scad}, la placa base se define con \texttt{cylinder()}:
+En \codigo{cad/cuerpo\_cuadruepdo.scad}, la placa base se define con \codigo{cylinder()}:
 
 \begin{openscad}
 // Archivo: cad/cuerpo_cuadruepdo.scad
@@ -255,7 +251,7 @@ cuerpo_t = 3.0;     // Grosor de las placas
 
 module placa_base_cuadruepodo() {
     difference() {
-        // Placa inferior sólida: cilindro de 65mm de radio, 3mm de grosor
+        // Placa inferior solida: cilindro de 65mm de radio, 3mm de grosor
         cylinder(r = cuerpo_r, h = cuerpo_t, center=true);
         // Agujeros para los 4 pilares espaciadores M3
         for (a = [0, 90, 180, 270]) {
@@ -270,29 +266,29 @@ module placa_base_cuadruepodo() {
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 2
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Transformaciones Geométricas}
+\chapter{Transformaciones Geometricas}
 
-Las transformaciones mueven, rotan y escalan objetos. \textbf{No crean geometría nueva}, sino que modifican la existente.
+Las transformaciones mueven, rotan y escalan objetos. \textbf{No crean geometria nueva}, sino que modifican la existente.
 
-\section{\texttt{translate([x, y, z])}}
+\section{\codigo{translate([x, y, z])}}
 Desplaza el objeto hijo en el espacio:
 \begin{openscad}
 translate([20, 10, 5])
     cube([10, 10, 10]);
 \end{openscad}
 
-\section{\texttt{rotate([x, y, z])}}
+\section{\codigo{rotate([x, y, z])}}
 Rota alrededor del origen en grados:
 \begin{openscad}
-// Rota 45° alrededor de Z
+// Rota 45 grados alrededor de Z
 rotate([0, 0, 45])
     cube([20, 5, 5]);
-// Rota 90° alrededor de X (pone el cubo vertical)
+// Rota 90 grados alrededor de X (pone el cubo vertical)
 rotate([90, 0, 0])
     cube([20, 5, 5]);
 \end{openscad}
 
-\section{\texttt{scale([x, y, z])}}
+\section{\codigo{scale([x, y, z])}}
 Escala en cada eje:
 \begin{openscad}
 // No uniforme: estira en X
@@ -301,8 +297,8 @@ scale([2, 1, 1]) sphere(r = 10);
 scale(2) sphere(r = 10);
 \end{openscad}
 
-\section{\texttt{mirror([x, y, z])} --- Reflejo especular}
-Refleja el objeto como si lo miraras a través de un plano:
+\section{\codigo{mirror([x, y, z])} --- Reflejo especular}
+Refleja el objeto como si lo miraras a traves de un plano:
 \begin{openscad}
 // Reflejar en X (plano YZ)
 mirror([1, 0, 0]) cube([10, 20, 5]);
@@ -310,7 +306,7 @@ mirror([1, 0, 0]) cube([10, 20, 5]);
 mirror([1, 1, 0]) cube([10, 20, 5]);
 \end{openscad}
 
-\section{\texttt{color("nombre")} --- Color para preview}
+\section{\codigo{color("nombre")} --- Color para preview}
 Asigna color a los hijos (solo Preview F5):
 \begin{openscad}
 color("RoyalBlue") cube([10, 10, 10]);
@@ -318,14 +314,14 @@ color([1.0, 0.5, 0]) sphere(r = 5);      // RGB [0-1]
 color("LightGray", 0.5) cube([20, 5, 5]); // Semitransparente
 \end{openscad}
 
-\section{\texttt{resize([x, y, z])} --- Redimensionar}
-Fuerza dimensiones absolutas, a diferencia de \texttt{scale()}:
+\section{\codigo{resize([x, y, z])} --- Redimensionar}
+Fuerza dimensiones absolutas, a diferencia de \codigo{scale()}:
 \begin{openscad}
-// Esfera de radio 10 → elipsoide de 30x60x10
+// Esfera de radio 10 -> elipsoide de 30x60x10
 resize([30, 60, 10]) sphere(r = 10);
 \end{openscad}
 
-\section{Composición: se lee de adentro hacia afuera}
+\section{Composicion: se lee de adentro hacia afuera}
 \begin{openscad}
 translate([30, 0, 0])
     rotate([0, 0, 45])
@@ -333,7 +329,7 @@ translate([30, 0, 0])
 \end{openscad}
 
 \section{Caso Real: Rotaciones y traslaciones}
-En \texttt{cad/cuerpo\_cuadruepdo.scad}:
+En \codigo{cad/cuerpo\_cuadruepdo.scad}:
 \begin{openscad}
 for (a = [45, 135, 225, 315]) {
     rotate([0, 0, a])
@@ -343,8 +339,8 @@ for (a = [45, 135, 225, 315]) {
 }
 \end{openscad}
 
-\section{Caso Real 2: Código de colores}
-En \texttt{cad/ensamble\_cuadruepodo.scad}:
+\section{Caso Real 2: Codigo de colores}
+En \codigo{cad/ensamble\_cuadruepodo.scad}:
 \begin{openscad}
 module dummy_servo() {
     color("RoyalBlue") {
@@ -360,12 +356,12 @@ module dummy_servo() {
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 3
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Operaciones Booleanas (El Corazón del Diseño)}
+\chapter{Operaciones Booleanas (El Corazon del Diseno)}
 
-Las operaciones booleanas combinan sólidos para crear formas complejas.
+Las operaciones booleanas combinan solidos para crear formas complejas.
 
-\section{\texttt{union()}}
-Fusiona todos los hijos en un solo sólido:
+\section{\codigo{union()}}
+Fusiona todos los hijos en un solo solido:
 \begin{openscad}
 union() {
     cube([10, 10, 10]);
@@ -374,7 +370,7 @@ union() {
 }
 \end{openscad}
 
-\section{\texttt{difference()}}
+\section{\codigo{difference()}}
 Resta los hijos subsiguientes del primero:
 \begin{openscad}
 difference() {
@@ -384,7 +380,7 @@ difference() {
 }
 \end{openscad}
 
-\section{\texttt{intersection()}}
+\section{\codigo{intersection()}}
 Devuelve solo el volumen compartido:
 \begin{openscad}
 intersection() {
@@ -394,7 +390,7 @@ intersection() {
 \end{openscad}
 
 \section{Anidamiento}
-Las booleanas se anidan sin límite:
+Las booleanas se anidan sin limite:
 \begin{openscad}
 difference() {
     union() {
@@ -407,12 +403,12 @@ difference() {
 \end{openscad}
 
 \section{Caso Real: El soporte de servo}
-El módulo \texttt{soporte\_servo\_cadera()} en \texttt{cad/cuerpo\_cuadruepdo.scad}:
+El modulo \codigo{soporte\_servo\_cadera()} en \codigo{cad/cuerpo\_cuadruepdo.scad}:
 
 \begin{openscad}
 module soporte_servo_cadera() {
     difference() {
-        // SÓLIDO BASE
+        // SOLIDO BASE
         translate([0, 0, 7.5])
             cube([36, 28, 15], center=true);
         // 1. Cavidad dual-depth para servo SG90
@@ -434,7 +430,7 @@ module soporte_servo_cadera() {
         translate([5.5, 12.0, 7.5])
             rotate([90, 0, 0])
                 cylinder(r=6.2, h=15, center=true);
-        // 5. Rebaje para rotación del fémur
+        // 5. Rebaje para rotacion del femur
         translate([6.5, 12.0, 7.5])
             cube([23, 5, 16], center=true);
     }
@@ -446,16 +442,16 @@ module soporte_servo_cadera() {
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 4
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Variables y Parámetros}
+\chapter{Variables y Parametros}
 
-\section{Declaración y asignación}
-En OpenSCAD las variables se asignan con \texttt{=} y son \textbf{inmutables}:
+\section{Declaracion y asignacion}
+En \openscadlogo\ las variables se asignan con \codigo{=} y son \textbf{inmutables}:
 \begin{openscad}
 ancho = 20; profundidad = 30; alto = 10;
 cube([ancho, profundidad, alto]);
 \end{openscad}
 
-\section{Variables paramétricas}
+\section{Variables parametricas}
 \begin{openscad}
 longitud = 50; ancho = 20; altura = 10;
 pared = 2.0; tornillo_r = 1.5;
@@ -467,14 +463,14 @@ difference() {
 }
 \end{openscad}
 
-\section{\texttt{let()} --- Variables locales}
+\section{\codigo{let()} --- Variables locales}
 \begin{openscad}
 let (ancho = 30, largo = ancho * 1.5) {
     cube([ancho, largo, 5]);
 }
 \end{openscad}
 
-\section{\texttt{assert()} --- Validación}
+\section{\codigo{assert()} --- Validacion}
 \begin{openscad}
 module soporte(alto, ancho) {
     assert(alto > 0, "El alto debe ser positivo");
@@ -483,7 +479,7 @@ module soporte(alto, ancho) {
 }
 \end{openscad}
 
-\section{\texttt{function} --- Funciones definidas por el usuario}
+\section{\codigo{function} --- Funciones definidas por el usuario}
 \begin{openscad}
 function area_circulo(radio) = PI * radio * radio;
 function volumen_cilindro(radio, alto) = area_circulo(radio) * alto;
@@ -492,11 +488,11 @@ echo(volumen_cilindro(10, 20));  // 6283.19
 
 \section{Funciones de string y lista}
 \begin{openscad}
-// str() — convertir a string
+// str() - convertir a string
 etiqueta = str("Pieza-", 3, ".stl");  // "Pieza-3.stl"
-// concat() — unir listas
+// concat() - unir listas
 c = concat([1, 2, 3], [4, 5]);       // [1, 2, 3, 4, 5]
-// len() — longitud
+// len() - longitud
 largo = len([10, 20, 30]);           // 3
 \end{openscad}
 
@@ -513,8 +509,8 @@ circunferencia = 2 * PI * radio;  // 62.8318
 echo(circunferencia);
 \end{openscad}
 
-\section{Caso Real: Variables paramétricas del SpiderBot}
-En \texttt{cad/eslabon\_pata\_cuadrupedo.scad}:
+\section{Caso Real: Variables parametricas del SpiderBot}
+En \codigo{cad/eslabon\_pata\_cuadrupedo.scad}:
 \begin{openscad}
 link_len = 55.0; // Longitud entre cadera y rodilla
 link_h = 25.0;   // Altura extremo de rodilla
@@ -523,21 +519,21 @@ servo_w = 23.0;  servo_t = 12.5;
 servo_h = 22.5;  ear_dist = 28.5;
 \end{openscad}
 
-Si cambias \texttt{link\_len = 55} a \texttt{70}, el bolsillo del servo y la abertura del engranaje se desplazan automáticamente.
+Si cambias \codigo{link\_len = 55} a \codigo{70}, el bolsillo del servo y la abertura del engranaje se desplazan automaticamente.
 
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 5
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Módulos --- Funciones del Diseño Paramétrico}
+\chapter{Modulos --- Funciones del Diseno Parametrico}
 
-\section{Sintaxis básica}
+\section{Sintaxis basica}
 \begin{openscad}
 module nombre(param1, param2 = valor_defecto) {
-    // Geometría aquí
+    // Geometria aqui
 }
 \end{openscad}
 
-\section{Ejemplo: tornillo paramétrico}
+\section{Ejemplo: tornillo parametrico}
 \begin{openscad}
 module tornillo(longitud, diametro = 4) {
     radio = diametro / 2;
@@ -550,7 +546,7 @@ tornillo(30, 6);                // L=30, D=6
 tornillo(diametro=5, longitud=15);  // Argumentos nombrados
 \end{openscad}
 
-\section{\texttt{children()} --- Módulos que envuelven geometría}
+\section{\codigo{children()} --- Modulos que envuelven geometria}
 \begin{openscad}
 module envolvente(radio_borde = 2) {
     minkowski() {
@@ -565,25 +561,25 @@ envolvente(3) {
 
 \section{DRY en CAD}
 \begin{openscad}
-// MAL: código duplicado
+// MAL: codigo duplicado
 cube([10, 20, 5]);
 translate([15, 0, 0]) cube([10, 20, 5]);
 
-// BIEN: con módulo
+// BIEN: con modulo
 module bloque() { cube([10, 20, 5]); }
 bloque();
 translate([15, 0, 0]) bloque();
 \end{openscad}
 
-\section{Caso Real: Los módulos del SpiderBot}
+\section{Caso Real: Los modulos del SpiderBot}
 \begin{openscad}
 module soporte_servo_cadera() { ... }   // bracket de cadera
 module placa_base_cuadruepodo() { ... } // chasis inferior
 module placa_superior() { ... }         // chasis superior con cunas
-module eslabon_completo() { ... }       // fémur completo
+module eslabon_completo() { ... }       // femur completo
 module tibia() { ... }                  // pierna inferior
 
-// Composición en ensamble_cuadruepodo.scad:
+// Composicion en ensamble_cuadruepodo.scad:
 module pata_articulada(angulo_cadera=0, angulo_rodilla=0) {
     dummy_servo();
     rotate([0, angulo_cadera, 0])
@@ -597,7 +593,7 @@ module pata_articulada(angulo_cadera=0, angulo_rodilla=0) {
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 6
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Iteración y Simetría --- El Bucle \texttt{for}}
+\chapter{Iteracion y Simetria --- El Bucle \codigo{for}}
 
 \section{Sintaxis}
 \begin{openscad}
@@ -605,10 +601,10 @@ for (i = [0 : 1 : 5]) {             // Rango [inicio:incremento:fin]
     translate([i * 10, 0, 0])
         cube([5, 5, 5]);
 }
-for (i = [10, 20, 30, 50]) { ... }  // Lista explícita
+for (i = [10, 20, 30, 50]) { ... }  // Lista explicita
 \end{openscad}
 
-\section{Distribución radial}
+\section{Distribucion radial}
 \begin{openscad}
 for (angulo = [0 : 60 : 300]) {
     rotate([0, 0, angulo])
@@ -617,7 +613,7 @@ for (angulo = [0 : 60 : 300]) {
 }
 \end{openscad}
 
-\section{\texttt{intersection\_for()}}
+\section{\codigo{intersection\_for()}}
 \begin{openscad}
 intersection_for(n = [0 : 5]) {
     rotate([0, 0, n * 60])
@@ -634,7 +630,7 @@ pares = [for (i = [0:20]) if (i % 2 == 0) i];
 
 \section{Caso Real: Las 4 patas del SpiderBot}
 \begin{openscad}
-// Distribuye 4 soportes en 45°, 135°, 225°, 315°
+// Distribuye 4 soportes en 45, 135, 225, 315 grados
 for (a = [45, 135, 225, 315]) {
     rotate([0, 0, a])
         translate([cuerpo_r - 7, 0, cuerpo_t/2])
@@ -642,7 +638,7 @@ for (a = [45, 135, 225, 315]) {
                 soporte_servo_cadera();
 }
 
-// Agujeros de pilares (0°, 90°, 180°, 270°)
+// Agujeros de pilares (0, 90, 180, 270 grados)
 for (a = [0, 90, 180, 270]) {
     rotate([0, 0, a])
         translate([spacer_r, 0, 0])
@@ -663,7 +659,7 @@ for (x = [-40, 40]) {
 % ═════════════════════════════════════════════════════════════════════════════
 \chapter{Operaciones Avanzadas}
 
-\section{\texttt{hull()} --- Envolvente convexa}
+\section{\codigo{hull()} --- Envolvente convexa}
 \begin{openscad}
 hull() {
     sphere(r = 10);
@@ -672,7 +668,7 @@ hull() {
 }
 \end{openscad}
 
-\section{\texttt{minkowski()} --- Suma de Minkowski}
+\section{\codigo{minkowski()} --- Suma de Minkowski}
 \begin{openscad}
 // Redondear bordes de un cubo con una esfera
 minkowski() {
@@ -681,20 +677,20 @@ minkowski() {
 }
 \end{openscad}
 
-\section{\texttt{linear\_extrude()} --- Extrusión de 2D a 3D}
+\section{\codigo{linear\_extrude()} --- Extrusion de 2D a 3D}
 \begin{openscad}
 linear_extrude(height = 10) { circle(r = 5); }
 linear_extrude(height = 20, twist = 90) { square([10, 10]); }
 \end{openscad}
 
-\section{\texttt{text()} --- Texto 2D}
+\section{\codigo{text()} --- Texto 2D}
 \begin{openscad}
 text("SpiderBot", size = 10);
 linear_extrude(height = 2)
     text("USS SpiderBot", size = 8, halign = "center");
 \end{openscad}
 
-\section{\texttt{offset()} --- Desplazamiento 2D}
+\section{\codigo{offset()} --- Desplazamiento 2D}
 \begin{openscad}
 // Expandir con esquinas redondeadas
 offset(r = 3) square([20, 20], center = true);
@@ -703,13 +699,13 @@ offset(r = -2) offset(delta = 2)
     square([20, 20], center = true);
 \end{openscad}
 
-\section{\texttt{projection()} --- Proyección 3D a 2D}
+\section{\codigo{projection()} --- Proyeccion 3D a 2D}
 \begin{openscad}
 projection(cut = false) sphere(r = 10);  // Sombra
 projection(cut = true)  sphere(r = 10);  // Corte transversal
 \end{openscad}
 
-\section{\texttt{polygon()} --- Perfiles 2D}
+\section{\codigo{polygon()} --- Perfiles 2D}
 \begin{openscad}
 polygon(points = [[0, 0], [10, 0], [5, 10]]);
 linear_extrude(height = 3) {
@@ -717,14 +713,14 @@ linear_extrude(height = 3) {
 }
 \end{openscad}
 
-\section{\texttt{rotate\_extrude()} --- Revolución}
+\section{\codigo{rotate\_extrude()} --- Revolucion}
 \begin{openscad}
 rotate_extrude(angle = 360, convexity = 10) {
     translate([20, 0, 0]) circle(r = 5);
 }
 \end{openscad}
 
-\section{Caso Real: El fémur con \texttt{hull()}}
+\section{Caso Real: El femur con \codigo{hull()}}
 \begin{openscad}
 union() {
     hull() {
@@ -737,7 +733,7 @@ union() {
 }
 \end{openscad}
 
-Gussets triangulares con \texttt{polygon()} + \texttt{linear\_extrude()}:
+Gussets triangulares con \codigo{polygon()} + \codigo{linear\_extrude()}:
 \begin{openscad}
 translate([-22.25, cuerpo_r - 5.0, 5.5]) {
     rotate([0, -90, 0])
@@ -749,36 +745,38 @@ translate([-22.25, cuerpo_r - 5.0, 5.5]) {
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 8
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Archivos Múltiples --- \texttt{use} e \texttt{include}}
+\chapter{Archivos Multiples --- \codigo{use} e \codigo{include}}
 
-\section{\texttt{use <archivo.scad>}} Importa solo los módulos:
+\section{\codigo{use <archivo.scad>}} Importa solo los modulos:
 \begin{openscad}
 // main.scad
 use <tornillo.scad>
-tornillo(20);  // El módulo está disponible
+tornillo(20);  // El modulo esta disponible
 \end{openscad}
 
-\section{\texttt{import()} --- Importar STL/SVG/DXF}
+\section{\codigo{import()} --- Importar STL/SVG/DXF}
 \begin{openscad}
 import("pieza_externa.stl");
 linear_extrude(height = 3) import("logo.svg");
 import("perfil.dxf");
 \end{openscad}
 
-\section{\texttt{include <archivo.scad>}} Importa todo (menos usado):
+\section{\codigo{include <archivo.scad>}} Importa todo (menos usado):
 \begin{openscad}
 include <tornillo.scad>
-// Todo el código de tornillo.scad se ejecuta aquí
+// Todo el codigo de tornillo.scad se ejecuta aqui
 \end{openscad}
 
-\section{Organización de proyectos}
+\section{Organizacion de proyectos}
+{\small
 \begin{verbatim}
 robot/
-├── cuerpo.scad         // Chasis y soportes
-├── femur.scad          // Eslabón de pata
-├── tibia.scad          // Pierna inferior
-└── ensamble.scad       // Ensamble completo (solo use)
++-- cuerpo.scad         // Chasis y soportes
++-- femur.scad          // Eslabon de pata
++-- tibia.scad          // Pierna inferior
++-- ensamble.scad       // Ensamble completo (solo use)
 \end{verbatim}
+}
 
 \section{Caso Real: El ensamble del SpiderBot}
 \begin{openscad}
@@ -786,7 +784,7 @@ robot/
 use <cuerpo_cuadruepdo.scad>
 use <eslabon_pata_cuadrupedo.scad>
 use <tibia_pata.scad>
-$fn = 20;  // Prevalece para render más rápido
+$fn = 20;  // Prevalece para render mas rapido
 
 // Archivos "instanciadores":
 // placa_base_inferior.scad:
@@ -797,7 +795,7 @@ placa_base_cuadruepodo();
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 9
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter{Renderizado, Debug y Exportación a STL}
+\chapter{Renderizado, Debug y Exportacion a STL}
 
 \section{Preview (F5) vs Render (F6)}
 \begin{center}
@@ -806,9 +804,9 @@ placa_base_cuadruepodo();
 Aspecto & Preview (F5) & Render (F6) \\
 \midrule
 Motor & OpenCSG (GPU) & CGAL (CPU) \\
-Velocidad & Instantáneo & Puede tomar minutos \\
-Precisión & Aproximada & Exacta (manifold) \\
-Exportable STL & No & Sí \\
+Velocidad & Instantaneo & Puede tomar minutos \\
+Precision & Aproximada & Exacta (manifold) \\
+Exportable STL & No & Si \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -817,12 +815,12 @@ Exportable STL & No & Sí \\
 \begin{center}
 \begin{tabular}{cll}
 \toprule
-Carácter & Nombre & Efecto \\
+Caracter & Nombre & Efecto \\
 \midrule
-\texttt{\%} & Background & Gris translúcido, excluido de booleanas \\
-\texttt{\#} & Debug & Rosa translúcido, incluido \\
-\texttt{!} & Root & Solo este sub-árbol \\
-\texttt{*} & Disable & Ignorado completamente \\
+\codigo{\%} & Background & Gris translucido, excluido de booleanas \\
+\codigo{\#} & Debug & Rosa translucido, incluido \\
+\codigo{!} & Root & Solo este sub-arbol \\
+\codigo{*} & Disable & Ignorado completamente \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -839,7 +837,7 @@ difference() {
 }
 \end{openscad}
 
-\section{\texttt{render()} --- Forzar CGAL en preview}
+\section{\codigo{render()} --- Forzar CGAL en preview}
 \begin{openscad}
 render(convexity = 4)
     difference() {
@@ -848,83 +846,87 @@ render(convexity = 4)
     }
 \end{openscad}
 
-\section{\texttt{\$t} y animación}
-Vista > Animación > FPS=10, Steps=100:
+\section{\codigo{\$t} y animacion}
+Vista $>$ Animacion $>$ FPS=10, Steps=100:
 \begin{openscad}
 translate([0, 0, 10 * sin($t * 360)]) sphere(r = 5);
 rotate([0, 0, $t * 360]) cube([20, 5, 5], center=true);
 \end{openscad}
 
-\section{\texttt{\$preview} --- Diferenciar preview de render}
+\section{\codigo{\$preview} --- Diferenciar preview de render}
 \begin{openscad}
 $fn = $preview ? 12 : 72;
 cylinder(r = 10, h = 20);
 \end{openscad}
 
 \section{Exportar a STL (F7)}
-Con F6 renderizado: Archivo > Exportar > Exportar como STL, o F7.
+Con F6 renderizado: Archivo $>$ Exportar $>$ Exportar como STL, o F7.
 
-\section{CLI de OpenSCAD}
+\section{CLI de \openscadlogo}
+{\small
 \begin{verbatim}
 # Exportar pieza individual
 openscad -o placa_base.stl cad/placa_base_inferior.scad
-# Con parámetros personalizados
+# Con parametros personalizados
 openscad -o femur_largo.stl -D "link_len=70" cad/eslabon_pata_cuadrupedo.scad
-# Calidad específica
-openscad -o pieza.stl -D "\$fn=100" archivo.scad
+# Calidad especifica
+openscad -o pieza.stl -D "$fn=100" archivo.scad
 \end{verbatim}
+}
 
-\section{Parámetros de calidad}
+\section{Parametros de calidad}
 \begin{center}
 \begin{tabular}{lcc}
 \toprule
-Parámetro & Por defecto & Recomendado STL \\
+Parametro & Por defecto & Recomendado STL \\
 \midrule
-\texttt{\$fn} & (automático) & 50--80 \\
-\texttt{\$fa} & 12° & 6°--2° \\
-\texttt{\$fs} & 2mm & 0.5--1mm \\
+\codigo{\$fn} & (automatico) & 50--80 \\
+\codigo{\$fa} & 12 grados & 6--2 grados \\
+\codigo{\$fs} & 2mm & 0.5--1mm \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \section{Caso Real: Comandos CLI para el SpiderBot}
+{\footnotesize
 \begin{verbatim}
-openscad -o placa_base_inferior.stl -D "\$fn=60" cad/placa_base_inferior.scad
-openscad -o femur.stl            -D "\$fn=50" cad/eslabon_pata_cuadrupedo.scad
-openscad -o tibia.stl            -D "\$fn=50" cad/tibia_pata.scad
-openscad -o placa_superior.stl   -D "\$fn=60" cad/placa_base_superior.scad
-openscad -o spiderbot_ensamble.stl -D "\$fn=30" cad/ensamble_cuadruepodo.scad
+openscad -o placa_base_inferior.stl -D "$fn=60" cad/placa_base_inferior.scad
+openscad -o femur.stl              -D "$fn=50" cad/eslabon_pata_cuadrupedo.scad
+openscad -o tibia.stl              -D "$fn=50" cad/tibia_pata.scad
+openscad -o placa_superior.stl     -D "$fn=60" cad/placa_base_superior.scad
+openscad -o spiderbot_ensamble.stl -D "$fn=30" cad/ensamble_cuadruepodo.scad
 \end{verbatim}
+}
 
 % ═════════════════════════════════════════════════════════════════════════════
 % CAPÍTULO 10
 % ═════════════════════════════════════════════════════════════════════════════
 \chapter{Proyecto Final --- Replica el USS SpiderBot desde Cero}
 
-Ejercicio guiado. Las soluciones completas están en \texttt{cad/}.
+Ejercicio guiado. Las soluciones completas estan en \codigo{cad/}.
 
 \section{Paso 1: El chasis circular}
-Crea \texttt{mi\_spiderbot.scad}:
+Crea \codigo{mi\_spiderbot.scad}:
 \begin{enumerate}
-    \item Define \texttt{\$fn = 50}.
-    \item Variables: \texttt{cuerpo\_r = 65.0}, \texttt{cuerpo\_t = 3.0}, \texttt{spacer\_r = 55.0}.
-    \item Módulo \texttt{placa\_base()} con \texttt{cylinder(r = cuerpo\_r, h = cuerpo\_t)}.
-    \item Con \texttt{difference()}, agrega 4 agujeros en 0°, 90°, 180°, 270° a radio \texttt{spacer\_r}.
-    \item Agrega 4 ranuras tipo velcro de \texttt{[4, 15, cuerpo\_t+2]} en (\texttt{±20, ±10}).
+    \item Define \codigo{\$fn = 50}.
+    \item Variables: \codigo{cuerpo\_r = 65.0}, \codigo{cuerpo\_t = 3.0}, \codigo{spacer\_r = 55.0}.
+    \item Modulo \codigo{placa\_base()} con \codigo{cylinder(r = cuerpo\_r, h = cuerpo\_t)}.
+    \item Con \codigo{difference()}, agrega 4 agujeros en 0, 90, 180, 270 grados a radio \codigo{spacer\_r}.
+    \item Agrega 4 ranuras tipo velcro de \codigo{[4, 15, cuerpo\_t+2]} en (\codigo{+-20, +-10}).
 \end{enumerate}
 
-\section{Paso 2: El soporte de servo paramétrico}
-Módulo \texttt{soporte\_servo()}:
+\section{Paso 2: El soporte de servo parametrico}
+Modulo \codigo{soporte\_servo()}:
 \begin{enumerate}
-    \item Base: \texttt{cube([36, 28, 15], center=true)} en Z=7.5.
+    \item Base: \codigo{cube([36, 28, 15], center=true)} en Z=7.5.
     \item Cavidad dual-depth: inferior a Z=2.9, superior a Z=9.5.
     \item Ranura para bridas en Y=5.5.
-    \item Agujeros M2 con \texttt{rotate([90,0,0]) cylinder} en X=±14.25.
+    \item Agujeros M2 con \codigo{rotate([90,0,0]) cylinder} en X=+-14.25.
     \item Abertura delantera para corona en (5.5, 12.0, 7.5).
 \end{enumerate}
 
 \section{Paso 3: Integrar soportes en el chasis}
-Dentro de \texttt{placa\_base()}, agrega:
+Dentro de \codigo{placa\_base()}, agrega:
 \begin{openscad}
 for (a = [45, 135, 225, 315]) {
     rotate([0, 0, a])
@@ -934,106 +936,109 @@ for (a = [45, 135, 225, 315]) {
 }
 \end{openscad}
 
-\section{Paso 4: El fémur con hull()}
-Crea \texttt{femur.scad}. Define \texttt{link\_len}, \texttt{link\_h}, \texttt{link\_t}.
-Usa \texttt{hull()} para conectar cilindro de cadera con bloque de rodilla.
+\section{Paso 4: El femur con hull()}
+Crea \codigo{femur.scad}. Define \codigo{link\_len}, \codigo{link\_h}, \codigo{link\_t}.
+Usa \codigo{hull()} para conectar cilindro de cadera con bloque de rodilla.
 
 \section{Paso 5: La tibia}
-Crea \texttt{tibia.scad}. Define \texttt{tibia\_h}, \texttt{tibia\_t}.
-Usa tres \texttt{hull()} consecutivos. Agrega \texttt{sphere(r=5.5)} para el pie.
+Crea \codigo{tibia.scad}. Define \codigo{tibia\_h}, \codigo{tibia\_t}.
+Usa tres \codigo{hull()} consecutivos. Agrega \codigo{sphere(r=5.5)} para el pie.
 
 \section{Paso 6: Ensamblar todo}
-Crea \texttt{ensamble\_final.scad}:
+Crea \codigo{ensamble\_final.scad}:
 \begin{enumerate}
-    \item \texttt{use} para importar tus 3 archivos.
-    \item Crea \texttt{dummy\_servo()} y \texttt{pata\_articulada()}.
-    \item \texttt{ensamble\_completo()} con placa base, 4 patas y placa superior.
+    \item \codigo{use} para importar tus 3 archivos.
+    \item Crea \codigo{dummy\_servo()} y \codigo{pata\_articulada()}.
+    \item \codigo{ensamble\_completo()} con placa base, 4 patas y placa superior.
 \end{enumerate}
 
 \section{Paso 7: Exportar a STL}
+{\small
 \begin{verbatim}
-openscad -o mi_placa_base.stl -D "\$fn=60" mi_spiderbot.scad
-openscad -o mi_femur.stl      -D "\$fn=50" femur.scad
-openscad -o mi_tibia.stl      -D "\$fn=50" tibia.scad
+openscad -o mi_placa_base.stl -D "$fn=60" mi_spiderbot.scad
+openscad -o mi_femur.stl      -D "$fn=50" femur.scad
+openscad -o mi_tibia.stl      -D "$fn=50" tibia.scad
 \end{verbatim}
+}
 
 % ═════════════════════════════════════════════════════════════════════════════
 % APÉNDICE A
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter*{Apéndice A: Hoja de Referencia Rápida}
-\addcontentsline{toc}{chapter}{Apéndice A: Hoja de Referencia Rápida}
+\chapter*{Apéndice A: Hoja de Referencia Rapida}
+\addcontentsline{toc}{chapter}{Apéndice A: Hoja de Referencia Rapida}
 
 \begin{center}
+\footnotesize
 \begin{longtable}{lll}
 \toprule
-Comando/Función & Sintaxis & Descripción \\
+Comando/Funcion & Sintaxis & Descripcion \\
 \midrule
 \endhead
 \bottomrule
 \endfoot
-\texttt{cube} & \texttt{cube([w,d,h], center)} & Cubo o prisma rectangular \\
-\texttt{sphere} & \texttt{sphere(r)} & Esfera \\
-\texttt{cylinder} & \texttt{cylinder(r,h)} / \texttt{(r1,r2,h)} & Cilindro o cono \\
-\texttt{polyhedron} & \texttt{polyhedron(points,faces)} & Poliedro arbitrario \\
-\texttt{translate} & \texttt{translate([x,y,z])} & Desplazar \\
-\texttt{rotate} & \texttt{rotate([x,y,z])} & Rotar (grados) \\
-\texttt{scale} & \texttt{scale([x,y,z])} & Escalar \\
-\texttt{mirror} & \texttt{mirror([x,y,z])} & Reflejo especular \\
-\texttt{resize} & \texttt{resize([x,y,z])} & Redimensionar exacto \\
-\texttt{color} & \texttt{color("nombre")} & Color (solo preview) \\
-\texttt{union} & \texttt{union() \{ \}} & Fusionar sólidos \\
-\texttt{difference} & \texttt{difference() \{ A; B; \}} & Restar B de A \\
-\texttt{intersection} & \texttt{intersection() \{ \}} & Intersección \\
-\texttt{hull} & \texttt{hull() \{ \}} & Envolvente convexa \\
-\texttt{minkowski} & \texttt{minkowski() \{ \}} & Suma Minkowski \\
-\texttt{linear\_extrude} & \texttt{linear\_extrude(h)} & Extruir 2D a 3D \\
-\texttt{rotate\_extrude} & \texttt{rotate\_extrude()} & Revolución 2D \\
-\texttt{text} & \texttt{text("str", size)} & Texto 2D \\
-\texttt{polygon} & \texttt{polygon(points=[...])} & Polígono 2D \\
-\texttt{offset} & \texttt{offset(r)} / \texttt{delta} & Desplazar contorno 2D \\
-\texttt{projection} & \texttt{projection(cut)} & Proyectar 3D a 2D \\
-\texttt{for} & \texttt{for(i=[inicio:fin])} & Bucle (unión) \\
-\texttt{intersection\_for} & \texttt{intersection\_for(...)} & Bucle (intersección) \\
-\texttt{if} & \texttt{if(cond)\{\}else\{\}} & Condicional \\
-\texttt{let} & \texttt{let(v=val)\{\}} & Variables locales \\
-\texttt{assert} & \texttt{assert(cond,"msg")} & Validación \\
-\texttt{module} & \texttt{module nom(p)\{\}} & Definir módulo \\
-\texttt{function} & \texttt{function nom(p)=expr} & Función (devuelve valor) \\
-\texttt{children} & \texttt{children(i)} & Hijos del módulo \\
-\texttt{use} & \texttt{use <archivo.scad>} & Importar módulos \\
-\texttt{include} & \texttt{include <archivo.scad>} & Importar todo \\
-\texttt{import} & \texttt{import("arch.stl")} & Importar STL/SVG/DXF \\
-\texttt{echo} & \texttt{echo(valor)} & Imprimir en consola \\
-\texttt{str} & \texttt{str(a,b,...)} & Concatenar a string \\
-\texttt{concat} & \texttt{concat(a,b,...)} & Concatenar listas \\
-\texttt{len} & \texttt{len(lista)} & Longitud \\
-\texttt{[for]} & \texttt{[for(i=[0:N]) expr]} & List comprehension \\
-\texttt{\$fn} & \texttt{\$fn = N} & Fragmentos resolución \\
-\texttt{\$fa} & \texttt{\$fa = ang} & Ángulo mínimo \\
-\texttt{\$fs} & \texttt{\$fs = tam} & Tamaño mínimo \\
-\texttt{\$t} & \texttt{\$t} (lectura) & Animación (0 a 1) \\
-\texttt{\$preview} & \texttt{\$preview} & true en F5, false en F6 \\
-\texttt{render} & \texttt{render(convexity=N)} & Forzar malla CGAL \\
-\texttt{\%} & \texttt{\% \{ \}} & Background (gris) \\
-\texttt{\#} & \texttt{\# \{ \}} & Debug (rosa) \\
-\texttt{!} & \texttt{! \{ \}} & Root (solo esto) \\
-\texttt{*} & \texttt{* \{ \}} & Disable (ignorar) \\
+\codigo{cube} & \codigo{cube([w,d,h], center)} & Cubo o prisma rectangular \\
+\codigo{sphere} & \codigo{sphere(r)} & Esfera \\
+\codigo{cylinder} & \codigo{cylinder(r,h) / (r1,r2,h)} & Cilindro o cono \\
+\codigo{polyhedron} & \codigo{polyhedron(points,faces)} & Poliedro arbitrario \\
+\codigo{translate} & \codigo{translate([x,y,z])} & Desplazar \\
+\codigo{rotate} & \codigo{rotate([x,y,z])} & Rotar (grados) \\
+\codigo{scale} & \codigo{scale([x,y,z])} & Escalar \\
+\codigo{mirror} & \codigo{mirror([x,y,z])} & Reflejo especular \\
+\codigo{resize} & \codigo{resize([x,y,z])} & Redimensionar exacto \\
+\codigo{color} & \codigo{color("nombre")} & Color (solo preview) \\
+\codigo{union} & \codigo{union() \{ \}} & Fusionar solidos \\
+\codigo{difference} & \codigo{difference() \{ A; B; \}} & Restar B de A \\
+\codigo{intersection} & \codigo{intersection() \{ \}} & Interseccion \\
+\codigo{hull} & \codigo{hull() \{ \}} & Envolvente convexa \\
+\codigo{minkowski} & \codigo{minkowski() \{ \}} & Suma Minkowski \\
+\codigo{linear\_extrude} & \codigo{linear\_extrude(h)} & Extruir 2D a 3D \\
+\codigo{rotate\_extrude} & \codigo{rotate\_extrude()} & Revolucion 2D \\
+\codigo{text} & \codigo{text("str", size)} & Texto 2D \\
+\codigo{polygon} & \codigo{polygon(points=[...])} & Poligono 2D \\
+\codigo{offset} & \codigo{offset(r) / delta} & Desplazar contorno 2D \\
+\codigo{projection} & \codigo{projection(cut)} & Proyectar 3D a 2D \\
+\codigo{for} & \codigo{for(i=[inicio:fin])} & Bucle (union) \\
+\codigo{intersection\_for} & \codigo{intersection\_for(...)} & Bucle (interseccion) \\
+\codigo{if} & \codigo{if(cond)\{\}else\{\}} & Condicional \\
+\codigo{let} & \codigo{let(v=val)\{\}} & Variables locales \\
+\codigo{assert} & \codigo{assert(cond,"msg")} & Validacion \\
+\codigo{module} & \codigo{module nom(p)\{\}} & Definir modulo \\
+\codigo{function} & \codigo{function nom(p)=expr} & Funcion (devuelve valor) \\
+\codigo{children} & \codigo{children(i)} & Hijos del modulo \\
+\codigo{use} & \codigo{use <archivo.scad>} & Importar modulos \\
+\codigo{include} & \codigo{include <archivo.scad>} & Importar todo \\
+\codigo{import} & \codigo{import("arch.stl")} & Importar STL/SVG/DXF \\
+\codigo{echo} & \codigo{echo(valor)} & Imprimir en consola \\
+\codigo{str} & \codigo{str(a,b,...)} & Concatenar a string \\
+\codigo{concat} & \codigo{concat(a,b,...)} & Concatenar listas \\
+\codigo{len} & \codigo{len(lista)} & Longitud \\
+{[}\codigo{for}{]} & \codigo{[for(i=[0:N]) expr]} & List comprehension \\
+\codigo{\$fn} & \codigo{\$fn = N} & Fragmentos resolucion \\
+\codigo{\$fa} & \codigo{\$fa = ang} & Angulo minimo \\
+\codigo{\$fs} & \codigo{\$fs = tam} & Tamano minimo \\
+\codigo{\$t} & \codigo{\$t} (lectura) & Animacion (0 a 1) \\
+\codigo{\$preview} & \codigo{\$preview} & true en F5, false en F6 \\
+\codigo{render} & \codigo{render(convexity=N)} & Forzar malla CGAL \\
+\codigo{\%} & \codigo{\% \{ \}} & Background (gris) \\
+\codigo{\#} & \codigo{\# \{ \}} & Debug (rosa) \\
+\codigo{!} & \codigo{! \{ \}} & Root (solo esto) \\
+\codigo{*} & \codigo{* \{ \}} & Disable (ignorar) \\
 \end{longtable}
 \end{center}
 
 % ═════════════════════════════════════════════════════════════════════════════
 % APÉNDICE B
 % ═════════════════════════════════════════════════════════════════════════════
-\chapter*{Apéndice B: Recursos y Documentación Oficial}
-\addcontentsline{toc}{chapter}{Apéndice B: Recursos y Documentación Oficial}
+\chapter*{Apéndice B: Recursos y Documentacion Oficial}
+\addcontentsline{toc}{chapter}{Apéndice B: Recursos y Documentacion Oficial}
 
 \begin{itemize}
-    \item \textbf{Documentación oficial de OpenSCAD:} \url{https://openscad.org/documentation.html}
+    \item \textbf{Documentacion oficial de \openscadlogo:} \url{https://openscad.org/documentation.html}
     \item \textbf{Cheat Sheet oficial:} \url{https://openscad.org/cheatsheet/}
     \item \textbf{Manual de usuario (Wikibooks):} \url{https://en.wikibooks.org/wiki/OpenSCAD_User_Manual}
     \item \textbf{Reddit:} \url{https://reddit.com/r/openscad}
     \item \textbf{GitHub:} \url{https://github.com/openscad/openscad}
-    \item \textbf{Librería MCAD:} \url{https://github.com/openscad/MCAD}
+    \item \textbf{Libreria MCAD:} \url{https://github.com/openscad/MCAD}
     \item \textbf{dotSCAD (utilidades):} \url{https://github.com/JustinSDK/dotSCAD}
     \item \textbf{Repositorio USS SpiderBot:} \url{https://github.com/moises-inc/USS-SPIDERBOT-solemne-3}
 \end{itemize}
@@ -1043,9 +1048,9 @@ Comando/Función & Sintaxis & Descripción \\
 \begin{center}
 \rule{5cm}{0.4pt}
 
-\small\textit{Guía generada para el proyecto USS SpiderBot --- Taller de Programación I, Universidad San Sebastián. 2026.}
+\small\textit{Guia generada para el proyecto USS SpiderBot --- Taller de Programacion I, Universidad San Sebastian. 2026.}
 
-\small\textit{Los archivos de referencia están en \texttt{cad/} del repositorio.}
+\small\textit{Los archivos de referencia estan en \codigo{cad/} del repositorio.}
 \end{center}
 
 \end{document}
