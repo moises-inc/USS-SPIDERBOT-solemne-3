@@ -29,6 +29,8 @@ Navega a través de las secciones de documentación técnica de este repositorio
 2.  **[Diccionario de Componentes y Módulos](MODULES.md):** Detalle de cada archivo de código fuente, sus responsabilidades, funciones principales, variables físicas y dependencias internas de importación.
 3.  **[Guía de Impresión 3D y Creality Print](guia_impresion_3d.md):** Parámetros de laminación (infill, perfiles de PLA/PETG, recuentos de pared) y distribución de piezas por platos de impresión en la cama.
 4.  **[Guía Completa de OpenSCAD: Del Cubo al Robot Cuadrúpedo](guia_openscad.md):** Tutorial exhaustivo de OpenSCAD desde cero usando el SpiderBot como caso de estudio real, con ejemplos funcionales extraídos de `cad/`.
+5.  **[Informe Técnico Final (TeX)](informe_proyecto_spiderbot.tex) / [PDF Compilado](informe_proyecto_spiderbot.pdf):** Documento académico final del proyecto SpiderBot (evaluación Solemne 3), cubriendo diseño mecánico, electrónica, firmware multitarea y simulación.
+6.  **[Presentación del Hall (TeX)](presentacion_hall_spiderbot.tex) / [PDF Compilado](presentacion_hall_spiderbot.pdf):** Diapositivas académicas de apoyo visual diseñadas en LaTeX Beamer para exhibición en el hall de la universidad.
 
 ---
 

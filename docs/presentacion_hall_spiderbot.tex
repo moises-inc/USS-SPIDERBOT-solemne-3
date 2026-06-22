@@ -1,0 +1,277 @@
+% =============================================================================
+% Presentación de Apoyo Visual: USS SpiderBot
+% Taller de Programación I, Universidad San Sebastián. Año 2026.
+% Compilar con: xelatex presentacion_hall_spiderbot.tex
+% =============================================================================
+\documentclass[10pt, aspectratio=169]{beamer}
+
+% ─── Temas y Estilos ─────────────────────────────────────────────────────────
+\usetheme{Madrid}
+\usecolortheme{whale}
+
+% ─── Paquetes ────────────────────────────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage[spanish,es-noshorthands,es-noquoting]{babel}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{amsmath}
+
+% ─── Configuración de Colores Personalizados ────────────────────────────────
+\definecolor{ussblue}{RGB}{12, 35, 64}      % Azul Marino Oficial USS
+\definecolor{ussgold}{RGB}{201, 151, 65}    % Dorado Accento
+\definecolor{bgcode}{RGB}{245, 245, 242}
+
+\setbeamercolor{palette primary}{bg=ussblue, fg=white}
+\setbeamercolor{palette secondary}{bg=ussblue!85, fg=white}
+\setbeamercolor{palette tertiary}{bg=ussblue!70, fg=white}
+\setbeamercolor{palette quaternary}{bg=ussblue, fg=white}
+\setbeamercolor{titlelike}{parent=palette primary, fg=ussblue}
+\setbeamercolor{structure}{fg=ussblue}
+\setbeamercolor{item projected}{bg=ussgold, fg=ussblue}
+
+% ─── Configuración de listings ──────────────────────────────────────────────
+\lstdefinestyle{tinystyle}{
+    language=Python,
+    backgroundcolor=\color{bgcode},
+    basicstyle=\tiny\ttfamily,
+    keywordstyle=\color{blue}\bfseries,
+    stringstyle=\color{purple},
+    commentstyle=\color{gray}\itshape,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{lightgray},
+}
+
+\newcommand{\codigo}[1]{\texttt{#1}}
+
+% ─── Información de Portada ──────────────────────────────────────────────────
+\title[USS SpiderBot]{USS SpiderBot: Robot Cuadrúpedo Articulado}
+\subtitle{Solemne 3 --- Taller de Programación I}
+\author[Moisés Amundarain]{Moisés Amundarain y Equipo}
+\institute[USS]{Ingeniería Civil Informática\\ Universidad San Sebastián}
+\date[Junio 2026]{2026}
+
+% ─── Cuerpo de la Presentación ───────────────────────────────────────────────
+\begin{document}
+
+% Slide 1: Portada
+\begin{frame}[plain]
+    \titlepage
+\end{frame}
+
+% Slide 2: Introducción
+\begin{frame}{Introducción y Propósito}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Definición de Proyecto}
+                El \textbf{USS SpiderBot} es un robot caminador cuadrúpedo de \textbf{8 grados de libertad (8-DoF)} orientado al reconocimiento autónomo en zonas de catástrofe y escombros.
+            \end{block}
+            \begin{block}{Desafío Tecnológico}
+                Sustituir ruedas por extremidades articuladas para sortear desniveles físicos de forma estable utilizando control de bucle cerrado.
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Características Principales}
+                \begin{itemize}
+                    \item Modelado paramétrico en \textbf{OpenSCAD}.
+                    \item Firmware multitarea asíncrono en \textbf{MicroPython}.
+                    \item Estabilización inercial activa con IMU \textbf{MPU6050}.
+                    \item Dashboard web Glassmorphism embebido.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 3: Diseño Mecánico
+\begin{frame}{Diseño Mecánico y Estructural (OpenSCAD)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Chasis Doble Deck}
+                \begin{itemize}
+                    \item \textbf{Placa Inferior ($r=65\text{mm}$):} Aloja perimetralmente los brackets de cadera.
+                    \item \textbf{Placa Superior ($r=65\text{mm}$):} Cuenta con cuna central para protoboard de 400 puntos y marcos protectores.
+                \end{itemize}
+            \end{block}
+            \begin{block}{Configuración Cinemática}
+                Juntas en paralelo horizontal (\textbf{Pitch-Pitch}) para maximizar torque vertical y evitar cizalle dinámico.
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Tolerancias de Precisión (FDM)}
+                \begin{itemize}
+                    \item \textbf{Cavidad Servo:} $+0.3\text{mm}$ de holgura nominal.
+                    \item \textbf{Bolsillos de Doble Profundidad:} Dual-depth ($30\text{mm}$ abajo para cables, $25\text{mm}$ arriba).
+                    \item \textbf{Single-Arm Horn Locks:} Ranuras chavetadas que encastran el horn estriado a presión.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 4: Arquitectura Electrónica
+\begin{frame}{Arquitectura Electrónica y Conexiones}
+    \begin{columns}
+        \begin{column}{0.45\textwidth}
+            \begin{block}{Bus I2C Compartido}
+                El microcontrolador \textbf{ESP32 DevKit V1} comanda la lógica I2C en paralelo hacia dos esclavos:
+                \begin{enumerate}
+                    \item \textbf{PCA9685 ($0x40$):} Driver PWM de 12-bit.
+                    \item \textbf{MPU6050 ($0x68$):} IMU de 6 ejes.
+                \end{enumerate}
+            \end{block}
+        \end{column}
+        \begin{column}{0.55\textwidth}
+            \begin{alertblock}{Aislamiento de Potencia (UBEC)}
+                \begin{itemize}
+                    \item Los 8 servos consumen picos de hasta $4\text{A}$ combinados.
+                    \item \textbf{UBEC (5V/3A):} Regula y separa la línea de fuerza externa de la bornera del PCA9685.
+                    \item Previene caídas de tensión y reinicios (*brownouts*) del procesador ESP32.
+                    \item \textbf{GND Unificado:} Referencia de voltaje común.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 5: Firmware Multitarea
+\begin{frame}{Firmware Multitarea Asíncrono (\codigo{uasyncio})}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Planificación Cooperativa}
+                Sustitución de llamadas bloqueantes (\codigo{time.sleep\_ms()}) por corrutinas no bloqueantes concurrentes:
+                \begin{itemize}
+                    \item \codigo{sensor\_updater()}: Adquisición MPU6050 y Sonar a $20\text{ Hz}$.
+                    \item \codigo{locomotion\_loop()}: Lazo de cinemática y control servo.
+                    \item \codigo{start\_server\_task()}: Socket TCP HTTP del dashboard.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Estado Compartido y Seguridad}
+                \begin{itemize}
+                    \item \textbf{state.py:} Singleton global que comparte la telemetría y órdenes de control en tiempo real.
+                    \item \textbf{Lazo de Seguridad:} Si el sonar detecta un obstáculo a menos de $15\text{ cm}$, se cancela la locomoción en menos de $25\text{ ms}$, regresando a pose segura con pitido acústico.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 6: Marcha de Gateo
+\begin{frame}{Algoritmo de Locomoción: Marcha de Gateo (Crawl Gait)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Polígono de Sustentación}
+                Estabilidad estática garantizada: en fase de oscilación (swing), el centro de masa (CoM) siempre reside dentro del triángulo formado por los tres puntos de apoyo en el suelo.
+            \end{block}
+            \begin{block}{Ciclo Cinemático (5 Fases)}
+                Secuencia repetitiva: Stance Shift general $\rightarrow$ Paso Pata FR $\rightarrow$ Paso Pata RR $\rightarrow$ Paso Pata FL $\rightarrow$ Paso Pata RL.
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Valores Angulares del Ciclo}
+                \begin{itemize}
+                    \item \textbf{Coxa (Cadera):} Avance derecho $110^\circ$, retroceso $70^\circ$. Espejado en el lado izquierdo (avance $75^\circ$, retroceso $105^\circ$).
+                    \item \textbf{Fémur (Rodilla):} Apoyo en el suelo a $60^\circ / 120^\circ$. Oscilación (swing) a $90^\circ$ para levantar la extremidad.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 7: Estabilización Activa
+\begin{frame}{Lazo Cerrado de Estabilización Inercial Activa}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Cálculo de Inclinación}
+                La IMU MPU6050 mide los ángulos de Pitch ($\theta_p$) y Roll ($\theta_r$) a una tasa de $20\text{ Hz}$.
+            \end{block}
+            \begin{block}{Compensación Proporcional}
+                Inyección de offsets angulares dinámicos en los servos de rodilla (fémures) de las patas en contacto:
+                $$\theta_{compensado} = \theta_{base} \pm (K_p \cdot \theta_{sensor})$$
+                Donde el coeficiente $K_p = 1.2$ compensa proporcionalmente la caída del chasis.
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Comportamiento Reactivo}
+                \begin{itemize}
+                    \item Las patas del lado inclinado hacia abajo se estiran de forma automática.
+                    \item Las patas del lado elevado se contraen.
+                    \item El plano de la base superior se mantiene horizontal en tiempo real.
+                    \item Las patas en fase de aire (swing) ignoran la corrección para no perder avance.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 8: Servidor y Dashboard
+\begin{frame}{Dashboard Web Embebido de Telemetría y Mando}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Dashboard Autocontenido (Glassmorphism)}
+                \begin{itemize}
+                    \item Archivo HTML, CSS y JS unificado de $24\text{ KB}$ servido de forma asíncrona.
+                    \item \textbf{100\% Offline:} Sin CDNs o llamadas de red externas para evitar dependencias locales.
+                    \item Enrutamiento por bloques de 512 bytes para evitar desbordamientos en la memoria de la ESP32.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Funciones de la Interfaz}
+                \begin{itemize}
+                    \item \textbf{Mando por Teclado:} Soporte de teclas físicas (W-A-S-D), barra espaciadora (parada) y tecla R (reposo).
+                    \item \textbf{Graficador SVG:} Visualizador vectorial 2D en tiempo real del plano inclinado del chasis inercial.
+                    \item \textbf{Telemetría en Vivo:} Lectura constante de distancia e inclinación.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 9: Simulación y Fabricación
+\begin{frame}{Validación en Wokwi e Impresión 3D}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Simulador Virtual Wokwi}
+                \begin{itemize}
+                    \item Cableado digital completo de 8 servos y sensores en \codigo{diagram.json}.
+                    \item \textbf{Control Fallback Directo:} En ausencia del expansor PCA9685, el firmware conmuta a modulación PWM nativa de la ESP32.
+                    \item Conexión a través del canal virtual `Wokwi-GUEST` para interactuar con el servidor real.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Especificaciones de Slicing (Creality Print)}
+                \begin{itemize}
+                    \item \textbf{Altura de Capa:} $0.2\text{ mm}$ con PLA/PETG.
+                    \item \textbf{Líneas de Pared:} Mínimo 4 perímetros (esencial para la fuerza de los agujeros roscados M2).
+                    \item \textbf{Relleno:} $30\%$ en patrón \textbf{Gyroid} (giroidal) por su rigidez mecánica tridimensional isotrópica.
+                    \item Proyecto de plato listo guardado en [spiderbot.3mf].
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 10: Conclusiones
+\begin{frame}{Conclusiones y Trabajo Futuro}
+    \begin{block}{Logros Obtenidos}
+        \begin{itemize}
+            \item Integración exitosa de modelado CAD, electrónica embebida, control asíncrono y desarrollo de red en la ESP32.
+            \item Estabilización proporcional inercial y evasión de obstáculos dinámicas completamente funcionales.
+            \item Estructura paramétrica en OpenSCAD lista para laminación FDM.
+        \end{itemize}
+    \end{block}
+    \begin{alertblock}{Mejoras Propuestas (Trabajo Futuro)}
+        \begin{itemize}
+            \item \textbf{Cinemática Inversa (IK):} Control completo de 3-DoF por pata para trayectorias de pie exactas.
+            \item \textbf{Visión Inteligente:} Integrar cámara web ESP32-CAM y algoritmos de detección local para rescates.
+            \item \textbf{Marcha Dinámica:} Programar trote alternado con fases de vuelo.
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\end{document}
