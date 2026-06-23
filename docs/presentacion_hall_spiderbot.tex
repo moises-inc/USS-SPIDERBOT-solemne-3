@@ -5,10 +5,6 @@
 % =============================================================================
 \documentclass[10pt, aspectratio=169]{beamer}
 
-% ─── Temas y Estilos ─────────────────────────────────────────────────────────
-\usetheme{Madrid}
-\usecolortheme{whale}
-
 % ─── Paquetes ────────────────────────────────────────────────────────────────
 \usepackage{fontspec}
 \usepackage[spanish,es-noshorthands,es-noquoting]{babel}
@@ -16,19 +12,25 @@
 \usepackage{listings}
 \usepackage{booktabs}
 \usepackage{amsmath}
+\usepackage{graphicx}
 
-% ─── Configuración de Colores Personalizados ────────────────────────────────
-\definecolor{ussblue}{RGB}{12, 35, 64}      % Azul Marino Oficial USS
-\definecolor{ussgold}{RGB}{201, 151, 65}    % Dorado Accento
+% ─── CONFIGURACIÓN DE COLORES INSTITUCIONALES USS ──────────────────────────
+\definecolor{USSBlue}{RGB}{0, 32, 91}    % Azul marino oficial USS
+\definecolor{USSGold}{RGB}{212, 175, 55} % Dorado oficial USS
 \definecolor{bgcode}{RGB}{245, 245, 242}
 
-\setbeamercolor{palette primary}{bg=ussblue, fg=white}
-\setbeamercolor{palette secondary}{bg=ussblue!85, fg=white}
-\setbeamercolor{palette tertiary}{bg=ussblue!70, fg=white}
-\setbeamercolor{palette quaternary}{bg=ussblue, fg=white}
-\setbeamercolor{titlelike}{parent=palette primary, fg=ussblue}
-\setbeamercolor{structure}{fg=ussblue}
-\setbeamercolor{item projected}{bg=ussgold, fg=ussblue}
+\mode<presentation> {
+  \usetheme{Madrid}
+  \usecolortheme[named=USSBlue]{structure}
+  \setbeamercolor{palette primary}{bg=USSBlue,fg=white}
+  \setbeamercolor{palette secondary}{bg=USSBlue,fg=white}
+  \setbeamercolor{palette tertiary}{bg=USSBlue,fg=white}
+  \setbeamercolor{title}{bg=white,fg=USSBlue}
+  \setbeamercolor{item}{fg=USSGold}
+  \setbeamercolor{structure}{fg=USSBlue}
+  \setbeamercolor{item projected}{bg=USSGold,fg=USSBlue}
+  \setbeamertemplate{navigation symbols}{} 
+}
 
 % ─── Configuración de listings ──────────────────────────────────────────────
 \lstdefinestyle{tinystyle}{
@@ -48,9 +50,18 @@
 % ─── Información de Portada ──────────────────────────────────────────────────
 \title[USS SpiderBot]{USS SpiderBot: Robot Cuadrúpedo Articulado}
 \subtitle{Solemne 3 --- Taller de Programación I}
-\author[Moisés Amundarain]{Moisés Amundarain y Equipo}
-\institute[USS]{Ingeniería Civil Informática\\ Universidad San Sebastián}
-\date[Junio 2026]{2026}
+\author[M. Amundarain, C. Aravena, F. Ramírez, J.P. Vargas, M.J. Santander]{
+    \textbf{Integrantes:}\\
+    Moisés Amundarain, Camila Aravena, Fernando Ramírez,\\
+    Juan Pablo Vargas, María José Santander
+}
+\institute[USS]{
+    Ingeniería Civil Informática\\
+    Facultad de Ingeniería\\
+    \textbf{Universidad San Sebastián}
+}
+\date[Junio 2026]{23 de Junio, 2026}
+\titlegraphic{\includegraphics[width=4.5cm]{logo_uss.png}}
 
 % ─── Cuerpo de la Presentación ───────────────────────────────────────────────
 \begin{document}
@@ -72,14 +83,11 @@
             \end{block}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{alertblock}{Características Principales}
-                \begin{itemize}
-                    \item Modelado paramétrico en \textbf{OpenSCAD}.
-                    \item Firmware multitarea asíncrono en \textbf{MicroPython}.
-                    \item Estabilización inercial activa con IMU \textbf{MPU6050}.
-                    \item Dashboard web Glassmorphism embebido.
-                \end{itemize}
-            \end{alertblock}
+            \begin{center}
+                \includegraphics[width=0.95\textwidth]{spiderbot_render.png}
+                \\ \vspace{0.2cm}
+                \small\color{USSBlue}\textit{Renderizado 3D de la estructura mecánica}
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
@@ -171,12 +179,11 @@
             \end{block}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{alertblock}{Valores Angulares del Ciclo}
-                \begin{itemize}
-                    \item \textbf{Coxa (Cadera):} Avance derecho $110^\circ$, retroceso $70^\circ$. Espejado en el lado izquierdo (avance $75^\circ$, retroceso $105^\circ$).
-                    \item \textbf{Fémur (Rodilla):} Apoyo en el suelo a $60^\circ / 120^\circ$. Oscilación (swing) a $90^\circ$ para levantar la extremidad.
-                \end{itemize}
-            \end{alertblock}
+            \begin{center}
+                \includegraphics[width=0.95\textwidth]{gait_simulation.png}
+                \\ \vspace{0.1cm}
+                \small\color{USSBlue}\textit{Perfiles de articulación simulados en Python}
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
@@ -185,24 +192,21 @@
 \begin{frame}{Lazo Cerrado de Estabilización Inercial Activa}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{block}{Cálculo de Inclinación}
-                La IMU MPU6050 mide los ángulos de Pitch ($\theta_p$) y Roll ($\theta_r$) a una tasa de $20\text{ Hz}$.
-            \end{block}
             \begin{block}{Compensación Proporcional}
                 Inyección de offsets angulares dinámicos en los servos de rodilla (fémures) de las patas en contacto:
                 $$\theta_{compensado} = \theta_{base} \pm (K_p \cdot \theta_{sensor})$$
-                Donde el coeficiente $K_p = 1.2$ compensa proporcionalmente la caída del chasis.
+                Donde el coeficiente $K_p = 1.2$ compensa proporcionalmente la caída del chasis medida por la IMU a $20\text{ Hz}$.
+            \end{block}
+            \begin{block}{Tolerancia Activa}
+                La compensación se activa si la inclinación medida supera la banda muerta de $\pm 3^\circ$.
             \end{block}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{alertblock}{Comportamiento Reactivo}
-                \begin{itemize}
-                    \item Las patas del lado inclinado hacia abajo se estiran de forma automática.
-                    \item Las patas del lado elevado se contraen.
-                    \item El plano de la base superior se mantiene horizontal en tiempo real.
-                    \item Las patas en fase de aire (swing) ignoran la corrección para no perder avance.
-                \end{itemize}
-            \end{alertblock}
+            \begin{center}
+                \includegraphics[width=0.95\textwidth]{stabilization_response.png}
+                \\ \vspace{0.1cm}
+                \small\color{USSBlue}\textit{Simulación del comportamiento transitorio inercial}
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
@@ -258,20 +262,39 @@
 
 % Slide 10: Conclusiones
 \begin{frame}{Conclusiones y Trabajo Futuro}
-    \begin{block}{Logros Obtenidos}
-        \begin{itemize}
-            \item Integración exitosa de modelado CAD, electrónica embebida, control asíncrono y desarrollo de red en la ESP32.
-            \item Estabilización proporcional inercial y evasión de obstáculos dinámicas completamente funcionales.
-            \item Estructura paramétrica en OpenSCAD lista para laminación FDM.
-        \end{itemize}
-    \end{block}
-    \begin{alertblock}{Mejoras Propuestas (Trabajo Futuro)}
-        \begin{itemize}
-            \item \textbf{Cinemática Inversa (IK):} Control completo de 3-DoF por pata para trayectorias de pie exactas.
-            \item \textbf{Visión Inteligente:} Integrar cámara web ESP32-CAM y algoritmos de detección local para rescates.
-            \item \textbf{Marcha Dinámica:} Programar trote alternado con fases de vuelo.
-        \end{itemize}
-    \end{alertblock}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Logros Obtenidos}
+                \begin{itemize}
+                    \item Integración exitosa de modelado CAD, electrónica embebida, control asíncrono y desarrollo de red en la ESP32.
+                    \item Estabilización proporcional inercial y evasión de obstáculos dinámicas completamente funcionales.
+                    \item Estructura paramétrica en OpenSCAD lista para laminación FDM.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{alertblock}{Mejoras Propuestas (Trabajo Futuro)}
+                \begin{itemize}
+                    \item \textbf{Cinemática Inversa (IK):} Control completo de 3-DoF por pata para trayectorias de pie exactas.
+                    \item \textbf{Visión Inteligente:} Integrar cámara web ESP32-CAM y algoritmos de detección local para rescates.
+                    \item \textbf{Marcha Dinámica:} Programar trote alternado con fases de vuelo.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 11: Agradecimientos
+\begin{frame}[plain]
+    \begin{center}
+        \includegraphics[width=6.5cm]{logo_uss.png}
+        
+        \vspace{1.2cm}
+        {\Huge\bfseries\color{USSBlue} ¡Muchas Gracias!}
+        
+        \vspace{0.4cm}
+        {\large\color{USSBlue!80} Proyecto USS SpiderBot --- Solemne 3}
+    \end{center}
 \end{frame}
 
 \end{document}

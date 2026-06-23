@@ -3,37 +3,43 @@
 % Taller de Programación I, Universidad San Sebastián. Año 2026.
 % Compilar con: xelatex informe_proyecto_spiderbot.tex
 % =============================================================================
-\documentclass[12pt, oneside, a4paper]{report}
+\documentclass[12pt]{article}
 
-% ─── Paquetes ────────────────────────────────────────────────────────────────
+% --- Paquetes Básicos ---
 \usepackage{fontspec}
 \usepackage[spanish,es-noshorthands,es-noquoting]{babel}
 \usepackage{geometry}
-\geometry{margin=2.5cm, top=3cm, bottom=3cm}
+\geometry{a4paper, margin=2.5cm} % Márgenes estándar según norma USS
 \usepackage{setspace}
-\setstretch{1.15}
-\usepackage{xcolor}
-\usepackage{listings}
-\usepackage{hyperref}
+\setstretch{1.5} % Interlineado 1.5 según norma USS
 \usepackage{graphicx}
-\usepackage{longtable}
-\usepackage{booktabs}
-\usepackage{fancyhdr}
-\usepackage{titlesec}
-\usepackage{parskip}
-\usepackage{amsmath}
+\usepackage{booktabs}  % Para tablas formato APA
+\usepackage{tabularx}
 
-% ─── Configuración de hyperref ───────────────────────────────────────────────
+% --- Paquetes Matemáticos y de Símbolos ---
+\usepackage{amsmath}   % Esencial para fórmulas avanzadas
+\usepackage{amssymb}   % Para símbolos
+\usepackage{textcomp}  % Para manejar símbolos de texto
+
+% --- Paquetes de Formato y Enlaces ---
+\usepackage{hyperref}  
 \hypersetup{
-    colorlinks=true,
-    linkcolor=blue!70!black,
-    urlcolor=blue!70!black,
-    citecolor=blue!70!black,
-    pdftitle={Informe Tecnico Final: USS SpiderBot - Robot Cuadruepedo},
-    pdfauthor={Proyecto USS SpiderBot},
+    colorlinks=true,   % True: colorea el texto del link
+    urlcolor=blue,     % Color para los enlaces web externos (formato APA estándar)
+    linkcolor=black,   % Color para los enlaces internos (como el índice)
+    citecolor=black    % Color para las citas bibliográficas
 }
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{xurl} % Permite romper las URLs en cualquier carácter
+\usepackage{listings}
 
-% ─── Configuración de listings para código ──────────────────────────
+% --- Configuración de Títulos ---
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% --- Configuración de listings para código ──────────────────────────
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -63,63 +69,49 @@
     rulecolor=\color{lightgray},
 }
 
-\lstnewenvironment{codigo_python}{
-    \lstset{style=pythonstyle}
-}{}
-
 \newcommand{\codigo}[1]{\texttt{#1}}
-
-% ─── Configuración de encabezados ────────────────────────────────────────────
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[LE,RO]{\thepage}
-\fancyhead[RE]{\leftmark}
-\fancyhead[LO]{\rightmark}
-\renewcommand{\headrulewidth}{0.4pt}
-
-% ─── Formato de títulos ─────────────────────────────────────────────────────
-\titleformat{\chapter}[display]
-    {\normalfont\huge\bfseries\color{blue!70!black}}
-    {\chaptertitlename\ \thechapter}{20pt}{\Huge}
-\titleformat{\section}
-    {\normalfont\Large\bfseries\color{blue!60!black}}
-    {\thesection}{1em}{}
-\titleformat{\subsection}
-    {\normalfont\large\bfseries\color{blue!50!black}}
-    {\thesubsection}{1em}{}
-
-% ─── Información del documento ───────────────────────────────────────────────
-\title{
-    \vspace{2cm}
-    {\Huge\bfseries Informe Técnico Final:\\ Proyecto USS SpiderBot}\\[0.5cm]
-    {\large Robot Cuadrúpedo de Reconocimiento con Estabilización Activa e Interfaz de Control Remoto}\\[1.5cm]
-    {\large Asignatura: \textbf{Taller de Programación I}}\\[0.5cm]
-    {\large Evaluación: \textbf{Solemne 3}}\\[2cm]
-}
-\author{
-    \textbf{Estudiante:} Moisés Amundarain\\
-    \textbf{Carrera:} Ingeniería Civil Informática\\
-    Universidad San Sebastián (USS)\\
-    \texttt{https://github.com/moises-inc/Taller-de-programacion-I-USS}
-}
-\date{Junio 2026}
 
 \begin{document}
 
-% ─── Portada ─────────────────────────────────────────────────────────────────
-\maketitle
-\thispagestyle{empty}
-\newpage
+% ======================================================
+% PORTADA
+% ======================================================
+\begin{titlepage}
+    \centering
+    {\bfseries\LARGE Universidad San Sebastián \par}
+    \vspace{1cm}
+    \includegraphics[width=0.4\textwidth]{logo_uss.png} \\
+    \vspace{1cm}
+    {\scshape\Large Facultad de Ingeniería y Tecnología \par}
+    {\large Carrera de Ingeniería Civil Informática \par}
+    \vspace{1.5cm}
+    {\bfseries\huge Informe Técnico Final: \par}
+    {\Large Proyecto USS SpiderBot --- Robot Cuadrúpedo de Reconocimiento \par}
+    \vspace{2cm}
+    
+    {\large \textbf{Integrantes:} \par}
+    Moisés Amundarain \par
+    Camila Aravena \par
+    Fernando Ramírez \par
+    Juan Pablo Vargas \par
+    María José Santander \par
+    \vfill
+    {\large Puerto Montt, Chile \par}
+    {\large \today \par}
+\end{titlepage}
 
-% ─── Índice ─────────────────────────────────────────────────────────────────
+% ======================================================
+% ÍNDICE
+% ======================================================
+\newpage
 \tableofcontents
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
+% ======================================================
 % RESUMEN EJECUTIVO
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter*{Resumen Ejecutivo}
-\addcontentsline{toc}{chapter}{Resumen Ejecutivo}
+% ======================================================
+\section*{Resumen Ejecutivo}
+\addcontentsline{toc}{section}{Resumen Ejecutivo}
 
 El presente informe detalla el diseño, modelado mecánico, desarrollo de hardware y arquitectura de software del \textbf{USS SpiderBot}, un robot cuadrúpedo de 8 grados de libertad (8-DoF) optimizado para la exploración de terrenos de catástrofe y zonas obstruidas por escombros.
 
@@ -129,21 +121,21 @@ El firmware implementa un lazo cerrado de control inercial proporcional que corr
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CAPÍTULO 1
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter{Introducción y Objetivos}
+% ======================================================
+% SECCIÓN 1: INTRODUCCIÓN Y OBJETIVOS
+% ======================================================
+\section{Introducción y Objetivos}
 
-\section{Introducción}
-La robótica móvil en entornos no estructurados representa uno de los desafíos más significativos para la ingeniería de automatización moderna. A diferencia de los sistemas de tracción por ruedas u orugas, los robots con locomoción basada en patas ofrecen una versatilidad superior al poder sortear de forma directa obstáculos discretos, ascender escaleras y nivelarse de manera activa sobre superficies irregulares o inclinadas.
+\subsection{Introducción}
+La robótica móvil en terrenos no estructurados representa uno de los desafíos más significativos para la ingeniería de automatización moderna. A diferencia de los sistemas de tracción por ruedas u orugas, los robots con locomoción basada en patas ofrecen una versatilidad superior al poder sortear de forma directa obstáculos discretos, ascender escaleras y nivelarse de manera activa sobre superficies irregulares o inclinadas.
 
 El proyecto \textbf{USS SpiderBot} consiste en el diseño e implementación de un prototipo de robot cuadrúpedo autónomo con estabilidad inercial de lazo cerrado, sensor de evasión de colisiones y panel de control web. Este desarrollo ha sido realizado como parte del entregable final de la asignatura \textbf{Taller de Programación I} (Universidad San Sebastián), integrando conceptos de desarrollo físico estructurado, programación paramétrica en CAD, lógica en sistemas embebidos de tiempo real y desarrollo web nativo para el operador de rescate.
 
-\section{Objetivos}
-\subsection{Objetivo General}
+\subsection{Objetivos}
+\subsubsection{Objetivo General}
 Diseñar, validar y documentar un robot cuadrúpedo articulado de 8 grados de libertad mediante modelado OpenSCAD, control embebido MicroPython y simulación interactiva, cumpliendo con los estándares mecánicos de holgura para impresión 3D y estabilidad de locomoción autónoma.
 
-\subsection{Objetivos Específicos}
+\subsubsection{Objetivos Específicos}
 \begin{enumerate}
     \item Desarrollar el chasis paramétrico y extremidades en OpenSCAD, aplicando tolerancias de precisión para impresión FDM y cerraduras chavetadas para los horns de los servos.
     \item Implementar la arquitectura electrónica unificada compartiendo la señal I2C entre el módulo PCA9685 y el acelerómetro MPU6050, aislando la potencia mediante un UBEC step-down.
@@ -154,14 +146,14 @@ Diseñar, validar y documentar un robot cuadrúpedo articulado de 8 grados de li
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CAPÍTULO 2
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter{Diseño Mecánico y Estructural (OpenSCAD)}
+% ======================================================
+% SECCIÓN 2: DISEÑO MECÁNICO Y ESTRUCTURAL
+% ======================================================
+\section{Diseño Mecánico y Estructural (OpenSCAD)}
 
 El modelado tridimensional del USS SpiderBot se basó en el paradigma de diseño de geometría sólida constructiva (CSG) mediante el uso de código paramétrico en OpenSCAD.
 
-\section{Estructura del Chasis (Doble Deck)}
+\subsection{Estructura del Chasis (Doble Deck)}
 El cuerpo central del robot consta de un sistema de doble placa circular (doble deck) que aísla los componentes de potencia y cableado del plano de los sensores y control:
 \begin{itemize}
     \item \textbf{Placa Inferior:} Un cilindro plano de radio $r = 65\text{ mm}$ y espesor $t = 3\text{ mm}$ que aloja perimetralmente los 4 brackets de fijación de servos de cadera. Cuenta con ranuras pasantes para la fijación de la batería mediante correas de velcro.
@@ -169,19 +161,26 @@ El cuerpo central del robot consta de un sistema de doble placa circular (doble 
     \item \textbf{Soporte HC-SR04:} Soporte vertical de $2\text{ mm}$ de espesor con dos orificios de $16.5\text{ mm}$ de diámetro espaciados a $26\text{ mm}$ entre centros, reforzado por dos gussets triangulares laterales para resistir fuerzas de cizalladura inerciales en caso de impacto.
 \end{itemize}
 
-\section{Articulaciones y Extremidades (Fémur y Tibia)}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.65\textwidth]{spiderbot_render.png}
+    \caption{Renderizado 3D paramétrico del chasis final y las extremidades articuladas del USS SpiderBot.}
+    \label{fig:spiderbot_render}
+\end{figure}
+
+\subsection{Articulaciones y Extremidades (Fémur y Tibia)}
 La configuración del robot se define como \textbf{Pitch-Pitch}, lo que significa que las articulaciones de la cadera (Coxa) y la rodilla (Fémur) rotan sobre ejes horizontales y paralelos.
 \begin{itemize}
     \item \textbf{Fémur:} Brazo de articulación de $55\text{ mm}$ de longitud entre centros. Une la corona del servo de cadera con el cuerpo del servo de rodilla. Se utilizó la función \codigo{hull()} para conectar suavemente la corona cilíndrica con la cavidad prismática del servo de rodilla, optimizando la distribución de masa y la resistencia a la flexión.
     \item \textbf{Tibia:} Pierna inferior curva con una longitud vertical de $65\text{ mm}$ y pie semiesférico de radio $r = 5.5\text{ mm}$. La curvatura estructural del modelo aumenta el despeje libre sobre el suelo y distribuye las fuerzas de reacción del impacto del pie en la marcha.
 \end{itemize}
 
-\section{Precisión en Tolerancias e Interfaces Mecánicas}
-\subsection{Cavidades de Servomotores (Snug Fit)}
+\subsection{Precisión en Tolerancias e Interfaces Mecánicas}
+\subsubsection{Cavidades de Servomotores (Snug Fit)}
 Debido a la contracción del plástico durante el enfriamiento de la extrusión FDM, se definió una tolerancia de precisión de \textbf{$0.3\text{ mm}$ totales} ($0.15\text{ mm}$ por lado) para las cavidades de los servos SG90/MG90S. Sus dimensiones internas se establecieron en $24.2\text{ x }23.2\text{ x }13.4\text{ mm}$, logrando un ajuste a presión sin juego mecánico.
 Las ranuras laterales de las bridas se fijaron a $2.8\text{ mm}$ de ancho y los agujeros de roscado autorroscante de tornillos M2 a $2.0\text{ mm}$ de diámetro.
 
-\subsection{Bolsillos de Doble Profundidad (Dual-Depth Pocket)}
+\subsubsection{Bolsillos de Doble Profundidad (Dual-Depth Pocket)}
 Para evitar el estrangulamiento de los cables de salida en la base del servo, se implementaron bolsillos de doble profundidad:
 \begin{equation}
     D(z) = 
@@ -192,22 +191,23 @@ Para evitar el estrangulamiento de los cables de salida en la base del servo, se
 \end{equation}
 Esto garantiza que los tornillos autorroscantes M2 plásticos agarren sobre plástico 100\% macizo de los brackets a $X = \pm 14.25\text{ mm}$.
 
-\subsection{Cerraduras de Acople Horn (Single-Arm Horn Locks)}
+\subsubsection{Cerraduras de Acople Horn (Single-Arm Horn Locks)}
 Para eliminar las pérdidas de transmisión por rozamiento o juego entre los acoples, se diseñaron chaveteros de un brazo (*single-arm horn locks*) embutidos en las caras de acople mecánico del fémur ($X = 16.0, Y = 5.2, Z = 2.6\text{ mm}$) y la tibia ($X = 5.2, Y = 16.0, Z = 2.6\text{ mm}$), bloqueando mecánicamente el brazo del horn estriado original del servo en el sólido de plástico.
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CAPÍTULO 3
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter{Arquitectura de Hardware y Conexiones}
+% ======================================================
+% SECCIÓN 3: ARQUITECTURA DE HARDWARE Y CONEXIONES
+% ======================================================
+\section{Arquitectura de Hardware y Conexiones}
 
-\section{Lista de Componentes (BOM)}
-La Tabla 3.1 muestra la lista de materiales requerida para el montaje del prototipo físico:
+\subsection{Lista de Componentes (BOM)}
+La Tabla 1 muestra la lista de materiales requerida para el montaje del prototipo físico:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Lista de Materiales del USS SpiderBot}
+\vspace{0.3cm}
 \begin{tabular}{lll}
 \toprule
 Componente & Función / Propósito & Cantidad \\
@@ -224,7 +224,7 @@ Batería Li-ion 2S 7.4V & Fuente de energía principal & 1 \\
 \end{tabular}
 \end{table}
 
-\section{Aislamiento de Potencia y Referencias GND}
+\subsection{Aislamiento de Potencia y Referencias GND}
 Los servomotores de micro-robótica como los SG90 operan típicamente a 5V de corriente continua y pueden demandar hasta $500\text{ mA}$ cuando levantan la carga estática del chasis.
 \begin{itemize}
     \item \textbf{Alimentación de Control:} El ESP32 se alimenta mediante la salida regulada de $5\text{V}$ del regulador UBEC conectado al pin \codigo{Vin}. El ESP32 a su vez entrega $3.3\text{V}$ estables a la IMU MPU6050 y a la lógica digital del driver PCA9685.
@@ -232,12 +232,13 @@ Los servomotores de micro-robótica como los SG90 operan típicamente a 5V de co
     \item \textbf{Unificación de Referencias:} Es un requisito indispensable unificar todos los terminales de tierra común ($GND$ lógico del PCA9685, $GND$ del regulador UBEC, $GND$ del ESP32, $GND$ de la IMU y del sonar) en un solo nodo físico para evitar bucles de masa y deriva de tensión.
 \end{itemize}
 
-\section{Tabla de Direccionamiento I2C y GPIOs}
+\subsection{Tabla de Direccionamiento I2C y GPIOs}
 El expansor PCA9685 y la IMU MPU6050 comparten de forma física el bus de comunicación serie I2C, direccionando las llamadas mediante sus identidades en el bus de datos ($0x40$ para el driver y $0x68$ para el sensor inercial).
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Mapa de Conexiones Físicas de la ESP32}
+\vspace{0.3cm}
 \begin{tabular}{lccl}
 \toprule
 Dispositivo & Pin Dispositivo & Pin ESP32 & Tipo de Señal \\
@@ -253,14 +254,14 @@ Todos los Servos & Canales 0--7 & Salidas PCA9685 & PWM de alta resolución \\
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CAPÍTULO 4
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter{Desarrollo del Firmware (MicroPython)}
+% ======================================================
+% SECCIÓN 4: DESARROLLO DEL FIRMWARE (MICROPYTHON)
+% ======================================================
+\section{Desarrollo del Firmware (MicroPython)}
 
 La programación del microcontrolador se basó en un diseño multitarea cooperativo no bloqueante que garantiza un tiempo de respuesta inferior a $25\text{ ms}$ para tareas críticas.
 
-\section{Arquitectura Multitarea Asíncrona (\codigo{uasyncio})}
+\subsection{Arquitectura Multitarea Asíncrona (\codigo{uasyncio})}
 Para evitar el uso de funciones de retardo bloqueantes como \codigo{time.sleep\_ms()}, las cuales congelarían el procesamiento del servidor web y del bucle inercial, se implementaron corrutinas concurrentes coordinadas por el planificador asíncrono \codigo{uasyncio}:
 \begin{itemize}
     \item \codigo{sensor\_updater()}: Lee periódicamente el acelerómetro MPU6050 y el sonar HC-SR04 a una frecuencia de refresco de $20\text{ Hz}$ ($50\text{ ms}$).
@@ -268,7 +269,7 @@ Para evitar el uso de funciones de retardo bloqueantes como \codigo{time.sleep\_
     \item \codigo{start\_server\_task()}: Ejecuta el socket TCP asíncrono que atiende las peticiones HTTP del Dashboard.
 \end{itemize}
 
-\section{Algoritmo de Locomoción: Marcha de Gateo (Crawl Gait)}
+\subsection{Algoritmo de Locomoción: Marcha de Gateo (Crawl Gait)}
 Para mantener la estabilidad estática, el robot debe asegurar en todo momento que la proyección ortogonal del centro de masa de su cuerpo se sitúe dentro de la superficie encerrada por las patas de apoyo (el polígono de sustentación).
 El ciclo de marcha implementado consta de \textbf{5 fases discretas}:
 \begin{enumerate}
@@ -279,7 +280,14 @@ El ciclo de marcha implementado consta de \textbf{5 fases discretas}:
     \item \textbf{Fase Swing RL:} La pata trasera izquierda (RL) completa el ciclo secuencial de marcha.
 \end{enumerate}
 
-\section{Lazo de Compensación Inercial Activa}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{gait_simulation.png}
+    \caption{Curvas de comportamiento angular para las articulaciones de cadera (Coxa) y muslo (Fémur) simuladas durante la marcha de gateo.}
+    \label{fig:gait_simulation}
+\end{figure}
+
+\subsection{Lazo de Compensación Inercial Activa}
 La nivelación de lazo cerrado se ejecuta en la corrutina de locomoción. Utiliza la lectura de los ángulos calculados de Pitch ($\theta_p$) y Roll ($\theta_r$) promediados del giroscopio y el acelerómetro de la MPU6050.
 Si el valor absoluto de la inclinación supera la banda de tolerancia de $\pm 3^\circ$, se inyecta una compensación proporcional a los servos de fémur de las patas en fase de apoyo:
 \begin{equation}
@@ -287,7 +295,14 @@ Si el valor absoluto de la inclinación supera la banda de tolerancia de $\pm 3^
 \end{equation}
 Donde $K_p = 1.2$ es la constante proporcional obtenida tras la calibración. Esto eleva los fémures del lado caído y baja los del lado elevado, manteniendo la horizontalidad del chasis. Las patas que están en el aire (swing) se excluyen para evitar perturbaciones de avance.
 
-\section{Evasión Reactiva y Servidor HTTP con Dashboard}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{stabilization_response.png}
+    \caption{Simulación en Python de la respuesta del sensor inercial bajo compensación activa frente a lazo abierto.}
+    \label{fig:stabilization_response}
+\end{figure}
+
+\subsection{Evasión Reactiva y Servidor HTTP con Dashboard}
 \begin{itemize}
     \item \textbf{Seguridad de Lazo Abierto:} Si la lectura de distancia de la corrutina del sonar es inferior a $15\text{ cm}$, se interrumpe la locomoción de inmediato, se desactivan los servos enviándolos a la pose de reposo estática (\codigo{pos\_reposo()}) y se activa una oscilación acústica intermitente a $2\text{ kHz}$ en el buzzer.
     \item \textbf{Dashboard Glassmorphism Embebido:} Se diseñó una interfaz gráfica completa en HTML, CSS Glassmorphism y JavaScript nativo. Dado que la ESP32 tiene recursos de memoria limitados, el servidor lee el archivo \codigo{index.html} por bloques de 512 bytes y los envía al socket sin saturar la pila de memoria dinámica. El dashboard incluye un monitor inercial vectorial SVG y recibe mandos de teclado no bloqueantes para el control de locomoción.
@@ -295,19 +310,19 @@ Donde $K_p = 1.2$ es la constante proporcional obtenida tras la calibración. Es
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CAPÍTULO 5
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter{Simulación y Laminación para Impresión 3D}
+% ======================================================
+% SECCIÓN 5: SIMULACIÓN Y LAMINACIÓN PARA IMPRESIÓN 3D
+% ======================================================
+\section{Simulación y Laminación para Impresión 3D}
 
-\section{Simulación del Circuito en Wokwi}
+\subsection{Simulación del Circuito en Wokwi}
 Para validar la lógica del firmware antes del cableado real, se diseñó el circuito completo en Wokwi:
 \begin{itemize}
     \item \textbf{Control de Fallback de Servos Directo:} Al no contar Wokwi con simulación física del chip PCA9685 por bus I2C de forma estándar en MicroPython, se programó un fallback dinámico en `main.py`. Si la inicialización I2C a la dirección $0x40$ falla, el controlador conmuta automáticamente a la clase `ESP32ServoDirect` la cual implementa la modulación PWM directa usando `machine.PWM` nativo en los GPIOs de control de la ESP32.
     \item \textbf{AP de Conexión Virtual:} La placa ESP32 del simulador se conecta de forma automática a la red pública `Wokwi-GUEST` en modo estación (STA). Esto permite abrir la IP de la consola directamente en el navegador local, enrutando los comandos remotos hacia el simulador virtual.
 \end{itemize}
 
-\section{Parámetros de Laminación FDM (Creality Print)}
+\subsection{Parámetros de Laminación FDM (Creality Print)}
 Para fabricar las piezas estructurales paramétricas garantizando rigidez contra impactos y estabilidad en las uniones roscadas plásticas, se definieron los siguientes parámetros en Creality Print:
 \begin{itemize}
     \item \textbf{Altura de capa:} $0.2\text{ mm}$ (balance ideal entre tiempo y adherencia de capas).
@@ -320,13 +335,13 @@ El proyecto de laminación completo fue agrupado y guardado en el archivo [spide
 
 \newpage
 
-% ═════════════════════════════════════════════════════════════════════════════
-% CONCLUSIONES
-% ═════════════════════════════════════════════════════════════════════════════
-\chapter*{Conclusiones y Trabajo Futuro}
-\addcontentsline{toc}{chapter}{Conclusiones y Trabajo Futuro}
+% ======================================================
+% SECCIÓN 6: CONCLUSIONES Y TRABAJO FUTURO
+% ======================================================
+\section*{Conclusiones y Trabajo Futuro}
+\addcontentsline{toc}{section}{Conclusiones y Trabajo Futuro}
 
-\section*{Conclusiones}
+\subsection*{Conclusiones}
 El proyecto \textbf{USS SpiderBot} ha permitido integrar con éxito múltiples disciplinas de la ingeniería de software y hardware:
 \begin{enumerate}
     \item El uso de modelado paramétrico en OpenSCAD con control riguroso de holguras ($0.3\text{ mm}$ total) y bolsillos dual-depth demostró ser una solución fiable para evitar errores de fabricación FDM comunes como el sobredimensionamiento de orificios o la colisión mecánica en uniones móviles.
@@ -334,7 +349,7 @@ El proyecto \textbf{USS SpiderBot} ha permitido integrar con éxito múltiples d
     \item El lazo cerrado proporcional inercial proporciona estabilidad estática y dinámica activa, lo que permite al cuadrúpedo adaptarse a desniveles físicos de forma autónoma.
 \end{enumerate}
 
-\section*{Trabajo Futuro}
+\subsection*{Trabajo Futuro}
 Para extender el alcance actual del proyecto y preparar al robot para aplicaciones reales de rescate, se proponen las siguientes mejoras:
 \begin{itemize}
     \item \textbf{Cinemática Inversa Completa (IK):} Migrar el control cinemático actual (Pitch-Pitch) a un sistema 3-DoF por pata con servomotor de aducción/abducción. Esto permitiría describir trayectorias circulares o elípticas exactas del pie en el espacio 3D, facilitando giros sobre el eje vertical sin patinar y reduciendo las corrientes transitorias.
