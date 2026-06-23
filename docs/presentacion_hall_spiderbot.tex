@@ -118,31 +118,89 @@
     \end{columns}
 \end{frame}
 
-% Slide 3b: Capturas de OpenSCAD
-\begin{frame}{Modelado CAD y Tolerancias (Detalles de OpenSCAD)}
+% Slide 3b: Placa Base Inferior (Modelado CAD)
+\begin{frame}{Modelado CAD --- Placa Base Inferior}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{center}
-                \includegraphics[height=2.3cm]{openscad_screenshot_1.png}
-                \\ \vspace{0.1cm}
-                \scriptsize\color{USSBlue}\textit{Placas base superior e inferior del chasis}
-            \end{center}
-            \begin{center}
-                \includegraphics[height=2.3cm]{openscad_screenshot_3.png}
-                \\ \vspace{0.1cm}
-                \scriptsize\color{USSBlue}\textit{Diseño paramétrico del eslabón fémur}
-            \end{center}
+            \begin{block}{Especificaciones Mecánicas}
+                \begin{itemize}
+                    \item \textbf{Geometría:} Radio exterior $r = 65\text{ mm}$ y espesor base $t = 3\text{ mm}$.
+                    \item \textbf{Alojamiento de Servos:} 4 cavidades perimetrales diseñadas para los brackets de fijación de servos de cadera SG90/MG90S.
+                    \item \textbf{Soporte de Batería:} Ranuras pasantes dispuestas para correas de velcro que fijan la batería en la parte inferior.
+                \end{itemize}
+            \end{block}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{center}
-                \includegraphics[height=2.3cm]{openscad_screenshot_5.png}
+                \includegraphics[height=5.2cm]{openscad_screenshot_6.png}
                 \\ \vspace{0.1cm}
-                \scriptsize\color{USSBlue}\textit{Chavetero de bloqueo Single-Arm Horn Lock}
+                \small\color{USSBlue}\textit{Vista superior de la Placa Base Inferior en OpenSCAD}
             \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 3c: Placa Base Superior (Modelado CAD)
+\begin{frame}{Modelado CAD --- Placa Base Superior}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Organización de Componentes}
+                \begin{itemize}
+                    \item \textbf{Soporte de Control:} Cuna central empotrada ($84\text{ x }56\text{ x }3\text{ mm}$) para protoboard de 400 puntos.
+                    \item \textbf{Soporte de Potencia:} Cuna trasera dedicada para el regulador de voltaje XL6009E1.
+                    \item \textbf{Ruteo de Cables:} 4 agujeros de $14\text{ mm}$ de diámetro para el paso ordenado de cables de señal y potencia.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
             \begin{center}
-                \includegraphics[height=2.3cm]{openscad_screenshot_7.png}
+                \includegraphics[height=5.2cm]{openscad_screenshot_4.png}
                 \\ \vspace{0.1cm}
-                \scriptsize\color{USSBlue}\textit{Acople de articulación cadera-fémur}
+                \small\color{USSBlue}\textit{Vista isométrica de la Placa Base Superior en OpenSCAD}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 3d: Eslabón Fémur (Modelado CAD)
+\begin{frame}{Modelado CAD --- Eslabón Fémur}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Diseño Paramétrico Estructural}
+                \begin{itemize}
+                    \item \textbf{Eje Mecánico:} Distancia de $55\text{ mm}$ entre centros de articulaciones de cadera y rodilla.
+                    \item \textbf{Distribución de Masa:} Uso del operador \codigo{hull()} para conectar con transiciones suaves el cilindro de la corona del servo con el alojamiento prismático del servo de rodilla.
+                    \item \textbf{Rigidez:} Minimiza esfuerzos de flexión lateral.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[height=5.2cm]{openscad_screenshot_8.png}
+                \\ \vspace{0.1cm}
+                \small\color{USSBlue}\textit{Diseño paramétrico del Eslabón Fémur en OpenSCAD}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 3e: Tibia Articulada (Modelado CAD)
+\begin{frame}{Modelado CAD --- Tibia Articulada}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Amortiguación de Impactos y Despeje}
+                \begin{itemize}
+                    \item \textbf{Geometría Curva:} Longitud de $65\text{ mm}$ con pie semiesférico de radio $r = 5.5\text{ mm}$.
+                    \item \textbf{Ventaja Funcional:} La curvatura y el grosor variable distribuyen las fuerzas de reacción del impacto.
+                    \item \textbf{Despeje:} Maximiza el espacio libre sobre el suelo durante la marcha ante obstáculos físicos.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[height=5.2cm]{openscad_screenshot_3.png}
+                \\ \vspace{0.1cm}
+                \small\color{USSBlue}\textit{Diseño de la Tibia Curva en OpenSCAD}
             \end{center}
         \end{column}
     \end{columns}
@@ -306,7 +364,7 @@
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{center}
-                \includegraphics[width=0.95\textwidth]{openscad_screenshot_8.png}
+                \includegraphics[width=0.95\textwidth]{openscad_screenshot_1.png}
                 \\ \vspace{0.1cm}
                 \small\color{USSBlue}\textit{Ensamble definitivo modular en OpenSCAD}
             \end{center}

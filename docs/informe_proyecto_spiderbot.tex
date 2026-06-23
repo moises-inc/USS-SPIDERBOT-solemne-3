@@ -138,9 +138,9 @@ El cuerpo central del robot consta de un sistema de doble placa circular (doble 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.45\textwidth]{openscad_screenshot_1.png}
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_6.png}
     \hfill
-    \includegraphics[width=0.45\textwidth]{openscad_screenshot_2.png}
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_4.png}
     \caption{Modelado paramétrico en OpenSCAD de la placa base inferior (izquierda) y placa base superior (derecha).}
     \label{fig:placas_chasis}
 \end{figure}
@@ -161,12 +161,14 @@ La configuración del robot se define como \textbf{Pitch-Pitch}, lo que signific
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.45\textwidth]{openscad_screenshot_3.png}
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_8.png}
     \hfill
-    \includegraphics[width=0.45\textwidth]{openscad_screenshot_4.png}
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_3.png}
     \caption{Modelado en OpenSCAD del eslabón fémur (izquierda) y de la tibia articulada curva (derecha).}
     \label{fig:femur_tibia_scad}
 \end{figure}
+
+\newpage
 
 \subsection{Precisión en Tolerancias e Interfaces Mecánicas}
 \subsubsection{Cavidades de Servomotores (Snug Fit)}
@@ -183,19 +185,11 @@ Para evitar el estrangulamiento de los cables de salida en la base del servo, se
 \end{equation}
 Esto garantiza que los tornillos autorroscantes M2 plásticos agarren sobre plástico 100\% macizo de los brackets a $X = \pm 14.25\text{ mm}$.
 
+\newpage
+
 \subsubsection{Cerraduras de Acople Horn (Single-Arm Horn Locks)}
 Para eliminar las pérdidas de transmisión por rozamiento o juego entre los acoples, se diseñaron chaveteros de un brazo (\textit{single-arm horn locks}) embutidos en las caras de acople mecánico del fémur y la tibia, bloqueando mecánicamente el brazo del horn estriado original del servo en el sólido de plástico.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.3\textwidth]{openscad_screenshot_5.png}
-    \hfill
-    \includegraphics[width=0.3\textwidth]{openscad_screenshot_6.png}
-    \hfill
-    \includegraphics[width=0.3\textwidth]{openscad_screenshot_7.png}
-    \caption{Detalles constructivos en OpenSCAD: chavetero horn lock (izquierda), cuna del servo de rodilla en fémur (centro) y acople de articulación en la pata (derecha).}
-    \label{fig:detalles_tolerancia_scad}
-\end{figure}
 
 % ======================================================
 % 4. LISTA DE MATERIALES
@@ -254,8 +248,12 @@ GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa un
 \end{tabularx}
 \end{table}
 
+\newpage
+
 \subsection{Nota sobre el Aislamiento de Potencia y GND Común}
 Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógicas de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se utiliza un regulador \textbf{UBEC (5V/3A)} externo. Su salida se conecta directamente a la bornera de alimentación del PCA9685, aislando la corriente de los servos. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
+
+\newpage
 
 % ======================================================
 % 6. FUNCIONES DEFINIDAS EN EL CÓDIGO
@@ -282,6 +280,8 @@ El firmware principal `main.py` implementa el paradigma asíncrono y modular. A 
 \end{tabularx}
 \end{table}
 
+\newpage
+
 % ======================================================
 % 7. DIAGRAMA DE FLUJO — LÓGICA PRINCIPAL
 % ======================================================
@@ -307,6 +307,8 @@ La lógica principal asíncrona del robot caminador se rige bajo la siguiente ta
 \end{tabularx}
 \end{table}
 
+\newpage
+
 % ======================================================
 % 8. SIMULACIÓN EN WOKWI
 % ======================================================
@@ -317,16 +319,16 @@ El circuito y el firmware completo del cuadrúpedo USS SpiderBot fueron modelado
 \begin{enumerate}
     \item Acceder a la plataforma oficial de simulación en \url{https://wokwi.com}.
     \item Crear un nuevo proyecto basado en la tarjeta de desarrollo \textbf{ESP32 DevKit V1}.
-    \item En el editor del proyecto, crear o reemplazar el archivo de cableado digital `diagram.json` con el contenido del archivo de configuración digital provisto en \codigo{cad/diagram.json}.
-    \item Reemplazar o copiar el contenido del archivo `main.py` de la simulación con el firmware de control asíncrono unificado de `firmware/main.py`.
+    \item En el editor del proyecto, crear o reemplazar el archivo de cableado digital ``diagram.json'' con el contenido del archivo de configuración digital provisto en \codigo{cad/diagram.json}.
+    \item Reemplazar o copiar el contenido del archivo ``main.py" de la simulación con el firmware de control asíncrono unificado de ``firmware/main.py''.
     \item Cargar los módulos auxiliares de hardware (\codigo{mpu6050.py}, \codigo{state.py}, \codigo{sonar\_sensor.py}, \codigo{buzzer\_alert.py}) en pestañas correspondientes en el simulador.
-    \item Presionar el botón de inicio de simulación (\textbf{▶ Start Simulation}).
+    \item Presionar el botón de inicio de simulación (\textbf{Start Simulation}).
     \item Interactuar con el panel interactivo modificando las distancias de proximidad del HC-SR04 y observando el comportamiento del buzzer y la oscilación de los 8 servomotores simulados.
 \end{enumerate}
 
 \subsection{Enlace público al proyecto Wokwi:}
 Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite el siguiente enlace del navegador:
-\url{https://wokwi.com/projects/uss-spiderbot-simulation}
+\url{https://wokwi.com/projects/467022722279683073}
 
 % ======================================================
 % 9. INSTRUCCIONES DE USO DEL PROTOTIPO Y LAMINACIÓN
@@ -365,29 +367,32 @@ Las piezas modeladas en OpenSCAD se exportan a archivos STL y se procesan en Cre
 \section{Evidencia de Modelado y Simulación}
 Este apartado recopila la verificación geométrica final del ensamble en OpenSCAD y las curvas de respuesta inercial y locomoción asíncrona del cuadrúpedo:
 
+\begin{center}
+
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.6\textwidth]{openscad_screenshot_8.png}
+    \includegraphics[width=1\textwidth]{openscad_screenshot_1.png}
     \caption{Renderizado y ensamble tridimensional completo del USS SpiderBot en el entorno de OpenSCAD.}
     \label{fig:ensamble_completo_scad}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.6\textwidth]{stabilization_response.png}
+    \includegraphics[width=1\textwidth]{stabilization_response.png}
     \caption{Respuesta transitoria simulada en Python del lazo cerrado de compensación activa de inclinación (Pitch y Roll).}
     \label{fig:lazo_compensacion}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.6\textwidth]{gait_simulation.png}
+    \includegraphics[width=1\textwidth]{gait_simulation.png}
     \caption{Simulación de la locomoción Crawl Gait con los perfiles angulares asíncronos por articulación.}
     \label{fig:gait_sim}
 \end{figure}
 
-\newpage
+\end{center}
 
+\newpage
 % ======================================================
 % 11. CONCLUSIONES Y TRABAJO FUTURO
 % ======================================================
