@@ -103,8 +103,6 @@ Fecha & Junio 2026 \\
 \end{tabular}
 \end{table}
 
-\newpage
-
 % ======================================================
 % 2. DESCRIPCIÓN DEL SISTEMA
 % ======================================================
@@ -140,7 +138,16 @@ El cuerpo central del robot consta de un sistema de doble placa circular (doble 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.65\textwidth]{spiderbot_render.png}
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_1.png}
+    \hfill
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_2.png}
+    \caption{Modelado paramétrico en OpenSCAD de la placa base inferior (izquierda) y placa base superior (derecha).}
+    \label{fig:placas_chasis}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.55\textwidth]{spiderbot_render.png}
     \caption{Renderizado 3D paramétrico del chasis final y las extremidades articuladas del USS SpiderBot.}
     \label{fig:spiderbot_render}
 \end{figure}
@@ -151,6 +158,15 @@ La configuración del robot se define como \textbf{Pitch-Pitch}, lo que signific
     \item \textbf{Fémur:} Brazo de articulación de $55\text{ mm}$ de longitud entre centros. Une la corona del servo de cadera con el cuerpo del servo de rodilla. Se utilizó la función \codigo{hull()} para conectar suavemente la corona cilíndrica con la cavidad prismática del servo de rodilla, optimizando la distribución de masa y la resistencia a la flexión.
     \item \textbf{Tibia:} Pierna inferior curva con una longitud vertical de $65\text{ mm}$ y pie semiesférico de radio $r = 5.5\text{ mm}$. La curvatura estructural del modelo aumenta el despeje libre sobre el suelo y distribuye las fuerzas de reacción del impacto del pie en la marcha.
 \end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_3.png}
+    \hfill
+    \includegraphics[width=0.45\textwidth]{openscad_screenshot_4.png}
+    \caption{Modelado en OpenSCAD del eslabón fémur (izquierda) y de la tibia articulada curva (derecha).}
+    \label{fig:femur_tibia_scad}
+\end{figure}
 
 \subsection{Precisión en Tolerancias e Interfaces Mecánicas}
 \subsubsection{Cavidades de Servomotores (Snug Fit)}
@@ -168,9 +184,18 @@ Para evitar el estrangulamiento de los cables de salida en la base del servo, se
 Esto garantiza que los tornillos autorroscantes M2 plásticos agarren sobre plástico 100\% macizo de los brackets a $X = \pm 14.25\text{ mm}$.
 
 \subsubsection{Cerraduras de Acople Horn (Single-Arm Horn Locks)}
-Para eliminar las pérdidas de transmisión por rozamiento o juego entre los acoples, se diseñaron chaveteros de un brazo (*single-arm horn locks*) embutidos en las caras de acople mecánico del fémur y la tibia, bloqueando mecánicamente el brazo del horn estriado original del servo en el sólido de plástico.
+Para eliminar las pérdidas de transmisión por rozamiento o juego entre los acoples, se diseñaron chaveteros de un brazo (\textit{single-arm horn locks}) embutidos en las caras de acople mecánico del fémur y la tibia, bloqueando mecánicamente el brazo del horn estriado original del servo en el sólido de plástico.
 
-\newpage
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.3\textwidth]{openscad_screenshot_5.png}
+    \hfill
+    \includegraphics[width=0.3\textwidth]{openscad_screenshot_6.png}
+    \hfill
+    \includegraphics[width=0.3\textwidth]{openscad_screenshot_7.png}
+    \caption{Detalles constructivos en OpenSCAD: chavetero horn lock (izquierda), cuna del servo de rodilla en fémur (centro) y acople de articulación en la pata (derecha).}
+    \label{fig:detalles_tolerancia_scad}
+\end{figure}
 
 % ======================================================
 % 4. LISTA DE MATERIALES
@@ -178,11 +203,11 @@ Para eliminar las pérdidas de transmisión por rozamiento o juego entre los aco
 \section{Lista de Materiales}
 La Tabla 2 describe la lista de materiales completa requerida para ensamblar e implementar el prototipo del robot caminador:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{BOM (Bill of Materials) del USS SpiderBot}
 \vspace{0.3cm}
-\begin{tabular}{cll}
+\begin{tabularx}{\textwidth}{c l X}
 \toprule
 \textbf{Cant.} & \textbf{Componente / Material} & \textbf{Descripción / Especificación} \\
 \midrule
@@ -198,10 +223,8 @@ La Tabla 2 describe la lista de materiales completa requerida para ensamblar e i
 1 & Regulador Boost XL6009E1 & Elevador opcional para voltajes de batería bajos \\
 s/n & Cables Dupont M-M y M-H & Cables de conexión para el bus I2C y GPIOs \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
-
-\newpage
 
 % ======================================================
 % 5. TABLA DE CONEXIONES (PINOUT)
@@ -209,11 +232,11 @@ s/n & Cables Dupont M-M y M-H & Cables de conexión para el bus I2C y GPIOs \\
 \section{Tabla de Conexiones (Pinout)}
 El bus físico I2C de la ESP32 se comparte en paralelo entre la IMU MPU6050 y el expansor de servomotores PCA9685. El sonar HC-SR04 y el buzzer activo se rutean a GPIOs digitales específicos:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Mapa de Conexiones Físicas de la ESP32}
 \vspace{0.3cm}
-\begin{tabular}{p{2.5cm}p{3cm}p{3cm}p{6cm}}
+\begin{tabularx}{\textwidth}{l l l X}
 \toprule
 \textbf{GPIO ESP32} & \textbf{Componente} & \textbf{Tipo de Señal} & \textbf{Descripción} \\
 \midrule
@@ -228,13 +251,11 @@ Vin & UBEC Out (5V) & Alimentación & Tensión de entrada de control para ESP32 
 3.3 V (ESP32) & MPU6050 / PCA9685 & Alimentación VCC & Tensión lógica para sensores y bus de señales \\
 GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa unificada del sistema \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{Nota sobre el Aislamiento de Potencia y GND Común}
-Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógicas de alimentación (*brownouts*), reiniciando la ESP32. Para evitar esto, se utiliza un regulador **UBEC (5V/3A)** externo. Su salida se conecta directamente a la bornera de alimentación del PCA9685, aislando la corriente de los servos. Es fundamental unificar todas las referencias **GND** en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
-
-\newpage
+Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógicas de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se utiliza un regulador \textbf{UBEC (5V/3A)} externo. Su salida se conecta directamente a la bornera de alimentación del PCA9685, aislando la corriente de los servos. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
 
 % ======================================================
 % 6. FUNCIONES DEFINIDAS EN EL CÓDIGO
@@ -242,11 +263,11 @@ Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrú
 \section{Funciones Definidas en el Código}
 El firmware principal `main.py` implementa el paradigma asíncrono y modular. A continuación se desglosan las principales funciones y corrutinas que estructuran el firmware:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Funciones y Corrutinas de main.py}
 \vspace{0.3cm}
-\begin{tabular}{lp{4cm}p{7cm}}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Función} & \textbf{Parámetros / Retorno} & \textbf{Descripción} \\
 \midrule
@@ -258,10 +279,8 @@ El firmware principal `main.py` implementa el paradigma asíncrono y modular. A 
 \codigo{locomotion\_loop()} & async / Corrutina cíclica & Evalúa los comandos de marcha e inyecta dinámicamente la compensación inercial proporcional si $|\theta| > 3^\circ$. \\
 \codigo{main\_async()} & async / Punto de entrada & Registra las tareas asíncronas de telemetría, locomoción, comandos y servidor web en el planificador asíncrono. \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
-
-\newpage
 
 % ======================================================
 % 7. DIAGRAMA DE FLUJO — LÓGICA PRINCIPAL
@@ -269,11 +288,11 @@ El firmware principal `main.py` implementa el paradigma asíncrono y modular. A 
 \section{Diagrama de Flujo — Lógica Principal}
 La lógica principal asíncrona del robot caminador se rige bajo la siguiente tabla secuencial de estados concurrentes:
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Etapas del Bucle de Control y Concurrencia}
 \vspace{0.3cm}
-\begin{tabular}{lp{11cm}}
+\begin{tabularx}{\textwidth}{l X}
 \toprule
 \textbf{Etapa / Decisión} & \textbf{Descripción de la lógica de ejecución} \\
 \midrule
@@ -285,10 +304,8 @@ La lógica principal asíncrona del robot caminador se rige bajo la siguiente ta
 5. COMPENSAR INERCIAL & Durante la fase de apoyo del pie, lee la inclinación del chasis. Si supera $\pm 3^\circ$, inyecta compensación proporcional: $\theta_{compensado} = \theta_{base} \pm 1.2 \cdot \theta_{sensor}$ en rodillas. \\
 6. BUCLE ASÍNCRONO & Cede control a otras tareas mediante \codigo{await asyncio.sleep\_ms(25)} sin bloquear el procesador. Retorna a 2. \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
-
-\newpage
 
 % ======================================================
 % 8. SIMULACIÓN EN WOKWI
@@ -299,19 +316,17 @@ El circuito y el firmware completo del cuadrúpedo USS SpiderBot fueron modelado
 \subsection{Instrucciones para cargar la simulación en Wokwi:}
 \begin{enumerate}
     \item Acceder a la plataforma oficial de simulación en \url{https://wokwi.com}.
-    \item Crear un nuevo proyecto basado en la tarjeta de desarrollo **ESP32 DevKit V1**.
+    \item Crear un nuevo proyecto basado en la tarjeta de desarrollo \textbf{ESP32 DevKit V1}.
     \item En el editor del proyecto, crear o reemplazar el archivo de cableado digital `diagram.json` con el contenido del archivo de configuración digital provisto en \codigo{cad/diagram.json}.
     \item Reemplazar o copiar el contenido del archivo `main.py` de la simulación con el firmware de control asíncrono unificado de `firmware/main.py`.
     \item Cargar los módulos auxiliares de hardware (\codigo{mpu6050.py}, \codigo{state.py}, \codigo{sonar\_sensor.py}, \codigo{buzzer\_alert.py}) en pestañas correspondientes en el simulador.
-    \item Presionar el botón de inicio de simulación (**▶ Start Simulation**).
+    \item Presionar el botón de inicio de simulación (\textbf{▶ Start Simulation}).
     \item Interactuar con el panel interactivo modificando las distancias de proximidad del HC-SR04 y observando el comportamiento del buzzer y la oscilación de los 8 servomotores simulados.
 \end{enumerate}
 
 \subsection{Enlace público al proyecto Wokwi:}
 Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite el siguiente enlace del navegador:
 \url{https://wokwi.com/projects/uss-spiderbot-simulation}
-
-\newpage
 
 % ======================================================
 % 9. INSTRUCCIONES DE USO DEL PROTOTIPO Y LAMINACIÓN
@@ -321,7 +336,7 @@ Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite e
 \subsection{Puesta en marcha del hardware:}
 \begin{enumerate}
     \item Conectar el microcontrolador ESP32 DevKit V1 al computador de desarrollo usando un cable micro-USB robusto que admita transferencia de datos serie.
-    \item Abrir el entorno integrado Thonny IDE y seleccionar en la esquina inferior derecha el intérprete de ejecución **MicroPython (ESP32)**.
+    \item Abrir el entorno integrado Thonny IDE y seleccionar en la esquina inferior derecha el intérprete de ejecución \textbf{MicroPython (ESP32)}.
     \item Cargar los archivos del firmware a la flash de la ESP32 respetando la estructura de carpetas (Thonny: Archivo $\rightarrow$ Guardar como $\rightarrow$ MicroPython device).
     \item Conectar la batería Li-ion de 7.4V a la bornera de entrada de potencia del UBEC. Al encender el interruptor principal, verificar que los leds del driver PCA9685 y de la IMU MPU6050 se encienden, y que los servos ejecutan el comando inicial de pose de reposo segura.
     \item Observar la salida en la consola interactiva de Thonny, la cual imprimirá la IP local generada en la red local WiFi.
@@ -332,7 +347,7 @@ Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite e
     \item Conectar el computador de control o smartphone al punto de acceso WiFi de la ESP32 (SSID: \codigo{USS\_SpiderBot\_AP}).
     \item Abrir un navegador de internet (Google Chrome, Firefox, etc.) e ingresar la dirección IP estática: \texttt{http://192.168.4.1}.
     \item La interfaz web de control remota en CSS Glassmorphism se cargará de manera automática.
-    \item Utilice los mandos direccionales interactivos en pantalla o presione las teclas del computador (**W** para avanzar, **S** para retroceder, **A** para girar a la izquierda, **D** para girar a la derecha y **Espacio** para frenar de inmediato).
+    \item Utilice los mandos direccionales interactivos en pantalla o presione las teclas del computador (\textbf{W} para avanzar, \textbf{S} para retroceder, \textbf{A} para girar a la izquierda, \textbf{D} para girar a la derecha y \textbf{Espacio} para frenar de inmediato).
     \item Observe el renderizado en tiempo real de la inclinación del chasis proyectada en el graficador vectorial SVG interactivo.
 \end{enumerate}
 
@@ -341,22 +356,20 @@ Las piezas modeladas en OpenSCAD se exportan a archivos STL y se procesan en Cre
 \begin{itemize}
     \item \textbf{Altura de capa:} $0.2\text{ mm}$ de precisión nominal.
     \item \textbf{Perímetros de pared:} $4$ líneas sólidas (proporciona anclaje roscado robusto).
-    \item \textbf{Infill (Relleno):} $30\%$ en patrón **Gyroid** por su rigidez tridimensional isotrópica.
+    \item \textbf{Infill (Relleno):} $30\%$ en patrón \textbf{Gyroid} por su rigidez tridimensional isotrópica.
 \end{itemize}
-
-\newpage
 
 % ======================================================
 % 10. EVIDENCIA FOTOGRÁFICA DEL PROTOTIPO
 % ======================================================
-\section{Evidencia Fotográfica del Prototipo}
-Este apartado recopila el registro fotográfico de la puesta en marcha física y la verificación empírica del hardware:
+\section{Evidencia de Modelado y Simulación}
+Este apartado recopila la verificación geométrica final del ensamble en OpenSCAD y las curvas de respuesta inercial y locomoción asíncrona del cuadrúpedo:
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.6\textwidth]{spiderbot_render.png}
-    \caption{Renderizado y maqueta digital de ensamble del chasis doble deck y la protoboard de 400 puntos sobre la placa superior.}
-    \label{fig:montaje_general}
+    \includegraphics[width=0.6\textwidth]{openscad_screenshot_8.png}
+    \caption{Renderizado y ensamble tridimensional completo del USS SpiderBot en el entorno de OpenSCAD.}
+    \label{fig:ensamble_completo_scad}
 \end{figure}
 
 \begin{figure}[h!]
@@ -381,10 +394,10 @@ Este apartado recopila el registro fotográfico de la puesta en marcha física y
 \section{Conclusiones y Trabajo Futuro}
 
 \subsection{Conclusiones}
-El desarrollo del proyecto **USS SpiderBot** ha permitido unificar de manera práctica y rigurosa los conceptos claves de la asignatura Taller de Programación I aplicados a un problema real de robótica móvil de exploración:
+El desarrollo del proyecto \textbf{USS SpiderBot} ha permitido unificar de manera práctica y rigurosa los conceptos claves de la asignatura Taller de Programación I aplicados a un problema real de robótica móvil de exploración:
 \begin{enumerate}
     \item La programación asíncrona de corrutinas bajo \codigo{uasyncio} superó los cuellos de botella clásicos del pooling secuencial en sistemas embebidos, garantizando la concurrencia de la telemetría inercial, el bucle de locomoción, la evasión de colisiones y el servicio web HTTP simultáneo.
-    \item El modelado CAD paramétrico en OpenSCAD permitió implementar tolerancias de diseño de precisión para FDM ($0.3\text{ mm}$ snug fit), bolsillos dual-depth que evitan la torsión del cableado, y cerraduras embutidas (*horn locks*) para optimizar la transmisión de torque de los servomotores.
+    \item El modelado CAD paramétrico en OpenSCAD permitió implementar tolerancias de diseño de precisión para FDM ($0.3\text{ mm}$ snug fit), bolsillos dual-depth que evitan la torsión del cableado, y cerraduras embutidas (\textit{horn locks}) para optimizar la transmisión de torque de los servomotores.
     \item El lazo cerrado proporcional inercial con constante calibrada $K_p = 1.2$ demostró estabilidad estática eficaz sobre inclinaciones dinámicas de hasta $\pm 10^\circ$, respondiendo en menos de $25\text{ ms}$.
 \end{enumerate}
 
@@ -392,7 +405,7 @@ El desarrollo del proyecto **USS SpiderBot** ha permitido unificar de manera pr�
 \begin{itemize}
     \item \textbf{Control Cinemático Inverso (IK) 3-DoF:} Implementar las ecuaciones analíticas de cinemática inversa para comandar trayectorias exactas en el espacio cartesiano de los pies del cuadrúpedo, incorporando un servomotor de aducción/abducción por pata.
     \item \textbf{Integración de Visión y Red Edge IA:} Montar una cámara ESP32-CAM y programar algoritmos de detección local de personas y señales luminosas de rescate usando librerías ligeras de IA embebida.
-    \item \textbf{Optimizaciones de Red Offline:} Ampliar el rango dinámico del Dashboard web offline habilitando almacenamiento local (*LocalStorage*) para mapeo topológico relativo.
+    \item \textbf{Optimizaciones de Red Offline:} Ampliar el rango dinámico del Dashboard web offline habilitando almacenamiento local (\textit{LocalStorage}) para mapeo topológico relativo.
 \end{itemize}
 
 \end{document}

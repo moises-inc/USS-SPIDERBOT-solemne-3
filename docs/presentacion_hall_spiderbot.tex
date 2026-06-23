@@ -118,6 +118,36 @@
     \end{columns}
 \end{frame}
 
+% Slide 3b: Capturas de OpenSCAD
+\begin{frame}{Modelado CAD y Tolerancias (Detalles de OpenSCAD)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[height=2.3cm]{openscad_screenshot_1.png}
+                \\ \vspace{0.1cm}
+                \scriptsize\color{USSBlue}\textit{Placas base superior e inferior del chasis}
+            \end{center}
+            \begin{center}
+                \includegraphics[height=2.3cm]{openscad_screenshot_3.png}
+                \\ \vspace{0.1cm}
+                \scriptsize\color{USSBlue}\textit{Diseño paramétrico del eslabón fémur}
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[height=2.3cm]{openscad_screenshot_5.png}
+                \\ \vspace{0.1cm}
+                \scriptsize\color{USSBlue}\textit{Chavetero de bloqueo Single-Arm Horn Lock}
+            \end{center}
+            \begin{center}
+                \includegraphics[height=2.3cm]{openscad_screenshot_7.png}
+                \\ \vspace{0.1cm}
+                \scriptsize\color{USSBlue}\textit{Acople de articulación cadera-fémur}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 % Slide 4: Arquitectura Electrónica
 \begin{frame}{Arquitectura Electrónica y Conexiones}
     \begin{columns}
@@ -256,6 +286,30 @@
                     \item Proyecto de plato listo guardado en [spiderbot.3mf].
                 \end{itemize}
             \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 9b: Ensamblaje y Simulación
+\begin{frame}{Ensamblaje General del Cuadrúpedo en OpenSCAD}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Visualización del Modelo 3D}
+                \begin{itemize}
+                    \item Ensamblaje modular completo instanciando los eslabones Coxa y Fémur para las 4 patas en su posición radial de $58\text{ mm}$.
+                    \item Simulación inercial en el espacio tridimensional.
+                \end{itemize}
+            \end{block}
+            \begin{block}{Entregable Final}
+                Los modelos STL están listos para la fabricación digital y las pruebas físicas de control reactivo.
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[width=0.95\textwidth]{openscad_screenshot_8.png}
+                \\ \vspace{0.1cm}
+                \small\color{USSBlue}\textit{Ensamble definitivo modular en OpenSCAD}
+            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
