@@ -42,6 +42,10 @@ module soporte_servo_cadera() {
         // 5. Rebaje frontal-derecho para rotación libre del fémur (trasladado a Y=12.0)
         translate([6.5, 12.0, 7.5])
             cube([23, 5, 16], center=true);
+
+        // 6. Agujero para paso de cables en el piso y pared posterior (local Y = -12, X = 0)
+        translate([0, -12, 7.5])
+            cylinder(r=5.0, h=16, center=true);
     }
 }
 
@@ -70,6 +74,13 @@ module placa_base_cuadruepodo() {
             translate([-28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
             translate([28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
         }
+
+        // Agujeros para pasar los cables de los servos en la parte trasera de cada bracket (radio 46mm)
+        for (a = [45, 135, 225, 315]) {
+            rotate([0, 0, a])
+                translate([46, 0, 0])
+                    cylinder(r=5.0, h=cuerpo_t+2, center=true);
+        }
     }
     
     // Añadir los 4 soportes de servo de cadera en la periferia (orientados tangencialmente, eje hacia afuera)
@@ -89,21 +100,19 @@ module placa_superior() {
             // Placa superior circular principal
             cylinder(r = cuerpo_r, h = cuerpo_t, center=true);
             
-            // Cuna para Protoboard de 400 puntos en el centro (0,0)
-            // Dimensiones internas: 84.0mm x 56.0mm. Altura: 3.0mm. Paredes: 2.0mm.
+            // Cuna para Protoboard de 400 puntos en el centro (0,0) (enlarged by 2mm: 86.0mm x 58.0mm)
             translate([0, 0, cuerpo_t/2 + 1.5]) {
                 difference() {
-                    cube([88.0, 60.0, 3.0], center=true);
-                    cube([84.0, 56.0, 3.1], center=true);
+                    cube([90.0, 62.0, 3.0], center=true);
+                    cube([86.0, 58.0, 3.1], center=true);
                 }
             }
             
-            // Cuna para Regulador XL6009E1 desplazado al área trasera (X = 0, Y = -42)
-            // Dimensiones internas: 43.6mm x 21.6mm. Altura: 3.0mm. Paredes: 2.0mm.
+            // Cuna para Regulador XL6009E1 desplazado al área trasera (X = 0, Y = -42) (enlarged by 2mm: 45.6mm x 23.6mm)
             translate([0, -42, cuerpo_t/2 + 1.5]) {
                 difference() {
-                    cube([47.6, 25.6, 3.0], center=true);
-                    cube([43.6, 21.6, 3.1], center=true);
+                    cube([49.6, 27.6, 3.0], center=true);
+                    cube([45.6, 23.6, 3.1], center=true);
                 }
             }
             
@@ -143,11 +152,10 @@ module placa_superior() {
         translate([13, cuerpo_r - 1.25, 11])
             rotate([90, 0, 0])
                 cylinder(r=8.25, h=10, center=true);
-                
-        // 3. Orificios de paso de cables (wire routing) en las 4 esquinas de la protoboard (r=7.0)
-        // Permite pasar los cables Dupont desde los servos y PCA9685 al deck superior
-        for (x = [-40, 40]) {
-            for (y = [-39, 39]) {
+                 
+        // 3. Orificios de paso de cables (wire routing) en las 4 esquinas de la cuna (shifted outward to clear cuna)
+        for (x = [-43, 43]) {
+            for (y = [-40, 40]) {
                 translate([x, y, 0])
                     cylinder(r=7.0, h=30, center=true);
             }
