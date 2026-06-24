@@ -40,19 +40,19 @@ module eslabon_completo() {
             cylinder(r=1.2, h=10, center=true);
         }
         
-        // 2. Bolsillo (pocket) para el servo de Rodilla (Knee Pitch) (dual-depth para cables y soporte de tornillos)
+        // 2. Bolsillo (pocket) para el servo de Rodilla (Knee Pitch) (dual-depth para cables y soporte de tornillos, abierto hacia atrás Y- para inserción)
         // Se coloca de forma que el eje del servo coincida exactamente con X = link_len (55)
         translate([link_len - 5.5, -11.25, 0]) {
-            // Parte inferior ensanchada a 30.0mm para cables (Z = -7.5 a -2.5)
-            translate([0, 0, -5.0])
-                cube([30.0, 24.2, 5.0], center=true);
-            // Parte superior estrecha a 25.0mm para soporte roscado (Z = -2.5 to 7.5)
-            translate([0, 0, 2.5])
-                cube([25.0, 24.2, 10.0], center=true);
+            // Parte inferior ensanchada a 30.0mm para cables (Z = -7.5 a -2.5, extendida en Y- para cortar la cara posterior)
+            translate([0, -5.4, -5.0])
+                cube([30.0, 35.0, 5.0], center=true);
+            // Parte superior estrecha a 25.0mm para soporte roscado (Z = -2.5 to 7.5, extendida en Y- para cortar la cara posterior)
+            translate([0, -5.4, 2.5])
+                cube([25.0, 35.0, 10.0], center=true);
             
-            // Ranura para orejas/bridas (paralela a XZ, en Y = 5.5)
-            translate([0, 5.5, 0])
-                cube([34.5, 3.2, 13.5], center=true);
+            // Ranura para orejas/bridas (paralela a XZ, extendida en Y- desde el soporte de la oreja hasta atrás)
+            translate([0, -5.4, 0])
+                cube([34.5, 25.0, 13.5], center=true);
                 
             // Agujeros para tornillos de orejas (paso estandar de 28.5mm)
             translate([-14.25, 0, 0])

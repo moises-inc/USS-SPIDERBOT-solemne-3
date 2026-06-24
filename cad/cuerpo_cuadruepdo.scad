@@ -18,13 +18,13 @@ module soporte_servo_cadera() {
         // Parte inferior ensanchada a 30.0mm para cables (Z = 0.8 a 5.0)
         translate([0, 0, 2.9])
             cube([30.0, 24.2, 4.2], center=true);
-        // Parte superior estrecha a 25.0mm para dar soporte roscado a los tornillos M2 (Z = 5.0 a 14.0)
-        translate([0, 0, 9.5])
-            cube([25.0, 24.2, 9.0], center=true);
+        // Parte superior estrecha a 25.0mm para dar soporte roscado a los tornillos M2 (abierta hacia arriba Z=5.0 a 25.0)
+        translate([0, 0, 15.0])
+            cube([25.0, 24.2, 20.0], center=true);
             
-        // 2. Ranura ensanchada para las orejas/bridas del servo (Y = 5.5)
-        translate([0, 5.5, 7.5])
-            cube([34.5, 3.2, 13.5], center=true);
+        // 2. Ranura ensanchada para las orejas/bridas del servo (Y = 5.5, abierta hacia arriba Z=5.0 a 25.0)
+        translate([0, 5.5, 15.0])
+            cube([34.5, 3.2, 20.0], center=true);
             
         // 3. Agujeros para los tornillos M2 (pasantes en Y)
         translate([-14.25, 0, 7.5])
