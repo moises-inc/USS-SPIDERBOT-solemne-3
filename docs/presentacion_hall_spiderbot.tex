@@ -60,7 +60,7 @@
     Facultad de Ingeniería\\
     \textbf{Universidad San Sebastián}
 }
-\date[Junio 2026]{23 de Junio, 2026}
+\date[Julio 2026]{1 de Julio, 2026}
 \titlegraphic{\includegraphics[width=4.5cm]{logo_uss.png}}
 
 % ─── Cuerpo de la Presentación ───────────────────────────────────────────────
@@ -209,22 +209,22 @@
 % Slide 4: Arquitectura Electrónica
 \begin{frame}{Arquitectura Electrónica y Conexiones}
     \begin{columns}
-        \begin{column}{0.45\textwidth}
-            \begin{block}{Bus I2C Compartido}
-                El microcontrolador \textbf{ESP32 DevKit V1} comanda la lógica I2C en paralelo hacia dos esclavos:
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Bus I2C y Señales PWM}
+                El microcontrolador \textbf{ESP32 DevKit V1} comanda directamente las señales y buses:
                 \begin{enumerate}
-                    \item \textbf{PCA9685 ($0x40$):} Driver PWM de 12-bit.
-                    \item \textbf{MPU6050 ($0x68$):} IMU de 6 ejes.
+                    \item \textbf{MPU6050 ($0x68$):} Lectura I2C de la IMU inercial de 6 ejes.
+                    \item \textbf{8x Servos PWM:} Control de posición directo por GPIOs (13, 12, 15, 2, 4, 5, 23, 25).
                 \end{enumerate}
             \end{block}
         \end{column}
-        \begin{column}{0.55\textwidth}
-            \begin{alertblock}{Aislamiento de Potencia (UBEC)}
+        \begin{column}{0.52\textwidth}
+            \begin{alertblock}{Alimentación y Potencia (UBEC)}
                 \begin{itemize}
-                    \item Los 8 servos consumen picos de hasta $4\text{A}$ combinados.
-                    \item \textbf{UBEC (5V/3A):} Regula y separa la línea de fuerza externa de la bornera del PCA9685.
-                    \item Previene caídas de tensión y reinicios (*brownouts*) del procesador ESP32.
-                    \item \textbf{GND Unificado:} Referencia de voltaje común.
+                    \item \textbf{Baterías 2S 14500 (7.4V):} 2 celdas de litio recargables en serie en la parte inferior del chasis.
+                    \item \textbf{UBEC (5V/3A):} Regulador step-down que reduce la tensión a 5V regulados de forma eficiente.
+                    \item \textbf{Aislamiento Lógico:} Separa la línea de fuerza de los servos de la ESP32 para evitar caídas (*brownouts*).
+                    \item \textbf{GND Unificado:} Referencia de voltaje común indispensable.
                 \end{itemize}
             \end{alertblock}
         \end{column}
@@ -330,7 +330,7 @@
             \begin{block}{Simulador Virtual Wokwi}
                 \begin{itemize}
                     \item Cableado digital completo de 8 servos y sensores en \codigo{diagram.json}.
-                    \item \textbf{Control Fallback Directo:} En ausencia del expansor PCA9685, el firmware conmuta a modulación PWM nativa de la ESP32.
+                    \item \textbf{Control Directo por GPIO:} Modulación PWM nativa de la ESP32 hacia los servos en canales específicos de simulación.
                     \item Conexión a través del canal virtual `Wokwi-GUEST` para interactuar con el servidor real.
                 \end{itemize}
             \end{block}

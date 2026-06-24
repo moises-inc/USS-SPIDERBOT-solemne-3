@@ -9,9 +9,9 @@ Esta sección describe la arquitectura lógica del firmware, el flujo de procesa
 El firmware utiliza la concurrencia asíncrona cooperativa en MicroPython. Tres corrutinas corren de forma concurrente, comunicándose a través de un registro de estado centralizado. 
 
 ### Ejecución Adaptativa (Detección del Entorno)
-El sistema detecta automáticamente si se encuentra en el robot físico o en Wokwi:
-1.  **Modo Hardware Real (I2C detecta `0x40`):** Instancia `PCA9685` para gobernar los servos y configura el Wi-Fi como **Access Point (AP)** privado (`USS_SpiderBot_AP`).
-2.  **Modo Simulación (I2C no detecta `0x40`):** Instancia `ESP32ServoDirect` (que gobierna los servos por PWM directo desde la ESP32) y configura el Wi-Fi como **Estación (STA)** conectándose a `Wokwi-GUEST`.
+El sistema detecta automáticamente si se encuentra en el robot físico o en Wokwi escaneando las redes Wi-Fi locales en busca de la red virtual `"Wokwi-GUEST"`:
+1.  **Modo Hardware Real:** Configura el Wi-Fi como **Access Point (AP)** privado (`USS_SpiderBot_AP`) y realiza lecturas de la IMU física MPU6050 a través de I2C. Los servos son comandados directamente por GPIOs a través de `ESP32ServoDirect`.
+2.  **Modo Simulación:** Configura el Wi-Fi como **Estación (STA)** conectándose a `Wokwi-GUEST` para permitir el acceso al simulador. Los servos son controlados con los mismos pines GPIO a través del generador PWM directo.
 
 ```mermaid
 graph TD
@@ -29,11 +29,8 @@ graph TD
         F[main.py - Tarea Sensores 20Hz]
     end
 
-    %% Doble Ruta de Actuación
-    subgraph Modo Actuación Detectado
-        G1[PCA9685 - Driver Servos I2C]
-        G2[ESP32ServoDirect - Servos GPIO Directos Wokwi]
-    end
+    %% Actuación
+    G[ESP32ServoDirect - Controlador Servos GPIO Directos]
 
     %% Sensores e Interfaces de Red
     subgraph Sensores e interfaces
@@ -55,8 +52,8 @@ graph TD
     C <-->|Modo STA| J2
     
     %% Acciones de Hardware/Simulación
-    E -->|Fórmula Gait + Compensación| G1
-    E -->|Mapeo de Canales a GPIO| G2
+    E -->|Fórmula Gait + Compensación| G
+    G -->|8x PWM Control| J3[8x Servomotores SG90/MG90S]
     F -->|Lectura I2C| H
     F -->|Lectura GPIO Pulso| I
 ```
@@ -82,4 +79,4 @@ La información fluye a través del sistema mediante un modelo desacoplado por e
 *   **Multitarea Cooperativa (Cooperative Multitasking):** Implementada a través del bucle de eventos asíncrono de `uasyncio`. En lugar de utilizar retardos bloqueantes (`time.sleep_ms`) o hilos físicos del procesador (que consumen demasiados recursos de memoria y son inestables en MicroPython), las tareas liberan la CPU cediéndola voluntariamente a otras mediante `await asyncio.sleep_ms()`.
 *   **Patrón Shared Registry (Estado Singleton):** Centralizado en [state.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/state.py). Permite desacoplar por completo la ejecución física de los servomotores de las peticiones de red del servidor HTTP, solucionando la importación circular de módulos.
 *   **Control Reactivo Proporcional (P-Control):** La estabilización inercial activa calcula la corrección mediante un factor de escala estático multiplicativo respecto a la desviación angular ($\Delta \text{Ángulo} \times \text{Factor}$). Esto imita la lógica básica de control proporcional industrial, brindando respuestas inmediatas y suaves sin sobrecarga matemática.
-*   **Patrón Adapter / Fallback (Abstracción de Hardware):** La clase `ESP32ServoDirect` actúa como un adaptador de hardware, permitiendo que el bucle de locomoción interactúe con una interfaz unificada `.set_servo_angle()` sin preocuparse de si la señal viaja físicamente por el chip I2C PCA9685 o a través del generador PWM directo integrado en los pines de la ESP32 en el entorno simulado de Wokwi.
+*   **Abstracción de Control Directo (Hardware/Simulador):** La clase `ESP32ServoDirect` unifica la interfaz de control de los servomotores a través del método `.set_servo_angle()`. Esta capa oculta la modulación PWM nativa de 16 bits de MicroPython (`duty_u16`), permitiendo que el algoritmo de locomoción opere con los mismos comandos y mapeos físicos tanto en el simulador Wokwi como en el hardware real.

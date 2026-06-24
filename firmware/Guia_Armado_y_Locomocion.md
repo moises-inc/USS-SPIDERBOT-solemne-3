@@ -11,12 +11,12 @@ El **USS SpiderBot** es un robot caminador cuadrúpedo de **8 grados de libertad
 
 ### Lista de Componentes Electrónicos
 *   **1x Microcontrolador ESP32 DevKit V1 (38 pines):** Cerebro del robot que ejecuta el bucle de control en MicroPython.
-*   **1x Driver PWM PCA9685 (16 canales I2C):** Módulo encargado de generar las señales de pulso para controlar los 8 servos, liberando pines del ESP32 y garantizando estabilidad temporal.
-*   **8x Servomotores SG90 o MG90S:** Actuadores para el movimiento de las articulaciones (2 por pata: Coxa y Fémur).
+*   **8x Servomotores SG90 o MG90S:** Actuadores para el movimiento de las articulaciones (2 por pata: Coxa y Fémur) conectados directamente a pines GPIO con PWM nativo de la ESP32.
 *   **1x Unidad de Medida Inercial (IMU) GY-521 (MPU6050):** Acelerómetro y giroscopio de 6 ejes que mide la inclinación (Pitch y Roll) para la auto-estabilización.
 *   **1x Sensor de Distancia Ultrasónico HC-SR04:** Sensor de prevención para detener la marcha si hay obstáculos a menos de 15 cm.
 *   **1x Buzzer Activo (5V):** Actuador acústico para emitir pitidos de encendido, alertas de colisión inminente y alarmas de inestabilidad extrema.
-*   **1x Batería Li-ion 2S (7.4V nominal) + Regulador de Voltaje Step-Down (UBEC 5V/3A):** Fuente de energía de alta capacidad y regulador de voltaje para aislar la potencia de los servos.
+*   **2x Baterías de Litio 14500 (3.7V c/u, 2S en serie):** Fuente de energía de alta capacidad que provee 7.4V nominales para alimentar el sistema.
+*   **1x Regulador de Voltaje Step-Down (UBEC 5V/3A):** Convertidor reductor de voltaje para bajar la tensión de las baterías a 5V regulados estables, alimentando la ESP32 y el riel de potencia de los servos de forma segura.
 
 ---
 
@@ -25,20 +25,25 @@ El **USS SpiderBot** es un robot caminador cuadrúpedo de **8 grados de libertad
 ### IMPORTANTE: El Aislamiento de Potencia
 Los servomotores SG90/MG90S pueden consumir picos de corriente superiores a **500 mA** cada uno cuando realizan esfuerzo mecánico (por ejemplo, al levantar el peso del robot).
 *   **Regla de Oro:** **NUNCA** alimente los servos desde las salidas de 3.3V o 5V del microcontrolador ESP32. Hacerlo causará caídas de tensión (brownouts) que reiniciarán constantemente el procesador.
-*   **Solución:** Los servomotores deben conectarse directamente a la bornera de alimentación externa del módulo **PCA9685** (marcada como V+ y GND), la cual se alimenta a través de la salida de 5V del regulador UBEC de 3A conectado a la batería.
-*   **GND Común:** Conecte el terminal GND del ESP32, el terminal GND del bus de señal del PCA9685 y el terminal GND de la bornera de alimentación externa del regulador en un punto común para establecer una referencia de voltaje unificada.
+*   **Solución:** Los servomotores deben alimentarse directamente a través del riel de salida de 5V del regulador UBEC de 3A (conectado en paralelo a las baterías de litio 2S). Las señales de control (cables naranja/amarillo) de cada servo se conectan directamente a su correspondiente pin GPIO de la ESP32.
+*   **GND Común:** Es fundamental unir físicamente el terminal GND del ESP32, el terminal de tierra del regulador UBEC y el cable de tierra (marrón/negro) de todos los 8 servos en un nodo común para establecer una referencia de voltaje unificada.
 
 ### Tabla de Conexiones del ESP32
 
-El bus de comunicación I2C es compartido por el driver PCA9685 y la IMU MPU6050, optimizando el uso de pines en el microcontrolador.
+El bus de comunicación I2C se utiliza de forma exclusiva para la IMU MPU6050. Los 8 servos se cablean directamente a las salidas PWM físicas de la ESP32.
 
 | Componente | Pin en Componente | Pin en ESP32 | Tipo de Señal | Propósito / Función |
 | :--- | :---: | :---: | :--- | :--- |
 | **MPU6050 (IMU)** | VCC / GND | 3.3V / GND | Alimentación | Energía para el procesado digital inercial |
-| **MPU6050 (IMU)** | SDA / SCL | GPIO 21 / GPIO 22 | I2C (Compartido) | Lectura de inclinación angular en grados |
-| **PCA9685 (Driver)** | VCC / GND | 3.3V / GND | Alimentación (Lógica) | Energía para el procesador interno I2C |
-| **PCA9685 (Driver)** | SDA / SCL | GPIO 21 / GPIO 22 | I2C (Compartido) | Comandos de posición angular para servos |
-| **PCA9685 (Driver)** | V+ (Bornera) | Salida 5V (UBEC) | Alimentación (Potencia)| Alimentación dedicada para los 8 servos |
+| **MPU6050 (IMU)** | SDA / SCL | GPIO 21 / GPIO 22 | I2C (Hardware) | Lectura de inclinación angular en grados |
+| **Servo FR - Coxa** | Señal (Naranja) | GPIO 13 | PWM (Out) | Control de rotación del servo de cadera FR |
+| **Servo FR - Fémur**| Señal (Naranja) | GPIO 12 | PWM (Out) | Control de rotación del servo de rodilla FR |
+| **Servo FL - Coxa** | Señal (Naranja) | GPIO 15 | PWM (Out) | Control de rotación del servo de cadera FL |
+| **Servo FL - Fémur**| Señal (Naranja) | GPIO 2  | PWM (Out) | Control de rotación del servo de rodilla FL |
+| **Servo RL - Coxa** | Señal (Naranja) | GPIO 4  | PWM (Out) | Control de rotación del servo de cadera RL |
+| **Servo RL - Fémur**| Señal (Naranja) | GPIO 5  | PWM (Out) | Control de rotación del servo de rodilla RL |
+| **Servo RR - Coxa** | Señal (Naranja) | GPIO 23 | PWM (Out) | Control de rotación del servo de cadera RR |
+| **Servo RR - Fémur**| Señal (Naranja) | GPIO 25 | PWM (Out) | Control de rotación del servo de rodilla RR |
 | **HC-SR04 (Sonar)** | VCC / GND | 5V / GND | Alimentación | El transductor de ultrasonido requiere 5V |
 | **HC-SR04 (Sonar)** | TRIG / ECHO | GPIO 18 / GPIO 19 | Digital I/O | Control de emisión y lectura de eco del sonar |
 | **Buzzer Activo** | Terminal + / - | GPIO 14 / GND | Digital OUT | Activación y modulación de tonos de alerta |
@@ -47,11 +52,11 @@ El bus de comunicación I2C es compartido por el driver PCA9685 y la IMU MPU6050
 
 ## 3. Esquema de Cableado Detallado
 
-A continuación se muestra el conexionado esquemático en formato de texto. El bus I2C (`GPIO 21` y `GPIO 22`) se deriva en paralelo hacia ambos dispositivos esclavos (`PCA9685` y `MPU6050`).
+A continuación se muestra el conexionado esquemático en formato de texto. El bus I2C se conecta a la IMU y los servos se cablean directamente a las GPIOs de la ESP32.
 
 ```text
                            +---------------------------+
-                           |      BATERIA 2S 7.4V      |
+                           |  BATERIA 14500 2S (7.4V)  |
                            +-------------+-------------+
                                          | (+7.4V)
                                          v
@@ -59,11 +64,11 @@ A continuación se muestra el conexionado esquemático en formato de texto. El b
                            |   REGULADOR UBEC 5V/3A    |
                            +------+-------------+------+
                                   |             |
-                    (5V Potencia) |             | (5V Control/Logica)
+                     (5V Potencia) |             | (5V Control/Logica)
                                   v             v
   +------------------------------+       +------------------------------+
-  |     PCA9685 - Bornera V+     |       |         ESP32 - Vin          |
-  |     PCA9685 - Bornera GND ---+-------+--->     ESP32 - GND          |
+  |    Servos VCC (Riel Rojo)    |       |         ESP32 - Vin          |
+  |    Servos GND (Riel Negro) --+-------+--->     ESP32 - GND          |
   +------------------------------+       +--------------+---------------+
                                                         | (3.3V Regulado)
                                                         v
@@ -72,27 +77,27 @@ A continuación se muestra el conexionado esquemático en formato de texto. El b
                                          |   MPU6050 (IMU) - GND --->GND|
                                          +------------------------------+
 
-  CONEXION DE SENALES (I2C y GPIOs):
+  CONEXION DE SEÑALES (I2C y GPIOs):
   ==================================
-  ESP32 GPIO 21 (SDA) <---------+--------> PCA9685 SDA
-                                +--------> MPU6050 SDA
-  
-  ESP32 GPIO 22 (SCL) <---------+--------> PCA9685 SCL
-                                +--------> MPU6050 SCL
+  ESP32 GPIO 21 (SDA) <-----------------> MPU6050 SDA
+  ESP32 GPIO 22 (SCL) <-----------------> MPU6050 SCL
   
   ESP32 GPIO 18 (TRIG) <----------------> HC-SR04 TRIG
   ESP32 GPIO 19 (ECHO) <----------------> HC-SR04 ECHO
   ESP32 GPIO 14 (SIG)  <----------------> Buzzer (+) [Buzzer (-) a GND]
+  
+  ESP32 GPIOs Servos   <----------------> Servos Señal (FR: 13/12, FL: 15/2,
+                                                          RL: 4/5, RR: 23/25)
 ```
 
 
-### Configuración de Canales de Servomotores (PCA9685)
+### Configuración de Canales de Servomotores (GPIO Directo)
 El robot se divide en 4 patas numeradas de la 0 a la 3, en una **configuración cinemática Pitch-Pitch (2 ejes horizontales paralelos por pata)**. Esto significa que ambos servos operan en el plano vertical: el de cadera (**Coxa** / Hip Pitch) realiza la flexión de la cadera y el de rodilla (**Fémur** / Knee Pitch) la de la rodilla, prescindiendo del giro horizontal para mayor torque y estabilidad de carga:
 
-*   **Pata 0 (Delantera Derecha - FR):** Coxa (Hip Pitch) $\rightarrow$ **Canal 0** | Fémur (Knee Pitch) $\rightarrow$ **Canal 1**
-*   **Pata 1 (Delantera Izquierda - FL):** Coxa (Hip Pitch) $\rightarrow$ **Canal 2** | Fémur (Knee Pitch) $\rightarrow$ **Canal 3**
-*   **Pata 2 (Trasera Izquierda - RL):** Coxa (Hip Pitch) $\rightarrow$ **Canal 4** | Fémur (Knee Pitch) $\rightarrow$ **Canal 5**
-*   **Pata 3 (Trasera Derecha - RR):** Coxa (Hip Pitch) $\rightarrow$ **Canal 6** | Fémur (Knee Pitch) $\rightarrow$ **Canal 7**
+*   **Pata 0 (Delantera Derecha - FR):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 13** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 12**
+*   **Pata 1 (Delantera Izquierda - FL):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 15** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 2**
+*   **Pata 2 (Trasera Izquierda - RL):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 4**  | Fémur (Knee Pitch) $\rightarrow$ **GPIO 5**
+*   **Pata 3 (Trasera Derecha - RR):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 23** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 25**
 
 ---
 
@@ -127,7 +132,7 @@ graph TD
     *   Asegure el servo al fémur con dos tornillos autorroscantes M2.
     *   Pase el cable del servo a lo largo de la ranura lateral del fémur hacia la articulación de la cadera.
 3.  **Paso 3: Calibración del Cero Eléctrico (CRÍTICO)**
-    *   Antes de acoplar los fémures y tibias, conecte el ESP32 y el PCA9685 y enciéndalos.
+    *   Antes de acoplar los fémures y tibias, conecte la electrónica completa y enciéndala.
     *   Cargue el firmware `main.py` para forzar a todos los servos a la posición de reposo estática (`pos_reposo()`): **caderas a $90^\circ$** y **rodillas a $60^\circ / 120^\circ$**.
     *   *Nota: Nunca intente ensamblar los brazos de plástico (horns) con los servos apagados o desalineados.*
 4.  **Paso 4: Acoplamiento del Fémur a la Cadera**
@@ -139,11 +144,11 @@ graph TD
     *   **Alineación:** La tibia debe quedar apuntando hacia abajo, formando una pose estable.
     *   Fije la tibia usando el tornillo central del servo y tornillos pequeños de fijación.
 6.  **Paso 6: Montaje del Doble Deck y Componentes Superiores**
-    *   Fije los 4 pilares espaciadores M3 de 22mm en los orificios de la Placa Base Inferior.
-    *   Posicione el driver PCA9685 en la placa inferior y rutee todos los cables. Conecte los 8 servos a sus respectivos canales (0-7).
+    *   Fije los 4 pilares espaciadores M3 de **25mm** (para la batería 14500 2S) en los orificios de la Placa Base Inferior.
+    *   Posicione el portabaterías 14500 2S y el regulador UBEC en la parte central y rutee todos los cables. Conecte las señales de los 8 servos a sus respectivos GPIOs en la ESP32.
     *   Coloque la **Placa Base Superior** sobre los pilares y asegúrela con tornillos M3.
-    *   Fije el ESP32 DevKit V1 en los soportes superiores de la tapa.
-    *   Monte la IMU MPU6050 y el sensor ultrasónico HC-SR04 y realice el conexionado de señales con jumpers según el pinout de la sección 2.
+    *   Fije el ESP32 DevKit V1 en la cuna para la protoboard de 400 puntos sobre la tapa.
+    *   Monte la IMU MPU6050 y el sensor ultrasónico HC-SR04 en la protoboard/cuna y realice el conexionado de señales con jumpers según el pinout de la sección 2.
 
 ---
 
@@ -196,7 +201,7 @@ El control reactivo del robot opera de manera simultánea en el firmware. En cad
 Para asegurar un armado exitoso y evitar daños en los componentes, ejecute la siguiente secuencia de pruebas antes de colocar el chasis impreso en 3D en el suelo:
 
 ### Paso A: Calibración del Cero Mecánico
-1.  Conecte el ESP32 y el PCA9685 sin montar los brazos de servo (horns) de plástico a los servomotores.
+1.  Conecte el ESP32 sin montar los brazos de servo (horns) de plástico a los servomotores.
 2.  Cargue el código firmware `main.py` para llevar los servos a la posición de reposo (`pos_reposo()`): caderas a $90^\circ$ y muslos a $60^\circ / 120^\circ$.
 3.  Con los servos energizados y fijos en esa posición de control, coloque mecánicamente los horns plásticos alineados a escuadra de forma manual (perpendiculares para la cadera, y en la inclinación correspondiente para el muslo). Atornille los horns. Esto garantiza que el software y la estructura física compartan la misma referencia angular de origen.
 
@@ -209,7 +214,7 @@ Para asegurar un armado exitoso y evitar daños en los componentes, ejecute la s
 Antes de realizar el conexionado físico final con jumpers, puede validar de forma interactiva el circuito y su lógica en el simulador en la nube:
 1.  Vaya a [wokwi.com](https://wokwi.com) y cree un nuevo proyecto de tipo **ESP32 con MicroPython**.
 2.  Sustituya el archivo de conexiones por el contenido de nuestro [diagram.json](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/Taller%20de%20Programaci%C3%B3n%20I/Unidad%203/USS_SpiderBot/diagram.json).
-3.  Suba los controladores locales (`mpu6050.py`, `sonar_sensor.py`, `buzzer_alert.py`, `pca9685.py`) y el código `main.py`.
+3.  Suba los controladores locales (`mpu6050.py`, `sonar_sensor.py`, `buzzer_alert.py`) y el código `main.py`.
 4.  Inicie la simulación, ajuste la distancia del sensor ultrasónico y observe cómo el buzzer y los servos reaccionan dinámicamente.
 
 ---

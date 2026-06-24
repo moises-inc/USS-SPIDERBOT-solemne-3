@@ -9,7 +9,7 @@ use <tibia_pata.scad>
 $fn = 20;
 
 cuerpo_r = 65.0;
-deck_spacing = 22.0;
+deck_spacing = 28.0;
 
 module dummy_servo() {
     // Renderizado simplificado de un servomotor SG90

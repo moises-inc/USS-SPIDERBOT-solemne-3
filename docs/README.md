@@ -12,7 +12,7 @@ El proyecto integra tecnologías de hardware embebido, desarrollo web nativo y m
 
 *   **Microcontrolador principal:** ESP32 DevKit V1 (38 pines) ejecutando **MicroPython v1.20+**.
 *   **Locomoción y multitarea:** Concurrencia cooperativa no bloqueante mediante la librería estándar **`uasyncio` (asyncio)** de MicroPython.
-*   **Actuadores:** 8x Servomotores analógicos SG90 controlados mediante el chip de expansión PWM de 12 bits **PCA9685** sobre bus físico I2C.
+*   **Actuadores:** 8x Servomotores analógicos SG90/MG90S controlados directamente mediante señales PWM por pines GPIO de la ESP32.
 *   **Sensores:**
     *   Unidad de Medida Inercial (IMU) **MPU6050** de 6 ejes para el cálculo dinámico de inclinación (Pitch y Roll).
     *   Sensor ultrasónico de distancia **HC-SR04** para evasión de obstáculos.

@@ -69,7 +69,7 @@
     \end{tabular}
     \vfill
     {\large Puerto Montt, Chile \par}
-    {\large \today \par}
+    {\large 1 de Julio de 2026 \par}
 \end{titlepage}
 
 % ======================================================
@@ -98,7 +98,7 @@ Integrante 2 & Camila Aravena — [Diseño 3D en OpenSCAD y Tolerancias] \\
 Integrante 3 & Fernando Ramírez — [Configuración Electrónica y Potencia] \\
 Integrante 4 & Juan Pablo Vargas — [Simulación Wokwi y Calibración IMU] \\
 Integrante 5 & María José Santander — [Dashboard Web Embebido e Interfaz SVG] \\
-Fecha & Junio 2026 \\
+Fecha & 1 de Julio de 2026 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -207,13 +207,12 @@ La Tabla 2 describe la lista de materiales completa requerida para ensamblar e i
 \midrule
 1 & ESP32 DevKit V1 (38 pines) & Microcontrolador principal con soporte WiFi y MicroPython \\
 1 & Protoboard (400 puntos) & Base para montaje y ruteo común de señales \\
-1 & Módulo Expansor PCA9685 I2C & Controlador PWM de 16 canales de 12 bits para los servos \\
 8 & Servomotores SG90 / MG90S & Servos analógicos de torque (Coxa y Fémur en las 4 patas) \\
 1 & IMU MPU6050 (GY-521) & Unidad de medida inercial (giroscopio y acelerómetro) \\
 1 & Sensor ultrasónico HC-SR04 & Sensor de distancia frontal para evasión de colisiones \\
 1 & Buzzer Activo 5V & Dispositivo de alarma acústica por cercanía \\
-1 & UBEC Regulador Step-down 5V/3A & Regulador aislado de potencia para alimentar la fuerza de servos \\
-1 & Batería Li-ion 2S 7.4V (2200mAh) & Fuente de potencia primaria del sistema \\
+1 & UBEC Regulador Step-down 5V/3A & Regulador de potencia para alimentar los servos y la ESP32 \\
+1 & Pack Baterías 2S 14500 (7.4V, 2200mAh) & 2 celdas de litio recargables de tamaño AA conectadas en serie \\
 1 & Regulador Boost XL6009E1 & Elevador opcional para voltajes de batería bajos \\
 s/n & Cables Dupont M-M y M-H & Cables de conexión para el bus I2C y GPIOs \\
 \bottomrule
@@ -224,7 +223,7 @@ s/n & Cables Dupont M-M y M-H & Cables de conexión para el bus I2C y GPIOs \\
 % 5. TABLA DE CONEXIONES (PINOUT)
 % ======================================================
 \section{Tabla de Conexiones (Pinout)}
-El bus físico I2C de la ESP32 se comparte en paralelo entre la IMU MPU6050 y el expansor de servomotores PCA9685. El sonar HC-SR04 y el buzzer activo se rutean a GPIOs digitales específicos:
+El bus físico I2C de la ESP32 se utiliza de forma exclusiva para la IMU MPU6050. Los 8 servomotores se conectan directamente a pines GPIO con PWM de la ESP32, mientras que el sonar HC-SR04 y el buzzer activo se rutean a GPIOs digitales específicos:
 
 \begin{table}[htbp]
 \centering
@@ -234,15 +233,15 @@ El bus físico I2C de la ESP32 se comparte en paralelo entre la IMU MPU6050 y el
 \toprule
 \textbf{GPIO ESP32} & \textbf{Componente} & \textbf{Tipo de Señal} & \textbf{Descripción} \\
 \midrule
-GPIO 21 & PCA9685 / MPU6050 & SDA (I2C) & Bus de datos serie compartido \\
-GPIO 22 & PCA9685 / MPU6050 & SCL (I2C) & Bus de reloj serie compartido \\
+GPIO 21 & MPU6050 (IMU) & SDA (I2C) & Bus de datos serie de la unidad inercial \\
+GPIO 22 & MPU6050 (IMU) & SCL (I2C) & Bus de reloj serie de la unidad inercial \\
 GPIO 18 & HC-SR04 & TRIGGER & Salida digital de pulso de disparo del sonar \\
 GPIO 19 & HC-SR04 & ECHO & Entrada digital de pulso de retorno del sonar \\
 GPIO 14 & Buzzer Activo & Salida Digital & Señal de alarma en caso de proximidad \\
-PCA Canales 0-3 & Servos Coxa (0-3) & Salida PWM & Modulación de posición para caderas \\
-PCA Canales 4-7 & Servos Fémur (0-3) & Salida PWM & Modulación de posición para muslos \\
-Vin & UBEC Out (5V) & Alimentación & Tensión de entrada de control para ESP32 \\
-3.3 V (ESP32) & MPU6050 / PCA9685 & Alimentación VCC & Tensión lógica para sensores y bus de señales \\
+GPIO 13, 15, 4, 23 & Servos Coxa (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de cadera \\
+GPIO 12, 2, 5, 25 & Servos Fémur (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de rodilla \\
+Vin & UBEC Out (5V) & Alimentación & Tensión de entrada regulada para ESP32 \\
+3.3 V (ESP32) & MPU6050 (IMU) & Alimentación VCC & Tensión lógica para sensor inercial \\
 GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa unificada del sistema \\
 \bottomrule
 \end{tabularx}
@@ -251,7 +250,7 @@ GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa un
 \newpage
 
 \subsection{Nota sobre el Aislamiento de Potencia y GND Común}
-Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógicas de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se utiliza un regulador \textbf{UBEC (5V/3A)} externo. Su salida se conecta directamente a la bornera de alimentación del PCA9685, aislando la corriente de los servos. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
+Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógica de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se utiliza un regulador de voltaje reductor \textbf{UBEC (5V/3A)} externo alimentado por el pack de 2 baterías de litio 14500 en serie (7.4V nominales). Su salida de 5V se conecta al riel de potencia de los servos y al pin Vin de la ESP32 de forma aislada. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
 
 \newpage
 
@@ -270,7 +269,7 @@ El firmware principal `main.py` implementa el paradigma asíncrono y modular. A 
 \textbf{Función} & \textbf{Parámetros / Retorno} & \textbf{Descripción} \\
 \midrule
 \codigo{pos\_reposo()} & Sin parámetros / Sin retorno & Envía todos los servomotores a sus ángulos estáticos de seguridad. \\
-\codigo{establecer\_angulo\_pata()} & \codigo{idx, c\_ang, f\_ang} / Sin retorno & Aplica el factor de conversión a pasos de 12 bits y escribe en el canal correspondiente del PCA9685. \\
+\codigo{establecer\_angulo\_pata()} & \codigo{idx, c\_ang, f\_ang} / Sin retorno & Aplica límites físicos de seguridad, calcula compensaciones y escribe directamente en los pines PWM de la ESP32. \\
 \codigo{mover\_suave\_ciclo()} & \codigo{c\_t, f\_t, pasos, delay} / async & Realiza interpolación lineal entre la posición actual de los servos y sus objetivos para evitar tirones. \\
 \codigo{caminar\_adelante()} & async / Sin retorno & Ejecuta la secuencia Crawl Gait en 5 pasos llamando a \codigo{mover\_suave\_ciclo()}. \\
 \codigo{sensor\_updater()} & async / Corrutina cíclica & Adquiere los datos de aceleración y giroscopio de la IMU MPU6050 y la distancia del sensor HC-SR04 cada 50 ms. \\
@@ -296,7 +295,7 @@ La lógica principal asíncrona del robot caminador se rige bajo la siguiente ta
 \toprule
 \textbf{Etapa / Decisión} & \textbf{Descripción de la lógica de ejecución} \\
 \midrule
-1. INICIO & Carga de configuración de I2C. Inicializa PCA9685 e IMU MPU6050. Invoca \codigo{pos\_reposo()}. Lanza las corrutinas asíncronas concurrentes. \\
+1. INICIO & Carga de configuración de I2C. Inicializa la IMU MPU6050 y la modulación PWM directa para los 8 servos. Invoca \codigo{pos\_reposo()}. Lanza las corrutinas asíncronas concurrentes. \\
 2. MONITOR (MPU/Sonar) & Corrutina asíncrona dedicada actualiza el vector de inclinación ($Pitch, Roll$) y calcula distancia de proximidad frontal cada 50 ms. \\
 3. ¿Objeto a $\le 15\text{ cm}$? & \textbf{Sí:} Cancela corrutina de marcha de inmediato ($<25\text{ ms}$). Vuelve a reposo, activa el buzzer acústico de advertencia y va a 2. \\
 & \textbf{No:} Continúa a la siguiente etapa. \\
@@ -313,7 +312,7 @@ La lógica principal asíncrona del robot caminador se rige bajo la siguiente ta
 % 8. SIMULACIÓN EN WOKWI
 % ======================================================
 \section{Simulación en Wokwi}
-El circuito y el firmware completo del cuadrúpedo USS SpiderBot fueron modelados y validados digitalmente en Wokwi. Dado que las cunas reales del hardware están compuestas de múltiples esclavos I2C, la simulación implementa una inicialización de autodetención o autodesvío (fallback) para verificar la lógica en el simulador en ausencia del controlador PCA9685 real.
+El circuito y el firmware completo del cuadrúpedo USS SpiderBot fueron modelados y validados digitalmente en Wokwi. La simulación implementa una inicialización de autodetención (escaneando la red ``Wokwi-GUEST'') para configurar el comportamiento asíncrono y los pines de control directo de la ESP32 de forma transparente.
 
 \subsection{Instrucciones para cargar la simulación en Wokwi:}
 \begin{enumerate}
@@ -340,7 +339,7 @@ Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite e
     \item Conectar el microcontrolador ESP32 DevKit V1 al computador de desarrollo usando un cable micro-USB robusto que admita transferencia de datos serie.
     \item Abrir el entorno integrado Thonny IDE y seleccionar en la esquina inferior derecha el intérprete de ejecución \textbf{MicroPython (ESP32)}.
     \item Cargar los archivos del firmware a la flash de la ESP32 respetando la estructura de carpetas (Thonny: Archivo $\rightarrow$ Guardar como $\rightarrow$ MicroPython device).
-    \item Conectar la batería Li-ion de 7.4V a la bornera de entrada de potencia del UBEC. Al encender el interruptor principal, verificar que los leds del driver PCA9685 y de la IMU MPU6050 se encienden, y que los servos ejecutan el comando inicial de pose de reposo segura.
+    \item Conectar la batería Li-ion 2S 14500 de 7.4V a la bornera de entrada de potencia del UBEC. Al encender el interruptor principal, verificar que los leds de la ESP32 y de la IMU MPU6050 se encienden, y que los servos ejecutan el comando inicial de pose de reposo segura.
     \item Observar la salida en la consola interactiva de Thonny, la cual imprimirá la IP local generada en la red local WiFi.
 \end{enumerate}
 

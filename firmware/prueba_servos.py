@@ -27,37 +27,7 @@ PINE_GPIO_DIRECTOS = {
     6: 23, 7: 25  # Pata RR
 }
 
-# Clase mínima para PCA9685
-class PCA9685Driver:
-    def __init__(self, i2c, address=0x40):
-        self.i2c = i2c
-        self.address = address
-        self.i2c.writeto_mem(self.address, 0x00, bytes([0x00])) # MODE1 normal
-        self.set_pwm_freq(50)
-        
-    def set_pwm_freq(self, freq):
-        prescaleval = 25000000.0 / 4096.0 / float(freq) - 1.0
-        prescale = int(prescaleval + 0.5)
-        oldmode = self.i2c.readfrom_mem(self.address, 0x00, 1)[0]
-        newmode = (oldmode & 0x7F) | 0x10
-        self.i2c.writeto_mem(self.address, 0x00, bytes([newmode]))
-        self.i2c.writeto_mem(self.address, 0xFE, bytes([prescale]))
-        self.i2c.writeto_mem(self.address, 0x00, bytes([oldmode]))
-        time.sleep_us(500)
-        self.i2c.writeto_mem(self.address, 0x00, bytes([oldmode | 0xa1]))
-        
-    def set_pwm(self, channel, on, off):
-        self.i2c.writeto_mem(self.address, 0x06 + 4 * channel, bytes([on & 0xFF]))
-        self.i2c.writeto_mem(self.address, 0x07 + 4 * channel, bytes([(on >> 8) & 0xFF]))
-        self.i2c.writeto_mem(self.address, 0x08 + 4 * channel, bytes([off & 0xFF]))
-        self.i2c.writeto_mem(self.address, 0x09 + 4 * channel, bytes([(off >> 8) & 0xFF]))
 
-    def set_angle(self, channel, angle):
-        angle = max(0, min(180, angle))
-        min_pulse = 130  # ~0.6ms
-        max_pulse = 530  # ~2.6ms
-        off_tick = int(min_pulse + (angle / 180.0) * (max_pulse - min_pulse))
-        self.set_pwm(channel, 0, off_tick)
 
 # Clase mínima para GPIO Directo
 class GPIOServoDriver:
@@ -101,21 +71,9 @@ def main():
     print("          Prueba de Servomotores - USS SpiderBot      ")
     print("=====================================================")
     
-    # Inicializar I2C (SDA=21, SCL=22)
-    print("Iniciando bus I2C en SDA=21, SCL=22...")
-    i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
-    
-    dispositivos = i2c.scan()
-    print("Dispositivos I2C encontrados:", [hex(d) for d in dispositivos])
-    
-    pca_detectado = 0x40 in dispositivos
-    
-    if pca_detectado:
-        print("[INFO] PCA9685 detectado en 0x40. Usando driver I2C.")
-        driver = PCA9685Driver(i2c, address=0x40)
-    else:
-        print("[INFO] PCA9685 no detectado. Conmutando a modo de prueba GPIO directa.")
-        driver = GPIOServoDriver(PINE_GPIO_DIRECTOS)
+    # Inicializar el controlador directo por GPIO para los 8 servos
+    print("Inicializando driver GPIO Directo (8 canales activos)...")
+    driver = GPIOServoDriver(PINE_GPIO_DIRECTOS)
         
     print("\nModos de prueba:")
     print("1. Barrido automático de todos los canales (0 al 7)")

@@ -11,7 +11,6 @@ import uasyncio as asyncio
 import sys
 import select
 import state
-from pca9685 import PCA9685
 from mpu6050 import MPU6050
 from sonar_sensor import SonarSensor
 from buzzer_alert import BuzzerAlert
@@ -47,31 +46,40 @@ class ESP32ServoDirect:
             self.pwms[channel].duty_u16(duty)
 
 # ── 1. Inicialización de Interfaces ──────────────────────────────
-print("Iniciando bus I2C (SDA=21, SCL=22)...")
+print("Iniciando bus I2C (SDA=21, SCL=22) para IMU...")
 i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
 
 dispositivos = i2c.scan()
 print("Dispositivos I2C detectados: ", [hex(d) for d in dispositivos])
 
-# Bandera para identificar si estamos en modo simulación (GPIO directo) o hardware real (PCA9685)
-modo_simulacion = False
-
 # ── 2. Inicialización de Drivers ────────────────────────────────
+# Mapeo de canales a pines GPIO físicos en la ESP32 (Control Directo)
+channels_pins = {
+    0: 13, 1: 12, # Pata 0 (FR)
+    2: 15, 3: 2,  # Pata 1 (FL)
+    4: 4,  5: 5,  # Pata 2 (RL)
+    6: 23, 7: 25  # Pata 3 (RR)
+}
+
+print("Inicializando controlador de servos directo por GPIO...")
+servos = ESP32ServoDirect(channels_pins)
+
+# Auto-detectar si estamos corriendo en el simulador Wokwi buscando la red virtual
+modo_simulacion = False
 try:
-    servos = PCA9685(i2c, address=0x40)
-    print("[OK] Servomotores (PCA9685) configurados en hardware real.")
+    import network
+    sta = network.WLAN(network.STA_IF)
+    sta.active(True)
+    print("Escaneando redes Wi-Fi para auto-detectar simulador...")
+    redes = sta.scan()
+    ssids = [r[0].decode('utf-8') for r in redes]
+    if "Wokwi-GUEST" in ssids:
+        print("[INFO] Red 'Wokwi-GUEST' detectada. Entorno: SIMULADOR WOKWI.")
+        modo_simulacion = True
+    else:
+        print("[INFO] Red 'Wokwi-GUEST' no detectada. Entorno: HARDWARE REAL.")
 except Exception as e:
-    print("[WARNING] PCA9685 no detectado. Utilizando controlador de servos directo por GPIO para Simulación.")
-    # Mapeo de canales del PCA9685 a pines GPIO físicos en la ESP32 para Wokwi:
-    # Ch 0 -> Pata 0 Coxa, Ch 1 -> Pata 0 Fémur, etc.
-    channels_pins = {
-        0: 13, 1: 12, # Pata 0 (FR)
-        2: 15, 3: 2,  # Pata 1 (FL)
-        4: 4,  5: 5,  # Pata 2 (RL)
-        6: 23, 7: 25  # Pata 3 (RR)
-    }
-    servos = ESP32ServoDirect(channels_pins)
-    modo_simulacion = True
+    print("[WARNING] Falló escaneo de red para auto-detección:", e)
 
 try:
     imu = MPU6050(i2c, address=0x68)

@@ -10,9 +10,9 @@ spacer_r = 55.0;    // Radio para pilares espaciadores
 
 module soporte_servo_cadera() {
     difference() {
-        // Bloque estructural principal (ensanchado a 28mm de ancho y 36mm de largo)
+        // Bloque estructural principal (ensanchado a 30mm de ancho y 42mm de largo para mayor grosor de pared)
         translate([0, 0, 7.5])
-            cube([36, 28, 15], center=true);
+            cube([42, 30, 15], center=true);
         
         // 1. Cavidad para el cuerpo del servo SG90 (dual-depth para salida de cables y soporte de tornillos)
         // Parte inferior ensanchada a 30.0mm para cables (Z = 0.8 a 5.0)
@@ -67,13 +67,7 @@ module placa_base_cuadruepodo() {
         translate([-20, 10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
         translate([20, 10, 0]) cube([4, 15, cuerpo_t + 2], center=true);
         
-        // Agujeros de montaje para el driver PCA9685 (56mm x 20mm)
-        translate([0, -25, 0]) {
-            translate([-28, -10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
-            translate([28, -10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
-            translate([-28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
-            translate([28, 10, 0]) cylinder(r=1.5, h=cuerpo_t+2, center=true);
-        }
+
 
         // Agujeros para pasar los cables de los servos en la parte trasera de cada bracket (radio 46mm)
         for (a = [45, 135, 225, 315]) {

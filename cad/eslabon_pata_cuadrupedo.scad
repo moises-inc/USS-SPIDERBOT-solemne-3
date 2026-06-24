@@ -26,9 +26,9 @@ module eslabon_completo() {
                 translate([link_len/2, -3, 1])
                     cube([12, 12, 8], center=true);
             }
-            // Bloque que aloja el servo de rodilla (al final del fémur, trasladado a Y=-8, ancho 28)
-            translate([link_len - 12, -8, 0])
-                cube([30, 28, link_t], center=true);
+            // Bloque que aloja el servo de rodilla (al final del fémur, centrado simétricamente con el bolsillo para mayor grosor de pared)
+            translate([link_len - 6.5, -11.25, 0])
+                cube([42, 32, link_t], center=true);
         }
         
         // 1. Acople para el horn del servo Cadera (Hip Pitch) en el origen (X=0, Z = -1.8)

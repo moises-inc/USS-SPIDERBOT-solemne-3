@@ -11,7 +11,7 @@ Módulos encargados de la ejecución en la placa ESP32:
 ### 1. [main.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/main.py)
 *   **Propósito:** Orquestador principal del robot. Levanta los drivers físicos, gestiona las tareas asíncronas de lectura inercial, locomoción y evasión reactiva, y maneja el inicio del Wi-Fi en modo AP (físico) o STA (simulador).
 *   **Clases Auxiliares:**
-    *   `ESP32ServoDirect`: Emulador de la API del PCA9685. Si la ESP32 no encuentra el PCA9685 en I2C, se instancia esta clase y se configuran 8 señales PWM directas hacia los GPIOs del simulador:
+    *   `ESP32ServoDirect`: Controlador único y principal de servomotores conectado directamente a pines GPIO de la ESP32 (GPIOs 13, 12, 15, 2, 4, 5, 23, 25). Genera modulación PWM de 16 bits nativa a 50Hz.
         *   Canal 0 (FR Coxa) $\rightarrow$ GPIO 13
         *   Canal 1 (FR Fémur) $\rightarrow$ GPIO 12
         *   Canal 2 (FL Coxa) $\rightarrow$ GPIO 15
@@ -28,7 +28,7 @@ Módulos encargados de la ejecución en la placa ESP32:
     *   `sensor_updater()`: Corrutina que lee a 20Hz el sonar y la IMU y actualiza el estado.
     *   `locomotion_loop()`: Corrutina de toma de decisiones de movimiento y freno de emergencia.
     *   `main_async()`: Punto de entrada asíncrono. Gestiona la conexión Wi-Fi adaptativa: modo AP (`USS_SpiderBot_AP`) en físico, y modo Estación conectado a `Wokwi-GUEST` en simulación.
-*   **Dependencias Internas:** Importa [state.py](../firmware/state.py), [pca9685.py](../firmware/pca9685.py), [mpu6050.py](../firmware/mpu6050.py), [sonar_sensor.py](../firmware/sonar_sensor.py), [buzzer_alert.py](../firmware/buzzer_alert.py), [web_server.py](../firmware/web_server.py).
+*   **Dependencias Internas:** Importa [state.py](../firmware/state.py), [mpu6050.py](../firmware/mpu6050.py), [sonar_sensor.py](../firmware/sonar_sensor.py), [buzzer_alert.py](../firmware/buzzer_alert.py), [web_server.py](../firmware/web_server.py).
 
 ### 2. [web_server.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/web_server.py)
 *   **Propósito:** Inicializa las funciones Wi-Fi y levanta un servidor HTTP no bloqueante en socket TCP (puerto 80).
@@ -50,40 +50,33 @@ Módulos encargados de la ejecución en la placa ESP32:
 *   **Propósito:** Código frontend de la interfaz web del operador. Diseñado para operar 100% offline, con diseño responsive Glassmorphism y visualizaciones SVG en tiempo real para inclinación y sensores.
 *   **Dependencias Internas:** Se comunica mediante Fetch asíncrono con los endpoints expuestos en [web_server.py](../firmware/web_server.py).
 
-### 5. [pca9685.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/pca9685.py)
-*   **Propósito:** Driver de bajo nivel para el expansor PWM PCA9685 mediante I2C.
-*   **Métodos Principales:**
-    *   `set_pwm_freq(freq)`: Ajusta la frecuencia PWM (50Hz para servos SG90).
-    *   `set_servo_angle(channel, angle)`: Convierte ángulos de 0° a 180° a ciclos de trabajo PWM de 12 bits.
-*   **Dependencias Internas:** Ninguna.
-
-### 6. [mpu6050.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/mpu6050.py)
+### 5. [mpu6050.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/mpu6050.py)
 *   **Propósito:** Driver para el acelerómetro MPU6050 por I2C.
 *   **Métodos Principales:**
     *   `set_offsets(ox, oy, oz)`: Establece los offsets de calibración a sustraer.
     *   `obtener_inclinacion()`: Retorna Pitch y Roll redondeados a un decimal usando funciones trigonométricas.
 *   **Dependencias Internas:** Ninguna.
 
-### 7. [sonar_sensor.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/sonar_sensor.py)
+### 6. [sonar_sensor.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/sonar_sensor.py)
 *   **Propósito:** Gestor del sensor de distancia ultrasónico HC-SR04.
 *   **Métodos Principales:**
     *   `medir_distancia()`: Emite el pulso y cronometra la respuesta en microsegundos, calculando la distancia lineal.
 *   **Dependencias Internas:** Ninguna.
 
-### 8. [buzzer_alert.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/buzzer_alert.py)
+### 7. [buzzer_alert.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/buzzer_alert.py)
 *   **Propósito:** Controla el buzzer del robot para generar avisos acústicos.
 *   **Métodos Principales:**
     *   `beep()`, `alarma_rapida()`, `alerta_postura()`.
 *   **Dependencias Internas:** Ninguna.
 
-### 9. [calibrate_mpu.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/calibrate_mpu.py)
+### 8. [calibrate_mpu.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/calibrate_mpu.py)
 *   **Propósito:** Utilidad de calibración de offsets para la IMU. Genera `mpu_offsets.txt`.
 *   **Dependencias Internas:** Importa [mpu6050.py](mpu6050.py).
 
-### 10. [validate_files.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/validate_files.py)
+### 9. [validate_files.py](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/validate_files.py)
 *   **Propósito:** Validador estático que verifica que todos los archivos Python del directorio compilen correctamente en Python local mediante el análisis AST.
 
-### 11. [diagram.json](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/diagram.json)
+### 10. [diagram.json](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/USS%20SPIDERBOT%20(solemne%203)/firmware/diagram.json)
 *   **Propósito:** Configuración del cableado virtual para simulaciones en Wokwi. Incluye la conexión de los 8 servomotores virtuales.
 
 ---
