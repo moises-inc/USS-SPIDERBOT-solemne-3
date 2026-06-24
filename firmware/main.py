@@ -100,7 +100,7 @@ except Exception as e:
 sonar = SonarSensor(trigger_pin=18, echo_pin=19)
 alarma = BuzzerAlert(pin_number=14)
 
-alarma.beep(300) # Beep de encendido exitoso
+alarma.play_startup() # Melodía rítmica de inicio para buzzer activo
 
 # ── 3. Definición de Canales de Servos y Poses ─────────────────────
 COXA_CHANNELS = [0, 2, 4, 6]
@@ -363,7 +363,7 @@ async def locomotion_loop():
         # A. Prevención de colisión inmediata reactiva local
         if 0.0 < state.distancia_actual < 15.0:
             print("[ALERTA] Obstáculo crítico! Deteniendo cuadrúpedo de inmediato.")
-            alarma.alarma_rapida(2)
+            alarma.play_critical_alert() # Alerta crítica rítmica
             pos_reposo()
             state.comando_actual = "stop"
             await asyncio.sleep_ms(1000)
@@ -375,7 +375,7 @@ async def locomotion_loop():
             marchando = await caminar_adelante()
             if not marchando:
                 print("[ALERTA] Marcha adelante cancelada por obstáculo.")
-                alarma.beep(150)
+                alarma.play_warning_alert() # Alerta de advertencia corta
                 pos_reposo()
                 state.comando_actual = "stop"
                 await asyncio.sleep_ms(500)
@@ -383,7 +383,7 @@ async def locomotion_loop():
             marchando = await caminar_atras()
             if not marchando:
                 print("[ALERTA] Marcha atrás cancelada por obstáculo.")
-                alarma.beep(150)
+                alarma.play_warning_alert() # Alerta de advertencia corta
                 pos_reposo()
                 state.comando_actual = "stop"
                 await asyncio.sleep_ms(500)
@@ -427,11 +427,11 @@ async def serial_listener():
             if line in ["forward", "backward", "left", "right", "stop", "reposo"]:
                 state.comando_actual = line
                 print(f"[CONSOLA] Comando cambiado a: {line}")
-                alarma.beep(100)
+                alarma.play_warning_alert() # Beep corto de confirmación
             elif line == "stabilize":
                 state.estabilizacion_activa = not state.estabilizacion_activa
                 print(f"[CONSOLA] Estabilización activa set a: {state.estabilizacion_activa}")
-                alarma.beep(100)
+                alarma.play_warning_alert() # Beep corto de confirmación
             else:
                 print(f"[CONSOLA] Comando desconocido: '{line}'")
         await asyncio.sleep_ms(100)
@@ -472,6 +472,10 @@ finally:
     # Intento de llevar a reposo (puede fallar si no hay PWM ya activo)
     try:
         pos_reposo()
+    except:
+        pass
+    try:
+        alarma.play_shutdown() # Melodía rítmica de apagado para buzzer activo
     except:
         pass
     alarma.apagar()
