@@ -33,9 +33,9 @@ module pilar_espaciador() {
 
 module pata_articulada(angulo_cadera=0, angulo_rodilla=0) {
     // 1. Servo de cadera (Hip Pitch) - Montado horizontalmente en el soporte perimetral
-    // Rotado [90, 180, 90] para meterse en la cavidad y orientar el eje a Y+ (X=5.5, Y=14.0, Z=7.5)
+    // Rotado [90, -90, 180] para meterse en la cavidad y orientar el eje a Y+ (X=5.5, Y=14.0, Z=7.5)
     translate([0, 0, 7.5])
-        rotate([90, 180, 90])
+        rotate([90, -90, 180])
             dummy_servo();
             
     // 2. Eslabón Fémur - Gira verticalmente (angulo_cadera) acoplado al eje del servo cadera
@@ -51,7 +51,7 @@ module pata_articulada(angulo_cadera=0, angulo_rodilla=0) {
                 // 3. Servo de rodilla (Knee Pitch) - Montado horizontalmente dentro del fémur
                 // Orientado y alineado con el eje físico de rotación en X = 55 (rodilla), Y = 2.75, Z = 0
                 translate([55 - 5.5, -11.25, 0])
-                    rotate([90, 180, 90])
+                    rotate([90, -90, 180])
                         dummy_servo();
                         
                 // 4. Tibia - Gira verticalmente (angulo_rodilla) acoplada al horn del servo de rodilla

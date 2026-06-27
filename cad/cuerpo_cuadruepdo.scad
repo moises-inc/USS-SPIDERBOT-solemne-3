@@ -14,38 +14,47 @@ module soporte_servo_cadera() {
         translate([0, 0, 7.5])
             cube([42, 30, 15], center=true);
         
-        // 1. Cavidad para el cuerpo del servo SG90 (dual-depth para salida de cables y soporte de tornillos)
-        // Parte inferior ensanchada a 30.0mm para cables (Z = 0.8 a 5.0)
+        // 1. Cavidad para el cuerpo del servo SG90 (tolerancias ajustadas)
+        // Reducimos el largo de la cavidad inferior a 25.0mm para dar soporte sólido a los tornillos
         translate([0, 0, 2.9])
-            cube([30.0, 24.2, 4.2], center=true);
-        // Parte superior estrecha a 25.0mm para dar soporte roscado a los tornillos M2 (abierta hacia arriba Z=5.0 a 25.0)
+            cube([25.0, 24.2, 4.2], center=true);
         translate([0, 0, 15.0])
             cube([25.0, 24.2, 20.0], center=true);
             
-        // 2. Ranura ensanchada para las orejas/bridas del servo (Y = 5.5, abierta hacia arriba Z=5.0 a 25.0)
+        // 2. Ranura para las orejas/bridas del servo (Y = 5.5, ancho = 3.5, largo = 33.5 para mayor resistencia de pared)
         translate([0, 5.5, 15.0])
-            cube([34.5, 3.2, 20.0], center=true);
+            cube([33.5, 3.5, 20.0], center=true);
             
-        // 3. Agujeros para los tornillos M2 (pasantes en Y)
-        translate([-14.25, 0, 7.5])
+        // 3. Agujeros para los tornillos M2 (pasantes en Y, alineados a Y = 5.5 para encajar con las orejas del servo)
+        translate([-14.25, 5.5, 7.5])
             rotate([90, 0, 0])
                 cylinder(r=1.0, h=35, center=true);
-        translate([14.25, 0, 7.5])
+        translate([14.25, 5.5, 7.5])
             rotate([90, 0, 0])
                 cylinder(r=1.0, h=35, center=true);
                    
-        // 4. Abertura delantera (Y+) para corona de salida del servo (trasladada a Y=12.0)
+        // 4. Abertura delantera (Y+) para corona de salida del servo
         translate([5.5, 12.0, 7.5])
             rotate([90, 0, 0])
                 cylinder(r=6.2, h=15, center=true);
                 
-        // 5. Rebaje frontal-derecho para rotación libre del fémur (trasladado a Y=12.0)
-        translate([6.5, 12.0, 7.5])
-            cube([23, 5, 16], center=true);
+        // 4b. Ranura superior para permitir deslizar el eje del servo desde arriba al ensamblar
+        translate([5.5, 12.0, 11.25])
+            cube([12.4, 15, 7.5], center=true);
+                
+        // 5. Rebaje frontal-derecho para rotación libre del fémur
+        // Ensanchamos a Y=6.0 y lo trasladamos a Y=12.5 para eliminar paredes delgadas flotantes
+        translate([6.5, 12.5, 7.5])
+            cube([23, 6, 16], center=true);
 
         // 6. Agujero para paso de cables en el piso y pared posterior (local Y = -12, X = 0)
         translate([0, -12, 7.5])
             cylinder(r=5.0, h=16, center=true);
+            
+        // 7. Canal de cable en el extremo derecho (X+) y lado posterior (Y-)
+        // Permite enrutar el cable que sale del lado del servo hacia el canal central
+        translate([13.0, -10.5, 7.5])
+            cube([4.0, 9.0, 16.0], center=true);
     }
 }
 
