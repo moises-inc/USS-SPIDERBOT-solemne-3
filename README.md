@@ -94,5 +94,5 @@ Al realizar pruebas y depuraciones físicas:
 ---
 
 ## 👥 Autores y Licencia
-Este proyecto ha sido desarrollado por el Grupo de Trabajo de la Universidad San Sebastián (Valdivia, Chile - 2026).
+Este proyecto ha sido desarrollado por el Grupo de Trabajo de la Universidad San Sebastián (Puerto Montt, Chile - 2026).
 Distribuido bajo la Licencia **MIT** (Consulte [LICENSE](LICENSE) para más detalles).
