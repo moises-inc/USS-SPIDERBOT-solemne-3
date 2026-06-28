@@ -51,6 +51,21 @@ def iniciar_wifi(ssid="USS_SpiderBot_AP", password=None, modo_ap=True):
         print("         Revirtiendo automáticamente a modo Access Point...")
         return iniciar_wifi(ssid, password, modo_ap=True)
 
+async def serve_html_file(writer, filename):
+    """Lee y sirve un archivo HTML por bloques de 512 bytes para evitar sobrecarga de memoria heap."""
+    try:
+        writer.write(b"HTTP/1.1 200 OK\r\n")
+        writer.write(b"Content-Type: text/html\r\n")
+        writer.write(b"Connection: close\r\n\r\n")
+        with open(filename, "r") as f:
+            while True:
+                chunk = f.read(512)
+                if not chunk:
+                    break
+                writer.write(chunk.encode('utf-8'))
+    except OSError:
+        writer.write(("<h1>[ERROR] Archivo %s no encontrado en la flash.</h1>" % filename).encode('utf-8'))
+
 async def handle_client(reader, writer):
     """Procesa las peticiones HTTP entrantes de forma asíncrona y no bloqueante."""
     try:
@@ -117,21 +132,10 @@ async def handle_client(reader, writer):
             writer.write(response.encode('utf-8'))
             
         # ── ENDPOINT: Servir HTML del Dashboard (Desde almacenamiento Flash) ──
-        elif path == "/" or path == "/index.html":
-            writer.write(b"HTTP/1.1 200 OK\r\n")
-            writer.write(b"Content-Type: text/html\r\n")
-            writer.write(b"Connection: close\r\n\r\n")
-            
-            # Lectura por bloques de 512 bytes para evitar sobrecarga de memoria heap
-            try:
-                with open("index.html", "r") as f:
-                    while True:
-                        chunk = f.read(512)
-                        if not chunk:
-                            break
-                        writer.write(chunk.encode('utf-8'))
-            except OSError:
-                writer.write(b"<h1>[ERROR] Archivo index.html no encontrado en la flash.</h1>")
+        elif path == "/" or path == "/dashboard.html":
+            await serve_html_file(writer, "dashboard.html")
+        elif path == "/index.html":
+            await serve_html_file(writer, "index.html")
                 
         else:
             writer.write(b"HTTP/1.1 404 Not Found\r\n")
