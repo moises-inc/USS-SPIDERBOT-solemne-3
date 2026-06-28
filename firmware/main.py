@@ -17,8 +17,9 @@ from buzzer_alert import BuzzerAlert
 
 class ESP32ServoDirect:
     """
-    Controlador fallback de servos conectado directamente a pines GPIO de la ESP32.
-    Se utiliza en el simulador Wokwi para emular el comportamiento del chip PCA9685.
+    Controlador de servos conectado directamente a pines GPIO de la ESP32.
+    Los servos son alimentados a 6.0V por el LM2596 #1 (pack 18650 independiente).
+    La ESP32 y los sensores se alimentan a 5.0V por el LM2596 #2.
     """
     def __init__(self, channels_pins):
         self.pwms = {}

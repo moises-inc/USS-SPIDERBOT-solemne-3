@@ -15,8 +15,8 @@ El **USS SpiderBot** es un robot caminador cuadrúpedo de **8 grados de libertad
 *   **1x Unidad de Medida Inercial (IMU) GY-521 (MPU6050):** Acelerómetro y giroscopio de 6 ejes que mide la inclinación (Pitch y Roll) para la auto-estabilización.
 *   **1x Sensor de Distancia Ultrasónico HC-SR04:** Sensor de prevención para detener la marcha si hay obstáculos a menos de 15 cm.
 *   **1x Buzzer Activo (5V):** Actuador acústico para emitir pitidos de encendido, alertas de colisión inminente y alarmas de inestabilidad extrema.
-*   **2x Baterías de Litio 14500 (3.7V c/u, 2S en serie):** Fuente de energía de alta capacidad que provee 7.4V nominales para alimentar el sistema.
-*   **1x Regulador de Voltaje Step-Down (UBEC 5V/3A):** Convertidor reductor de voltaje para bajar la tensión de las baterías a 5V regulados estables, alimentando la ESP32 y el riel de potencia de los servos de forma segura.
+*   **2x Porta Pilas Duales 2x18650 (4 celdas Li-ion 18650 de 3.7V en total):** Dos packs independientes de 2 celdas 18650 en serie, cada uno proveyendo 7.4V nominales para alimentación redundante y aislada.
+*   **2x Convertidores Step-Down LM2596:** Reguladores de voltaje reductores ajustables. El LM2596 #1 se regula a 6.0V para el riel de potencia de los servos SG90/MG90S, y el LM2596 #2 se regula a 5.0V para alimentar la ESP32 y los sensores.
 
 ---
 
@@ -25,8 +25,8 @@ El **USS SpiderBot** es un robot caminador cuadrúpedo de **8 grados de libertad
 ### IMPORTANTE: El Aislamiento de Potencia
 Los servomotores SG90/MG90S pueden consumir picos de corriente superiores a **500 mA** cada uno cuando realizan esfuerzo mecánico (por ejemplo, al levantar el peso del robot).
 *   **Regla de Oro:** **NUNCA** alimente los servos desde las salidas de 3.3V o 5V del microcontrolador ESP32. Hacerlo causará caídas de tensión (brownouts) que reiniciarán constantemente el procesador.
-*   **Solución:** Los servomotores deben alimentarse directamente a través del riel de salida de 5V del regulador UBEC de 3A (conectado en paralelo a las baterías de litio 2S). Las señales de control (cables naranja/amarillo) de cada servo se conectan directamente a su correspondiente pin GPIO de la ESP32.
-*   **GND Común:** Es fundamental unir físicamente el terminal GND del ESP32, el terminal de tierra del regulador UBEC y el cable de tierra (marrón/negro) de todos los 8 servos en un nodo común para establecer una referencia de voltaje unificada.
+*   **Solución (Alimentación Dual Independiente):** Se utilizan dos convertidores LM2596 alimentados desde dos packs 2x18650 independientes. El LM2596 #1 se regula a **6.0V** para el riel de potencia de los servos, y el LM2596 #2 se regula a **5.0V** para la ESP32 y sensores. Cada convertidor opera sobre su propio pack de baterías, aislando eléctricamente los transitorios de los servos del microcontrolador.
+*   **GND Común:** Es fundamental unir físicamente el terminal GND de la ESP32, el GND de salida de ambos LM2596 y el cable de tierra (marrón/negro) de todos los 8 servos en un nodo común para establecer una referencia de voltaje unificada.
 
 ### Tabla de Conexiones del ESP32
 
@@ -55,27 +55,9 @@ El bus de comunicación I2C se utiliza de forma exclusiva para la IMU MPU6050. L
 A continuación se muestra el conexionado esquemático en formato de texto. El bus I2C se conecta a la IMU y los servos se cablean directamente a las GPIOs de la ESP32.
 
 ```text
-                           +---------------------------+
-                           |  BATERIA 14500 2S (7.4V)  |
-                           +-------------+-------------+
-                                         | (+7.4V)
-                                         v
-                           +---------------------------+
-                           |   REGULADOR UBEC 5V/3A    |
-                           +------+-------------+------+
-                                  |             |
-                     (5V Potencia) |             | (5V Control/Logica)
-                                  v             v
-  +------------------------------+       +------------------------------+
-  |    Servos VCC (Riel Rojo)    |       |         ESP32 - Vin          |
-  |    Servos GND (Riel Negro) --+-------+--->     ESP32 - GND          |
-  +------------------------------+       +--------------+---------------+
-                                                        | (3.3V Regulado)
-                                                        v
-                                         +------------------------------+
-                                         |   MPU6050 (IMU) - VCC        |
-                                         |   MPU6050 (IMU) - GND --->GND|
-                                         +------------------------------+
+       [Pack Bat. A: 2x18650 (7.4V)] ──> [LM2596 #1 (Reg. a 6.0V)] ──> Riel VCC Servos (8x SG90)
+       [Pack Bat. B: 2x18650 (7.4V)] ──> [LM2596 #2 (Reg. a 5.0V)] ──> Vin ESP32 / Sensores
+       [GND Común Unificado] <─────────> GND salidas LM2596 #1, #2 y GND ESP32
 
   CONEXION DE SEÑALES (I2C y GPIOs):
   ==================================
@@ -144,8 +126,8 @@ graph TD
     *   **Alineación:** La tibia debe quedar apuntando hacia abajo, formando una pose estable.
     *   Fije la tibia usando el tornillo central del servo y tornillos pequeños de fijación.
 6.  **Paso 6: Montaje del Doble Deck y Componentes Superiores**
-    *   Fije los 4 pilares espaciadores M3 de **25mm** (para la batería 14500 2S) en los orificios de la Placa Base Inferior.
-    *   Posicione el portabaterías 14500 2S y el regulador UBEC en la parte central y rutee todos los cables. Conecte las señales de los 8 servos a sus respectivos GPIOs en la ESP32.
+    *   Fije los 4 pilares espaciadores M3 de **25mm** en los orificios de la Placa Base Inferior.
+    *   Posicione los dos portabaterías 2x18650 y los dos reguladores LM2596 en la parte central y rutee todos los cables. Conecte las señales de los 8 servos a sus respectivos GPIOs en la ESP32.
     *   Coloque la **Placa Base Superior** sobre los pilares y asegúrela con tornillos M3.
     *   Fije el ESP32 DevKit V1 en la cuna para la protoboard de 400 puntos sobre la tapa.
     *   Monte la IMU MPU6050 y el sensor ultrasónico HC-SR04 en la protoboard/cuna y realice el conexionado de señales con jumpers según el pinout de la sección 2.
@@ -236,7 +218,7 @@ Para llevar el **USS SpiderBot** a su culminación funcional y entrega exitosa e
 *   **Calibración Dinámica del MPU6050:** Ejecutar el calibrador inercial `calibrate_mpu.py` sobre una superficie plana para generar el archivo `mpu_offsets.txt`. Esto evitará derivas angulares y errores de auto-nivelación.
 
 ### 3. Ajuste Fino de la Marcha en Suelo (Gait Tuning)
-*   **Monitoreo de Consumo de Corriente:** Colocar el robot en el suelo y realizar pruebas de caminata monitoreando que el regulador UBEC de 3A no se sobrecaliente.
+*   **Monitoreo de Consumo de Corriente:** Colocar el robot en el suelo y realizar pruebas de caminata monitoreando que los reguladores LM2596 no se sobrecalienten y que los voltajes se mantengan estables en 6.0V (servos) y 5.0V (ESP32).
 *   **Ajuste de Amplitud de Paso:** Si el robot patina o pierde tracción en el suelo, ajustar los rangos angulares de empuje y avance en `caminar_adelante()` dentro de `main.py`. Reducir el ángulo Coxa FWD/BWD (por ejemplo, reducir el swing a $80^\circ - 100^\circ$ en lugar de $70^\circ - 110^\circ$) para suavizar la aceleración.
 *   **Ajuste del Coeficiente de Estabilización:** Variar la constante `FACTOR_COMPENSACION` en `main.py` si la nivelación inercial reacciona de forma muy lenta o muy brusca (con oscilaciones).
 

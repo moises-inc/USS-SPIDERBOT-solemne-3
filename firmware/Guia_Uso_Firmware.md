@@ -6,10 +6,10 @@ Esta guía detalla la arquitectura de software, la asignación física de pines 
 
 ## 🔌 Asignación Física de Pines (ESP32 DevKit V1)
 
-Al haber migrado a **control directo por GPIO** (sin usar el driver PCA9685) y alimentación mediante un **pack de baterías Li-ion 2S en serie (7.4V)** regulado por un **UBEC de 5V/3A**, las conexiones físicas se realizan directamente de la siguiente manera:
+Al haber migrado a **control directo por GPIO** (sin usar el driver PCA9685) y alimentación mediante **alimentación dual independiente** (2x packs 18650 + 2x LM2596), las conexiones físicas se realizan directamente de la siguiente manera:
 
 ### 1. Servomotores (8 Canales Directos a GPIO)
-Los cables de señal de los 8 servomotores SG90 se conectan a los siguientes pines de la ESP32 (los terminales de alimentación **VCC y GND deben ir al riel de salida del UBEC**, compartiendo la tierra común GND con la ESP32):
+Los cables de señal de los 8 servomotores SG90 se conectan a los siguientes pines de la ESP32 (los terminales de alimentación **VCC deben ir al riel de salida de 6.0V del LM2596 #1 y el GND al nodo común**, compartiendo la tierra unificada con la ESP32 alimentada por el LM2596 #2 a 5.0V):
 
 | Canal | Componente | Pin GPIO | Descripción |
 |:---:|:---|:---:|:---|
@@ -21,6 +21,12 @@ Los cables de señal de los 8 servomotores SG90 se conectan a los siguientes pin
 | **5** | Pata RL - Fémur (Rodilla) | **GPIO 5** | Rotación vertical trasera izquierda |
 | **6** | Pata RR - Coxa (Cadera) | **GPIO 23** | Rotación horizontal trasera derecha |
 | **7** | Pata RR - Fémur (Rodilla) | **GPIO 25** | Rotación vertical trasera derecha |
+
+> **⚠️ ADVERTENCIA — REGULACIÓN PREVIA CON MULTÍMETRO:**
+> Antes de conectar la alimentación a la ESP32 o a los servos, utilice un multímetro para ajustar los potenciómetros de los LM2596:
+> *   **LM2596 #1:** Regule el tornillo de ajuste hasta medir exactamente **6.0V** en su salida (alimentación de servos).
+> *   **LM2596 #2:** Regule el tornillo de ajuste hasta medir exactamente **5.0V** en su salida (alimentación de ESP32 y sensores).
+> Conectar voltajes incorrectos puede dañar irreversiblemente los componentes.
 
 ### 2. Sensores e Interfaces de Alerta
 | Dispositivo | Señal / Pin | Pin GPIO | Notas |
@@ -95,4 +101,4 @@ Antes de colocar físicamente los brackets de los fémures y tibias en los engra
 
 ## 🛠️ Solución de Problemas Comunes
 * **`ImportError: no module named 'sonar_sensor'`**: Asegúrate de haber subido todas las librerías auxiliares (`sonar_sensor.py`, `mpu6050.py`, `buzzer_alert.py`, `state.py`, `web_server.py`) a la ESP32 y no solo el script de prueba.
-* **Los servos vibran o se reinicia la ESP32**: Los servos están demandando más corriente de la que el puerto USB o un regulador pequeño puede entregar. Conecta la alimentación externa mediante el pack de baterías 2S y el UBEC reductor, recordando unir la tierra (GND) del UBEC con la de la ESP32.
+* **Los servos vibran o se reinicia la ESP32**: Los servos están demandando más corriente de la que el puerto USB o un regulador pequeño puede entregar. Conecta la alimentación externa mediante los packs 2x18650 y los LM2596, recordando unificar la tierra (GND) de ambos reguladores con la ESP32.

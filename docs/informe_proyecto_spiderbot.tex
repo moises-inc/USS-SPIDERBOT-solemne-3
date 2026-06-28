@@ -211,8 +211,8 @@ La Tabla 2 describe la lista de materiales completa requerida para ensamblar e i
 1 & IMU MPU6050 (GY-521) & Unidad de medida inercial (giroscopio y acelerómetro) \\
 1 & Sensor ultrasónico HC-SR04 & Sensor de distancia frontal para evasión de colisiones \\
 1 & Buzzer Activo 5V & Dispositivo de alarma acústica por cercanía \\
-1 & UBEC Regulador Step-down 5V/3A & Regulador de potencia para alimentar los servos y la ESP32 \\
-1 & Pack Baterías 2S 14500 (7.4V, 2200mAh) & 2 celdas de litio recargables de tamaño AA conectadas en serie \\
+2 & Convertidores Step-down LM2596 & Reguladores de potencia ajustables. \#1 a 6.0V para servos, \#2 a 5.0V para ESP32 y sensores \\
+2 & Porta Pilas Duales 2x18650 (4 celdas Li-ion) & Dos packs independientes de 2x18650 cada uno proveyendo 7.4V \\
 1 & Regulador Boost XL6009E1 & Elevador opcional para voltajes de batería bajos \\
 s/n & Cables Dupont M-M y M-H & Cables de conexión para el bus I2C y GPIOs \\
 \bottomrule
@@ -240,7 +240,7 @@ GPIO 19 & HC-SR04 & ECHO & Entrada digital de pulso de retorno del sonar \\
 GPIO 14 & Buzzer Activo & Salida Digital & Señal de alarma en caso de proximidad \\
 GPIO 13, 15, 4, 23 & Servos Coxa (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de cadera \\
 GPIO 12, 2, 5, 25 & Servos Fémur (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de rodilla \\
-Vin & UBEC Out (5V) & Alimentación & Tensión de entrada regulada para ESP32 \\
+Vin & LM2596 \#2 Out (5.0V) & Alimentación & Tensión de entrada regulada para ESP32 \\
 3.3 V (ESP32) & MPU6050 (IMU) & Alimentación VCC & Tensión lógica para sensor inercial \\
 GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa unificada del sistema \\
 \bottomrule
@@ -250,7 +250,12 @@ GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa un
 \newpage
 
 \subsection{Nota sobre el Aislamiento de Potencia y GND Común}
-Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógica de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se utiliza un regulador de voltaje reductor \textbf{UBEC (5V/3A)} externo alimentado por el pack de 2 baterías de litio 14500 en serie (7.4V nominales). Su salida de 5V se conecta al riel de potencia de los servos y al pin Vin de la ESP32 de forma aislada. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
+Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógica de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se implementó una arquitectura de alimentación dual independiente con dos convertidores reductores \textbf{LM2596} y dos packs de baterías 18650 aislados:
+\begin{itemize}
+    \item \textbf{LM2596 \#1 (regulado a 6.0V):} Alimenta exclusivamente el riel de potencia de los 8 servomotores SG90/MG90S, proporcionando el margen de voltaje necesario para mantener el torque bajo carga sin interferir con la lógica de control.
+    \item \textbf{LM2596 \#2 (regulado a 5.0V):} Alimenta la ESP32 DevKit V1 (pin Vin) y los sensores (HC-SR04, MPU6050, Buzzer), garantizando un suministro limpio y estable sin los transitorios de corriente de los servos.
+\end{itemize}
+Cada convertidor opera sobre su propio pack independiente de 2 celdas 18650 en serie (7.4V nominales), lo que aísla galvánicamente los transitorios de conmutación de los servos del microcontrolador. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
 
 \newpage
 
@@ -339,7 +344,7 @@ Para acceder de forma rápida a la simulación preconfigurada en Wokwi, visite e
     \item Conectar el microcontrolador ESP32 DevKit V1 al computador de desarrollo usando un cable micro-USB robusto que admita transferencia de datos serie.
     \item Abrir el entorno integrado Thonny IDE y seleccionar en la esquina inferior derecha el intérprete de ejecución \textbf{MicroPython (ESP32)}.
     \item Cargar los archivos del firmware a la flash de la ESP32 respetando la estructura de carpetas (Thonny: Archivo $\rightarrow$ Guardar como $\rightarrow$ MicroPython device).
-    \item Conectar la batería Li-ion 2S 14500 de 7.4V a la bornera de entrada de potencia del UBEC. Al encender el interruptor principal, verificar que los leds de la ESP32 y de la IMU MPU6050 se encienden, y que los servos ejecutan el comando inicial de pose de reposo segura.
+    \item Conectar los dos packs 2x18650 de 7.4V a las borneras de entrada de los LM2596 \#1 y \#2. Antes de conectar la ESP32 y los servos, verificar con un multímetro que la salida del LM2596 \#1 esté regulada a exactamente 6.0V y la del LM2596 \#2 a exactamente 5.0V. Al encender el interruptor principal, verificar que los leds de la ESP32 y de la IMU MPU6050 se encienden, y que los servos ejecutan el comando inicial de pose de reposo segura.
     \item Observar la salida en la consola interactiva de Thonny, la cual imprimirá la IP local generada en la red local WiFi.
 \end{enumerate}
 

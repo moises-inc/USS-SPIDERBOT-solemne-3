@@ -219,14 +219,15 @@
             \end{block}
         \end{column}
         \begin{column}{0.52\textwidth}
-            \begin{alertblock}{Alimentación y Potencia (UBEC)}
-                \begin{itemize}
-                    \item \textbf{Baterías 2S 14500 (7.4V):} 2 celdas de litio recargables en serie en la parte inferior del chasis.
-                    \item \textbf{UBEC (5V/3A):} Regulador step-down que reduce la tensión a 5V regulados de forma eficiente.
-                    \item \textbf{Aislamiento Lógico:} Separa la línea de fuerza de los servos de la ESP32 para evitar caídas (*brownouts*).
-                    \item \textbf{GND Unificado:} Referencia de voltaje común indispensable.
-                \end{itemize}
-            \end{alertblock}
+        \begin{alertblock}{Alimentación Dual Independiente (LM2596)}
+            \begin{itemize}
+                \item \textbf{Packs 2x18650 (7.4V c/u):} Dos packs independientes de 2 celdas Li-ion en serie, uno para servos y otro para lógica.
+                \item \textbf{LM2596 \#1 (6.0V servos):} Regulador step-down que alimenta el riel de potencia de los 8 servos SG90/MG90S.
+                \item \textbf{LM2596 \#2 (5.0V lógica):} Regulador step-down que alimenta la ESP32 y los sensores.
+                \item \textbf{Aislamiento Total:} Al operar sobre packs separados, los transitorios de los servos no afectan al microcontrolador.
+                \item \textbf{GND Unificado:} Referencia de voltaje común indispensable.
+            \end{itemize}
+        \end{alertblock}
         \end{column}
     \end{columns}
 \end{frame}
