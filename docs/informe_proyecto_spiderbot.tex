@@ -229,7 +229,7 @@ El bus físico I2C de la ESP32 se utiliza de forma exclusiva para la IMU MPU6050
 \centering
 \caption{Mapa de Conexiones Físicas de la ESP32}
 \vspace{0.3cm}
-\begin{tabularx}{\textwidth}{l l l X}
+\begin{tabularx}{\textwidth}{p{2.8cm} p{2.8cm} p{2.4cm} X}
 \toprule
 \textbf{GPIO ESP32} & \textbf{Componente} & \textbf{Tipo de Señal} & \textbf{Descripción} \\
 \midrule
@@ -238,11 +238,11 @@ GPIO 22 & MPU6050 (IMU) & SCL (I2C) & Bus de reloj serie de la unidad inercial \
 GPIO 18 & HC-SR04 & TRIGGER & Salida digital de pulso de disparo del sonar \\
 GPIO 19 & HC-SR04 & ECHO & Entrada digital de pulso de retorno del sonar \\
 GPIO 14 & Buzzer Activo & Salida Digital & Señal de alarma en caso de proximidad \\
-GPIO 13, 15, 4, 23 & Servos Coxa (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de cadera \\
-GPIO 12, 2, 5, 25 & Servos Fémur (FR, FL, RL, RR) & Salida PWM & Control directo de posición para articulación de rodilla \\
-Vin & LM2596 \#2 Out (5.0V) & Alimentación & Tensión de entrada regulada para ESP32 \\
-3.3 V (ESP32) & MPU6050 (IMU) & Alimentación VCC & Tensión lógica para sensor inercial \\
-GND (Unificado) & Todos los componentes & Tierra común & Referencia negativa unificada del sistema \\
+GPIO 13, 15, 4, 23 & Servos Coxa & Salida PWM & Control de cadera (FR, FL, RL, RR) \\
+GPIO 12, 2, 5, 25 & Servos Fémur & Salida PWM & Control de rodilla (FR, FL, RL, RR) \\
+Vin (ESP32) & LM2596 \#2 Out & Alimentación & Tensión de entrada regulada (5.0V) \\
+3.3V (ESP32) & MPU6050 (IMU) & Alimentación & Tensión lógica para sensor inercial \\
+GND (Unificado) & Todo el sistema & Tierra común & Referencia negativa unificada \\
 \bottomrule
 \end{tabularx}
 \end{table}
