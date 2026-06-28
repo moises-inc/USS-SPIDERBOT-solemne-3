@@ -12,3 +12,15 @@ firmware/mpu_offsets.txt
 .vscode/
 .DS_Store
 Thumbs.db
+
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+*.fls
+*.fdb_latexmk
