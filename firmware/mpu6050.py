@@ -37,6 +37,14 @@ class MPU6050:
             val -= 65536
         return val
         
+    def read_gyro_raw(self):
+        """Lee los valores brutos del giroscopio en X, Y, Z."""
+        data = self.i2c.readfrom_mem(self.address, 0x43, 6)
+        x = self._to_short(data[0:2])
+        y = self._to_short(data[2:4])
+        z = self._to_short(data[4:6])
+        return x, y, z
+        
     def obtener_inclinacion(self):
         """Calcula los ángulos de inclinación (pitch y roll) en grados."""
         x, y, z = self.read_accel_calibrated()

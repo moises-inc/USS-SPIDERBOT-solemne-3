@@ -257,6 +257,30 @@ Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrú
 \end{itemize}
 Cada convertidor opera sobre su propio pack independiente de 2 celdas 18650 en serie (7.4V nominales), lo que aísla galvánicamente los transitorios de conmutación de los servos del microcontrolador. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
 
+\subsection{Clasificador de IA Sensorial Embebida (\codigo{classifier\_ia.py})}
+Para dotar al robot de capacidad de reacción autónoma ante eventos físicos no programados en la coreografía de locomoción, se implementó un clasificador ligero basado en árbol de decisión que ejecuta directamente en la ESP32 a $20\text{ Hz}$.
+
+El módulo \codigo{classifier\_ia.py} define la clase \codigo{IASensorClassifier} que evalúa los valores brutos del acelerómetro y el giroscopio del MPU6050 junto con el comando de movimiento actual, retornando uno de cuatro estados posibles:
+
+\begin{itemize}
+    \item \textbf{FALLEN (Caída):} Se activa si la inclinación calculada (Pitch o Roll) supera los $\pm 45^\circ$, si la magnitud de aceleración resulta cercana a cero (caída libre, $|a| < 0.2g$), o si se detecta un impacto de choque superior a $2.0g$.
+    \item \textbf{PUSHED (Perturbación):} Se detecta cuando el robot está en reposo (comando \texttt{stop} o \texttt{reposo}) pero la magnitud del giroscopio supera los $120^\circ/\text{s}$, indicando un empuje físico externo.
+    \item \textbf{SLIPPING (Derrape):} Se identifica cuando el robot ejecuta una marcha (\texttt{forward} o \texttt{backward}) pero la varianza de la aceleración longitudinal es anormalmente baja, indicando que las patas se mueven en vacío sin desplazar el chasis.
+    \item \textbf{NORMAL:} Estado por defecto cuando no se cumple ninguna condición anterior.
+\end{itemize}
+
+Los umbrales del clasificador se calibraron experimentalmente:
+\begin{align*}
+    \text{Pitch}_{\text{límite}} &= 45^\circ, \quad
+    \text{Roll}_{\text{límite}} = 45^\circ, \quad
+    a_{\text{caída libre}} < 0.2g \\
+    a_{\text{impacto}} &> 2.0g, \quad
+    \omega_{\text{perturbación}} > 120^\circ/\text{s}, \quad
+    \sigma^2_{a_x, \text{derrape}} < 0.08
+\end{align*}
+
+En el bucle de control \codigo{locomotion\_loop()}, si \codigo{state.estado\_ia == "FALLEN"}, se detiene inmediatamente la marcha de gateo, los servos retornan a pose estática y el buzzer emite un sonido pulsante de emergencia. El estado clasificado se transmite también al dashboard web vía el campo \codigo{estado\_ia} en la API \texttt{/telemetry}, donde se despliega con código de colores dinámico.
+
 \newpage
 
 % ======================================================

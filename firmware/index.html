@@ -199,7 +199,7 @@
         /* Telemetria */
         .telemetry-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 25px;
         }
@@ -224,6 +224,16 @@
         }
         .telemetry-item.alert .telemetry-val {
             color: var(--danger);
+        }
+        .telemetry-item.ia-fallen .telemetry-val {
+            color: var(--danger);
+            animation: pulse-danger 0.8s ease-in-out infinite;
+        }
+        .telemetry-item.ia-pushed .telemetry-val { color: #ff9800; }
+        .telemetry-item.ia-slipping .telemetry-val { color: #ff9800; }
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
         /* IMU Visualizer (SVG Crosshair) */
         .imu-visualizer-container {
@@ -326,6 +336,10 @@
                 <div class="telemetry-item" id="item-distance">
                     <div class="telemetry-val" id="val-distance">-- cm</div>
                     <div class="telemetry-lbl">Distancia Sonar</div>
+                </div>
+                <div class="telemetry-item" id="item-ia">
+                    <div class="telemetry-val" id="val-ia">NORMAL</div>
+                    <div class="telemetry-lbl">Estado IA</div>
                 </div>
             </div>
             
@@ -467,7 +481,7 @@
             else if (cmd === "reposo") document.getElementById("btn-stand").classList.add("active");
         }
         
-        function renderTelemetry(pitch, roll, distance, cmd, stabilize) {
+        function renderTelemetry(pitch, roll, distance, cmd, stabilize, estado_ia) {
             document.getElementById("val-pitch").textContent = `${pitch.toFixed(1)}°`;
             document.getElementById("val-roll").textContent = `${roll.toFixed(1)}°`;
             
@@ -533,6 +547,18 @@
             
             updateActiveCommandInUI(cmd);
             updateStabilizationUI(stabilize === 1);
+
+            const iaEl = document.getElementById("item-ia");
+            const iaVal = document.getElementById("val-ia");
+            iaVal.textContent = estado_ia;
+            iaEl.className = "telemetry-item";
+            if (estado_ia === "FALLEN") {
+                iaEl.className = "telemetry-item ia-fallen";
+            } else if (estado_ia === "PUSHED") {
+                iaEl.className = "telemetry-item ia-pushed";
+            } else if (estado_ia === "SLIPPING") {
+                iaEl.className = "telemetry-item ia-slipping";
+            }
         }
         
         function pollTelemetry() {
@@ -562,7 +588,7 @@
                     distance = 12.0 + Math.abs((t * 5) % 80 - 40);
                 }
                 
-                renderTelemetry(pitch, roll, distance, demoCommand, activeStabilize ? 1 : 0);
+                renderTelemetry(pitch, roll, distance, demoCommand, activeStabilize ? 1 : 0, "NORMAL");
                 
                 if (host && Math.floor(t) % 5 === 0) {
                     fetch(`http://${host}/telemetry`)
@@ -581,7 +607,7 @@
                 .then(data => {
                     updateConnection(true);
                     consecutiveFailures = 0;
-                    renderTelemetry(data.pitch, data.roll, data.distance, data.cmd, data.stabilize);
+                    renderTelemetry(data.pitch, data.roll, data.distance, data.cmd, data.stabilize, data.estado_ia);
                 })
                 .catch(e => {
                     console.error("Error polling telemetría:", e);

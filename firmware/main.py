@@ -14,6 +14,7 @@ import state
 from mpu6050 import MPU6050
 from sonar_sensor import SonarSensor
 from buzzer_alert import BuzzerAlert
+from classifier_ia import IASensorClassifier
 
 class ESP32ServoDirect:
     """
@@ -100,6 +101,8 @@ except Exception as e:
 
 sonar = SonarSensor(trigger_pin=18, echo_pin=19)
 alarma = BuzzerAlert(pin_number=14)
+
+clasificador_ia = IASensorClassifier()
 
 alarma.play_startup() # Melodía rítmica de inicio para buzzer activo
 
@@ -339,10 +342,13 @@ async def sensor_updater():
         # 1. Medir distancia ultrasónica
         state.distancia_actual = sonar.medir_distancia()
         
-        # 2. Medir inclinación MPU6050
+        # 2. Medir inclinación MPU6050 y clasificar estado IA
         if imu:
             try:
+                ax, ay, az = imu.read_accel_calibrated()
+                gx, gy, gz = imu.read_gyro_raw()
                 state.pitch_actual, state.roll_actual = imu.obtener_inclinacion()
+                state.estado_ia = clasificador_ia.classify(ax, ay, az, gx, gy, gz, state.comando_actual)
                 
                 # Alerta inercial si el robot se inclina peligrosamente (>15 grados)
                 if abs(state.pitch_actual) > 15.0 or abs(state.roll_actual) > 15.0:
@@ -361,7 +367,16 @@ async def locomotion_loop():
     """Supervisa y procesa el estado actual del comando de movimiento."""
     print("Iniciando tarea de control de locomoción...")
     while True:
-        # A. Prevención de colisión inmediata reactiva local
+        # A. Detección de caída por IA sensorial
+        if state.estado_ia == "FALLEN":
+            print("[ALERTA IA] ¡Caída detectada! Deteniendo y emitiendo alarma.")
+            alarma.alerta_postura()
+            pos_reposo()
+            state.comando_actual = "stop"
+            await asyncio.sleep_ms(500)
+            continue
+
+        # B. Prevención de colisión inmediata reactiva local
         if 0.0 < state.distancia_actual < 15.0:
             print("[ALERTA] Obstáculo crítico! Deteniendo cuadrúpedo de inmediato.")
             alarma.play_critical_alert() # Alerta crítica rítmica

@@ -232,6 +232,32 @@
     \end{columns}
 \end{frame}
 
+% Slide 4b: IA Sensorial Embebida
+\begin{frame}{IA Sensorial Embebida en ESP32}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Clasificador por Árbol de Decisión}
+                Ejecuta en tiempo real ($20\text{ Hz}$) sobre valores brutos del MPU6050:
+                \begin{itemize}
+                    \item \textbf{FALLEN:} Inclinación $> \pm 45^\circ$, caída libre ($|a| < 0.2g$) o impacto ($> 2.0g$).
+                    \item \textbf{PUSHED:} Reposo con giroscopio $> 120^\circ$/s (empuje externo).
+                    \item \textbf{SLIPPING:} Marcha sin variación inercial (patas en vacío).
+                    \item \textbf{NORMAL:} Operación estable.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.52\textwidth}
+            \begin{alertblock}{Reacción Autónoma en el Bucle}
+                \begin{itemize}
+                    \item Si \textbf{FALLEN}: Se aborta la marcha, los servos vuelven a pose segura y el buzzer emite alarma pulsante.
+                    \item Estado transmitido al dashboard web vía API \texttt{/telemetry} con indicación visual por colores (rojo intermitente para caída, naranja para perturbación/derrape, verde para normal).
+                    \item Sin falsos positivos: los umbrales se calibran para ignorar inclinación leve de la marcha de gateo.
+                \end{itemize}
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 % Slide 5: Firmware Multitarea
 \begin{frame}{Firmware Multitarea Asíncrono (\codigo{uasyncio})}
     \begin{columns}

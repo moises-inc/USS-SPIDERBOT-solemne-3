@@ -18,3 +18,6 @@ estabilizacion_activa = True
 pitch_actual = 0.0
 roll_actual = 0.0
 distancia_actual = 100.0
+
+# Estado clasificado por la IA sensorial embebida
+estado_ia = "NORMAL"

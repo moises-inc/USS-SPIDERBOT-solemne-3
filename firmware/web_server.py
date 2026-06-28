@@ -118,12 +118,13 @@ async def handle_client(reader, writer):
             
         # ── ENDPOINT: API de Telemetría (Frecuencia de lectura externa ~4Hz) ──
         elif path.startswith("/telemetry"):
-            response = '{"pitch":%.1f,"roll":%.1f,"distance":%.1f,"cmd":"%s","stabilize":%d}' % (
+            response = '{"pitch":%.1f,"roll":%.1f,"distance":%.1f,"cmd":"%s","stabilize":%d,"estado_ia":"%s"}' % (
                 state.pitch_actual,
                 state.roll_actual,
                 state.distancia_actual,
                 state.comando_actual,
-                1 if state.estabilizacion_activa else 0
+                1 if state.estabilizacion_activa else 0,
+                state.estado_ia
             )
             writer.write(b"HTTP/1.1 200 OK\r\n")
             writer.write(b"Content-Type: application/json\r\n")
