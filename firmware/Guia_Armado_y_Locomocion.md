@@ -1,227 +1,302 @@
-# Guía de Armado Electrónico y Sistema de Locomoción — USS SpiderBot
-**Solemne 3 — Taller de Programación I (Universidad San Sebastián)**
+# Manual Definitivo de Armado, Electrónica, Locomoción y Firmware — USS SpiderBot
+**Solemne 3 — Taller de Programación I (Universidad San Sebastián, 2026)**
 
-Este documento contiene las especificaciones detalladas para el armado de la electrónica del robot cuadrúpedo **USS SpiderBot**, el diseño lógico de su sistema de locomoción (marcha de gateo) y las instrucciones para realizar pruebas de simulación y calibración inercial.
-
----
-
-## 1. Arquitectura del Sistema y Lista de Materiales (BOM)
-
-El **USS SpiderBot** es un robot caminador cuadrúpedo de **8 grados de libertad (8-DoF)** diseñado para el reconocimiento de zonas de desastre (escombros). Cuenta con autonomía inercial para auto-nivelarse en terrenos rugosos y evasión reactiva ante obstáculos frontales.
-
-### Lista de Componentes Electrónicos
-*   **1x Microcontrolador ESP32 DevKit V1 (38 pines):** Cerebro del robot que ejecuta el bucle de control en MicroPython.
-*   **8x Servomotores SG90 o MG90S:** Actuadores para el movimiento de las articulaciones (2 por pata: Coxa y Fémur) conectados directamente a pines GPIO con PWM nativo de la ESP32.
-*   **1x Unidad de Medida Inercial (IMU) GY-521 (MPU6050):** Acelerómetro y giroscopio de 6 ejes que mide la inclinación (Pitch y Roll) para la auto-estabilización.
-*   **1x Sensor de Distancia Ultrasónico HC-SR04:** Sensor de prevención para detener la marcha si hay obstáculos a menos de 15 cm.
-*   **1x Buzzer Activo (5V):** Actuador acústico para emitir pitidos de encendido, alertas de colisión inminente y alarmas de inestabilidad extrema.
-*   **2x Porta Pilas Duales 2x18650 (4 celdas Li-ion 18650 de 3.7V en total):** Dos packs independientes de 2 celdas 18650 en serie, cada uno proveyendo 7.4V nominales para alimentación redundante y aislada.
-*   **2x Convertidores Step-Down LM2596:** Reguladores de voltaje reductores ajustables. El LM2596 #1 se regula a 6.0V para el riel de potencia de los servos SG90/MG90S, y el LM2596 #2 se regula a 5.0V para alimentar la ESP32 y los sensores.
+Este documento constituye la guía oficial y definitiva para el ensamblaje mecánico, la integración de la electrónica dual aislada, el conexionado físico (pinout), el centrado de servomotores y la calibración inercial del robot cuadrúpedo **USS SpiderBot**. Además, se detalla la arquitectura de software (MicroPython) y el funcionamiento de la Inteligencia Artificial Sensorial embebida.
 
 ---
 
-## 2. Guía de Alimentación y Conexiones (Pinout)
-
-### IMPORTANTE: El Aislamiento de Potencia
-Los servomotores SG90/MG90S pueden consumir picos de corriente superiores a **500 mA** cada uno cuando realizan esfuerzo mecánico (por ejemplo, al levantar el peso del robot).
-*   **Regla de Oro:** **NUNCA** alimente los servos desde las salidas de 3.3V o 5V del microcontrolador ESP32. Hacerlo causará caídas de tensión (brownouts) que reiniciarán constantemente el procesador.
-*   **Solución (Alimentación Dual Independiente):** Se utilizan dos convertidores LM2596 alimentados desde dos packs 2x18650 independientes. El LM2596 #1 se regula a **6.0V** para el riel de potencia de los servos, y el LM2596 #2 se regula a **5.0V** para la ESP32 y sensores. Cada convertidor opera sobre su propio pack de baterías, aislando eléctricamente los transitorios de los servos del microcontrolador.
-*   **GND Común:** Es fundamental unir físicamente el terminal GND de la ESP32, el GND de salida de ambos LM2596 y el cable de tierra (marrón/negro) de todos los 8 servos en un nodo común para establecer una referencia de voltaje unificada.
-
-### Tabla de Conexiones del ESP32
-
-El bus de comunicación I2C se utiliza de forma exclusiva para la IMU MPU6050. Los 8 servos se cablean directamente a las salidas PWM físicas de la ESP32.
-
-| Componente | Pin en Componente | Pin en ESP32 | Tipo de Señal | Propósito / Función |
-| :--- | :---: | :---: | :--- | :--- |
-| **MPU6050 (IMU)** | VCC / GND | 3.3V / GND | Alimentación | Energía para el procesado digital inercial |
-| **MPU6050 (IMU)** | SDA / SCL | GPIO 21 / GPIO 22 | I2C (Hardware) | Lectura de inclinación angular en grados |
-| **Servo FR - Coxa** | Señal (Naranja) | GPIO 13 | PWM (Out) | Control de rotación del servo de cadera FR |
-| **Servo FR - Fémur**| Señal (Naranja) | GPIO 12 | PWM (Out) | Control de rotación del servo de rodilla FR |
-| **Servo FL - Coxa** | Señal (Naranja) | GPIO 15 | PWM (Out) | Control de rotación del servo de cadera FL |
-| **Servo FL - Fémur**| Señal (Naranja) | GPIO 2  | PWM (Out) | Control de rotación del servo de rodilla FL |
-| **Servo RL - Coxa** | Señal (Naranja) | GPIO 4  | PWM (Out) | Control de rotación del servo de cadera RL |
-| **Servo RL - Fémur**| Señal (Naranja) | GPIO 5  | PWM (Out) | Control de rotación del servo de rodilla RL |
-| **Servo RR - Coxa** | Señal (Naranja) | GPIO 23 | PWM (Out) | Control de rotación del servo de cadera RR |
-| **Servo RR - Fémur**| Señal (Naranja) | GPIO 25 | PWM (Out) | Control de rotación del servo de rodilla RR |
-| **HC-SR04 (Sonar)** | VCC / GND | 5V / GND | Alimentación | El transductor de ultrasonido requiere 5V |
-| **HC-SR04 (Sonar)** | TRIG / ECHO | GPIO 18 / GPIO 19 | Digital I/O | Control de emisión y lectura de eco del sonar |
-| **Buzzer Activo** | Terminal + / - | GPIO 14 / GND | Digital OUT | Activación y modulación de tonos de alerta |
+## 💻 Índice
+1. [Especificaciones y Arquitectura General](#1-especificaciones-y-arquitectura-general)
+2. [Lista de Materiales y Herramientas (BOM)](#2-lista-de-materiales-y-herramientas-bom)
+3. [Integración Eléctrica y Regulación de Potencia Dual](#3-integración-eléctrica-y-regulación-de-potencia-dual)
+4. [Pinout y Diagrama de Cableado Detallado](#4-pinout-y-diagrama-de-cableado-detallado)
+5. [Guía de Ensamblaje Mecánico 3D Paso a Paso](#5-guía-de-ensamblaje-mecánico-3d-paso-a-paso)
+6. [Estructura del Firmware y Mapa de Archivos](#6-estructura-del-firmware-y-mapa-de-archivos)
+7. [Algoritmo de Locomoción y Marcha de Gateo](#7-algoritmo-de-locomoción-y-marcha-de-gateo)
+8. [Inteligencia Artificial Sensorial (IA Local)](#8-inteligencia-artificial-sensorial-ia-local)
+9. [Protocolo de Puesta en Marcha y Calibración](#9-protocolo-de-puesta-en-marcha-y-calibración)
+10. [Guía de Diagnóstico y Resolución de Problemas (FAQ)](#10-guía-de-diagnóstico-y-resolución-de-problemas-faq)
 
 ---
 
-## 3. Esquema de Cableado Detallado
+## 1. Especificaciones y Arquitectura General
+El **USS SpiderBot** es un robot móvil terrestre cuadrúpedo articulado con **8 grados de libertad (8-DoF)**. Su diseño físico se basa en una configuración cinemática **Pitch-Pitch** (dos ejes de rotación horizontales y paralelos por pata, correspondientes a las articulaciones de la cadera o *Coxa* y la rodilla o *Fémur*). Esta disposición prescinde de la rotación vertical para maximizar el torque útil y la estabilidad de carga en terrenos rugosos.
 
-A continuación se muestra el conexionado esquemático en formato de texto. El bus I2C se conecta a la IMU y los servos se cablean directamente a las GPIOs de la ESP32.
+### Características Principales:
+*   **Microcontrolador Principal:** ESP32 DevKit V1 ejecutando MicroPython asíncrono.
+*   **Locomoción Dinámica:** Marcha de gateo estática (*Crawl Gait*) asistida por compensación inercial activa.
+*   **Estabilidad Activa:** Lectura inercial en tiempo real (IMU MPU6050) para auto-nivelación de la pose.
+*   **Seguridad Reactiva:** Sensor de proximidad frontal (ultrasonido HC-SR04) y buzzer activo de alarma.
+*   **IA de Borde (Edge AI):** Clasificador embebido local para detectar caídas, derrapes y perturbaciones.
+*   **Interfaz de Operación:** Servidor web asíncrono y control por dashboard Glassmorphism por Wi-Fi.
+
+---
+
+## 2. Lista de Materiales y Herramientas (BOM)
+
+### A. Componentes Electrónicos
+*   **1x ESP32 DevKit V1 (38 pines):** Microcontrolador principal de 3.3V.
+*   **8x Servomotores SG90 (engranajes de nylon) o MG90S (engranajes metálicos):** Actuadores de torque.
+*   **1x Módulo GY-521 (IMU MPU6050):** Acelerómetro y giroscopio de 6 ejes con comunicación I2C.
+*   **1x Sensor Ultrasónico HC-SR04:** Transductor de distancia de 5V.
+*   **1x Buzzer Activo (5V):** Generador de alarmas y confirmaciones acústicas.
+*   **2x Convertidores Step-Down LM2596:** Reguladores reductores de voltaje ajustables (con voltímetro interno o manual).
+*   **2x Porta Pilas Duales 2x18650:** Soportes para las celdas de alimentación independiente.
+*   **4x Celdas de Litio-Ion 18650 (3.7V / 2500mAh mínimo):** Baterías de alta tasa de descarga.
+
+### B. Materiales de Chasis e Impresión 3D
+*   **1x Placa Base Inferior (`cuerpo_cuadruepdo.scad`):** Soporta servos de cadera y portabaterías.
+*   **1x Placa Base Superior/Tapa (`cuerpo_cuadruepdo.scad`):** Protege la electrónica y soporta el ESP32.
+*   **4x Eslabones Fémur (`femur_cuadrupedo.scad`):** Conectan la cadera con el muslo y alojan los servos de rodilla.
+*   **4x Tibias Inferiores Curvas (`tibia_cuadrupedo.scad`):** Brazos de contacto con el suelo.
+*   **4x Pilares Separadores:** Pilares de 25mm M3 (plástico o latón) para distanciar el chasis.
+
+### C. Herramientas Recomendadas
+*   **Multímetro Digital:** Indispensable para regular el voltaje de salida de los convertidores LM2596.
+*   **Destornillador de Precisión:** Phillips (cruz) para fijar servos y horns.
+*   **Amarras de Velcro:** Para la fijación inferior de los porta pilas.
+*   **Cautín y Soldadura de Estaño:** Para consolidar el nodo de tierra común (GND unificado).
+
+---
+
+## 3. Integración Eléctrica y Regulación de Potencia Dual
+
+El principal enemigo de los robots caminadores pequeños es el **ruido eléctrico** y los **picos de corriente** inducidos por los motores. Al iniciar el movimiento, los 8 servos pueden demandar en conjunto más de **3.0A**, provocando que el voltaje caiga por debajo de 4.0V, lo que gatilla reinicios por bajo voltaje (*brownouts*) en la ESP32.
+
+Para evitar esto, se implementa un **aislamiento absoluto de potencia y lógica**:
 
 ```text
-       [Pack Bat. A: 2x18650 (7.4V)] ──> [LM2596 #1 (Reg. a 6.0V)] ──> Riel VCC Servos (8x SG90)
-       [Pack Bat. B: 2x18650 (7.4V)] ──> [LM2596 #2 (Reg. a 5.0V)] ──> Vin ESP32 / Sensores
-       [GND Común Unificado] <─────────> GND salidas LM2596 #1, #2 y GND ESP32
-
-  CONEXION DE SEÑALES (I2C y GPIOs):
-  ==================================
-  ESP32 GPIO 21 (SDA) <-----------------> MPU6050 SDA
-  ESP32 GPIO 22 (SCL) <-----------------> MPU6050 SCL
+  [Pack Batería A (7.4V)] ──> [LM2596 #1 (Regulado a 6.0V)] ──> Riel VCC Servomotores (Servos 0-7)
+  [Pack Batería B (7.4V)] ──> [LM2596 #2 (Regulado a 5.0V)] ──> Pin Vin ESP32 y Alimentación Sensores
   
-  ESP32 GPIO 18 (TRIG) <----------------> HC-SR04 TRIG
-  ESP32 GPIO 19 (ECHO) <----------------> HC-SR04 ECHO
-  ESP32 GPIO 14 (SIG)  <----------------> Buzzer (+) [Buzzer (-) a GND]
-  
-  ESP32 GPIOs Servos   <----------------> Servos Señal (FR: 13/12, FL: 15/2,
-                                                          RL: 4/5, RR: 23/25)
+  [GND de Salida LM2596 #1] ──┐
+  [GND de Salida LM2596 #2] ──┼──> [NODO DE TIERRA UNIFICADO] ──> Pin GND ESP32
+  [GND de todos los Servos] ──┘
 ```
 
+### 🛠️ Protocolo Obligatorio de Regulación (Paso a Paso):
+1.  **Aislamiento Inicial:** No conecte la ESP32, sensores ni servos a los reguladores LM2596 aún.
+2.  **Encendido de Batería:** Inserte las pilas 18650 cargadas en los porta pilas y encienda la alimentación de entrada de los LM2596.
+3.  **Medición y Ajuste con Multímetro:**
+    *   Coloque las puntas de prueba del multímetro en la salida `OUT+` y `OUT-` del **LM2596 #1 (Servos)**. Gire el pequeño tornillo del potenciómetro de bronce en sentido antihorario hasta medir exactamente **6.0V**.
+    *   Coloque las puntas de prueba en la salida del **LM2596 #2 (Lógica)**. Ajuste el potenciómetro hasta medir exactamente **5.0V**.
+4.  **Verificación Final:** Apague la alimentación, termine el conexionado físico y vuelva a encender solo tras comprobar que los voltajes de alimentación son correctos.
 
-### Configuración de Canales de Servomotores (GPIO Directo)
-El robot se divide en 4 patas numeradas de la 0 a la 3, en una **configuración cinemática Pitch-Pitch (2 ejes horizontales paralelos por pata)**. Esto significa que ambos servos operan en el plano vertical: el de cadera (**Coxa** / Hip Pitch) realiza la flexión de la cadera y el de rodilla (**Fémur** / Knee Pitch) la de la rodilla, prescindiendo del giro horizontal para mayor torque y estabilidad de carga:
-
-*   **Pata 0 (Delantera Derecha - FR):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 13** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 12**
-*   **Pata 1 (Delantera Izquierda - FL):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 15** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 2**
-*   **Pata 2 (Trasera Izquierda - RL):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 4**  | Fémur (Knee Pitch) $\rightarrow$ **GPIO 5**
-*   **Pata 3 (Trasera Derecha - RR):** Coxa (Hip Pitch) $\rightarrow$ **GPIO 23** | Fémur (Knee Pitch) $\rightarrow$ **GPIO 25**
+### ⚠️ Reglas Críticas de Seguridad Eléctrica:
+*   **GND Unificado:** Es estrictamente obligatorio unir físicamente el GND del circuito de servos (LM2596 #1), el GND del circuito lógico (LM2596 #2) y el GND de la ESP32. Si no están unidos, los servos vibrarán sin control al no tener una referencia de señal común.
+*   **Peligro de Backfeeding (Retorno de Voltaje):** **NUNCA** conecte el cable USB a su computadora mientras el interruptor de las baterías esté encendido y entregando 5.0V al pin `Vin` de la ESP32. Muchos clones de ESP32 carecen de diodos de bypass y esta conexión en paralelo puede quemar el puerto USB del computador o dañar el microcontrolador.
+    *   *Regla:* Para subir códigos mediante USB, **apague** las baterías. Para pruebas inalámbricas con baterías, **desconecte** por completo el cable USB.
 
 ---
 
-## 4. Guía de Ensamblaje Mecánico con Piezas 3D
+## 4. Pinout y Diagrama de Cableado Detallado
 
-El correcto ensamblaje de las piezas estructurales impresas en 3D con los componentes electrónicos es crucial para evitar rozamientos, esfuerzos innecesarios en los servos y desgaste de material.
+Las conexiones físicas directas de la ESP32 DevKit V1 se estructuran para optimizar el ruteo de cables y evitar interferencias en el bus I2C:
 
-### 4.1 Preparación de las Piezas Impresas
-*   **Limpieza de Cavidades:** Retire con cuidado todo el material de soporte de las cavidades destinadas a los servomotores en la `placa_base_inferior` y los fémures (`eslabon_femur`). Las tolerancias son estrechas (0.3mm total) para un ajuste a presión firme (snug fit).
-*   **Acondicionamiento de Agujeros:** Los agujeros para los tornillos M2 de fijación de bridas de servo están diseñados con un diámetro de 2.0mm. Se recomienda roscar previamente los orificios metiendo y sacando un tornillo de prueba para facilitar el ensamblaje final.
+| Pin ESP32 | Componente | Tipo de Señal | Función / Descripción |
+| :---: | :--- | :---: | :--- |
+| **Vin** | Salida LM2596 #2 (5.0V) | Alimentación IN | Entrada de voltaje regulado para la lógica de la ESP32 |
+| **GND** | Nodo de Tierra Común | Referencia | Tierra unificada del sistema |
+| **GPIO 21** | MPU6050 (IMU) | SDA (I2C) | Bus de datos serie de la unidad inercial |
+| **GPIO 22** | MPU6050 (IMU) | SCL (I2C) | Bus de reloj serie de la unidad inercial |
+| **GPIO 18** | HC-SR04 (Sonar) | TRIGGER | Pulso digital de disparo del ultrasonido |
+| **GPIO 19** | HC-SR04 (Sonar) | ECHO | Entrada de lectura del tiempo de eco |
+| **GPIO 14** | Buzzer Activo | Salida Digital | Activación y modulación de tonos acústicos |
+| **GPIO 13** | Servo FR - Coxa (Pata 0) | Salida PWM | Control de la articulación de la cadera derecha-delantera |
+| **GPIO 12** | Servo FR - Fémur (Pata 0) | Salida PWM | Control de la articulación de la rodilla derecha-delantera |
+| **GPIO 15** | Servo FL - Coxa (Pata 1) | Salida PWM | Control de la articulación de la cadera izquierda-delantera |
+| **GPIO 2** | Servo FL - Fémur (Pata 1) | Salida PWM | Control de la articulación de la rodilla izquierda-delantera |
+| **GPIO 4** | Servo RL - Coxa (Pata 2) | Salida PWM | Control de la articulación de la cadera izquierda-trasera |
+| **GPIO 5** | Servo RL - Fémur (Pata 2) | Salida PWM | Control de la articulación de la rodilla izquierda-trasera |
+| **GPIO 23** | Servo RR - Coxa (Pata 3) | Salida PWM | Control de la articulación de la cadera derecha-trasera |
+| **GPIO 25** | Servo RR - Fémur (Pata 3) | Salida PWM | Control de la articulación de la rodilla derecha-trasera |
 
-### 4.2 Secuencia de Montaje Mecánico Paso a Paso
+### Esquema de Señales (Físico):
+```text
+                  +-----------------------------------+
+                  |           ESP32 DevKit            |
+                  |                                   |
+    MPU6050 SDA ──| GPIO 21                   GPIO 13 |──> Servo FR - Coxa (Cadera)
+    MPU6050 SCL ──| GPIO 22                   GPIO 12 |──> Servo FR - Fémur (Rodilla)
+                  |                                   |
+   HC-SR04 TRIG ──| GPIO 18                   GPIO 15 |──> Servo FL - Coxa (Cadera)
+   HC-SR04 ECHO ──| GPIO 19                   GPIO 2  |──> Servo FL - Fémur (Rodilla)
+                  |                                   |
+     Buzzer (+) ──| GPIO 14                   GPIO 4  |──> Servo RL - Coxa (Cadera)
+                  |                           GPIO 5  |──> Servo RL - Fémur (Rodilla)
+                  |                                   |
+                  |                           GPIO 23 |──> Servo RR - Coxa (Cadera)
+                  |                           GPIO 25 |──> Servo RR - Fémur (Rodilla)
+                  |                                   |
+     LM2596 #2  ──| Vin                           GND |──> Nodo de Tierra Común (GND)
+                  +-----------------------------------+
+```
+
+---
+
+## 5. Guía de Ensamblaje Mecánico 3D Paso a Paso
+
+El ensamble requiere precisión para asegurar que la geometría física del cuadrúpedo sea ortogonal y no existan tensiones mecánicas estáticas en los servos.
+
+```text
+[Piezas Limpias] ➔ [Montar Servos en Placa Inferior] ➔ [Montar Servos en Fémures]
+                       ➔ [Centrado Eléctrico de Servos] ➔ [Acoplar Horns y Patas]
+```
+
+### Paso 1: Acondicionamiento de las Piezas 3D
+*   Remueva con cuidado todo el material de soporte impreso en PLA/PETG. Preste especial atención a los calces prismáticos de los fémures y a las canaletas interiores de la placa base inferior.
+*   Pase un tornillo M2 de prueba en los agujeros de fijación para roscarlos previamente. Las piezas están diseñadas con tolerancias de 0.3mm para ajustes firmes (*snug fits*).
+
+### Paso 2: Montaje de Servos de Cadera (Hip Pitch)
+*   Inserte a presión los 4 servos de cadera en la **Placa Base Inferior**.
+*   **Orientación Crucial:** El eje metálico estriado de salida de cada servo debe quedar posicionado hacia el extremo exterior de la placa (hacia la izquierda o derecha exterior).
+*   Asegure los servos con tornillos autorroscantes M2 (2 por servo) introducidos a través de las aletas del cuerpo del servo.
+*   Pase los cables de conexión hacia el interior del cuerpo por las canaletas provistas para tal fin.
+
+### Paso 3: Montaje de Servos de Rodilla (Knee Pitch)
+*   Tome los 4 fémures impresos (`eslabon_femur.scad`) e introduzca a presión un servo en la cavidad de rodilla de cada uno.
+*   **Orientación Crucial:** El eje de salida del servo debe quedar alineado con la articulación exterior del fémur (a 55mm del eje de cadera).
+*   Asegure el servo al fémur con tornillos M2.
+*   Pase el cable del servo a lo largo de la ranura protectora lateral del fémur hacia la articulación de la cadera.
+
+### Paso 4: Calibración del Cero Eléctrico (Paso Crítico antes del Acople)
+*   No monte aún los brazos plásticos (*horns*) en los ejes de los servomotores.
+*   Conecte la ESP32 vía USB, cargue y ejecute el script `prueba_servos.py`, seleccionando la **Opción 3** (*Modo Armado/Calibración*). Esto posicionará los engranajes de todos los servos a la pose neutra del software:
+    *   **Caderas:** $90^\circ$ (Posición media exacta del rango de giro).
+    *   **Rodillas:** $60^\circ$ (Patas derechas) / $120^\circ$ (Patas izquierdas) (Posición neutra del fémur/tibia).
+*   *Nota:* Mantenga los servos energizados y fijos en estos ángulos durante los siguientes pasos.
+
+### Paso 5: Acoplamiento de Extremidades (Fémur y Tibia)
+*   **Acople del Fémur a la Cadera:** Con el servo de cadera fijo eléctricamente a $90^\circ$, encaje el fémur manual y perpendicularmente respecto al chasis inferior (formando un ángulo recto de $90^\circ$ apuntando hacia abajo). Fíjelo apretando el tornillo central del engranaje del servo.
+*   **Acople de la Tibia al Fémur:** Con el servo de rodilla energizado y fijo a $60^\circ$ (derecha) o $120^\circ$ (izquierda), encaje la tibia apuntando verticalmente hacia abajo (en escuadra vertical respecto al suelo). Atornille el horn central.
+*   *Verificación Visual:* En pose de reposo estática, el robot debe quedar erguido, con las cuatro patas formando un cuadrado perfecto y las tibias perpendiculares a la superficie.
+
+### Paso 6: Doble Deck y Cierre
+*   Atornille los 4 pilares distanciadores M3 de 25mm en las roscas de la Placa Inferior.
+*   Aloje los portabaterías en los carriles inferiores y amárrelos con velcro.
+*   Posicione los reguladores LM2596 y la ESP32 en el compartimiento intermedio.
+*   Monte la **Placa Base Superior** y asegúrela a los pilares con tornillos M3.
+*   Conecte la IMU MPU6050 y el sensor ultrasónico HC-SR04 en sus correspondientes cunas frontales.
+
+---
+
+## 6. Estructura del Firmware y Mapa de Archivos
+
+El sistema operativo del USS SpiderBot se implementa sobre un modelo asíncrono cooperativo utilizando `uasyncio` en MicroPython. La arquitectura de archivos es la siguiente:
+
+```text
+├── main.py             # Orquestador del bucle principal, gait control y failsafe reactivo.
+├── web_server.py       # Servidor HTTP no bloqueante y enrutador de API REST.
+├── state.py            # Almacén global de estados (Variables inerciales, proximidad y comandos).
+├── classifier_ia.py    # Clasificador inercial de IA sensorial basado en árbol de decisiones.
+├── mpu6050.py          # Controlador y lector de acelerómetro/giroscopio I2C.
+├── sonar_sensor.py     # Controlador del sensor ultrasónico HC-SR04.
+├── buzzer_alert.py     # Controlador digital de alertas melódicas y beeps del buzzer.
+├── calibrate_mpu.py    # Script de autocalibración estática del acelerómetro.
+├── prueba_servos.py    # Script de diagnóstico para barrido angular y centrado (Modo Armado).
+└── dashboard.html      # Panel interactivo premium de control y telemetría real.
+```
+
+### El lazo de Control Asíncrono (`uasyncio`):
+El microcontrolador divide el procesamiento en tres tareas concurrentes que ceden control de forma no bloqueante mediante `await asyncio.sleep_ms()`:
 
 ```mermaid
 graph TD
-    Step1[1. Limpieza de piezas 3D y preparación de orificios] --> Step2[2. Insertar y atornillar 4 Servos de Cadera en Placa Inferior]
-    Step2 --> Step3[3. Insertar y atornillar 4 Servos de Rodilla en Fémures]
-    Step3 --> Step4[4. Calibración del Cero Eléctrico de todos los servos]
-    Step4 --> Step5[5. Acoplar y atornillar Fémures a los Horns de Cadera]
-    Step5 --> Step6[6. Acoplar y atornillar Tibias a los Horns de Rodilla]
-    Step6 --> Step7[7. Montaje de Pilares, Placa Superior y Sensores]
+    subgraph ESP32 Async Loop
+        T1[sensor_updater - 50ms] -->|Actualiza state| State[(state.py)]
+        T2[locomotion_loop - 20ms] -->|Lee state / Mueve servos| Servos[8x Servomotores]
+        T3[web_server_task - Puerto 80] -->|Recibe comandos HTTP| State
+    end
 ```
-
-1.  **Paso 1: Montaje de Servos de Cadera (Hip Pitch)**
-    *   Tome la **Placa Base Inferior** e inserte a presión cada uno de los 4 servos de cadera en sus respectivos soportes perimetrales (`soporte_servo_cadera`).
-    *   **Orientación:** El eje de salida estriado de cada servo debe quedar posicionado hacia el lado del rebaje frontal del soporte (X = 5.5).
-    *   Asegure los servos utilizando tornillos autorroscantes M2 (dos por servo) atravesando las bridas del servo hacia la base de plástico.
-    *   Rutee los cables de señal hacia el interior del chasis a través de las canaletas internas.
-2.  **Paso 2: Montaje de Servos de Rodilla (Knee Pitch)**
-    *   Tome los 4 fémures (`eslabon_femur`) e inserte a presión un servo en el bolsillo de rodilla de cada fémur.
-    *   **Orientación:** El eje estriado de salida debe quedar alineado con el extremo exterior del fémur (X = 55.0).
-    *   Asegure el servo al fémur con dos tornillos autorroscantes M2.
-    *   Pase el cable del servo a lo largo de la ranura lateral del fémur hacia la articulación de la cadera.
-3.  **Paso 3: Calibración del Cero Eléctrico (CRÍTICO)**
-    *   Antes de acoplar los fémures y tibias, conecte la electrónica completa y enciéndala.
-    *   Cargue el firmware `main.py` para forzar a todos los servos a la posición de reposo estática (`pos_reposo()`): **caderas a $90^\circ$** y **rodillas a $60^\circ / 120^\circ$**.
-    *   *Nota: Nunca intente ensamblar los brazos de plástico (horns) con los servos apagados o desalineados.*
-4.  **Paso 4: Acoplamiento del Fémur a la Cadera**
-    *   Con los servos energizados en reposo ($90^\circ$), tome el fémur y encaje su acoplamiento de horn en el eje del servo de cadera.
-    *   **Alineación:** El fémur debe quedar alineado a escuadra vertical (apuntando a $90^\circ$ perpendicular respecto al plano de la base).
-    *   Fije el fémur introduciendo el tornillo central del servo y dos tornillos pequeños de fijación en los orificios del horn.
-5.  **Paso 5: Acoplamiento de la Tibia a la Rodilla**
-    *   Con los servos energizados en reposo ($60^\circ$ para pata derecha, $120^\circ$ para pata izquierda), tome la tibia (`tibia_inferior`) y encaje su acoplamiento de horn en el eje del servo de rodilla.
-    *   **Alineación:** La tibia debe quedar apuntando hacia abajo, formando una pose estable.
-    *   Fije la tibia usando el tornillo central del servo y tornillos pequeños de fijación.
-6.  **Paso 6: Montaje del Doble Deck y Componentes Superiores**
-    *   Fije los 4 pilares espaciadores M3 de **25mm** en los orificios de la Placa Base Inferior.
-    *   Posicione los dos portabaterías 2x18650 y los dos reguladores LM2596 en la parte central y rutee todos los cables. Conecte las señales de los 8 servos a sus respectivos GPIOs en la ESP32.
-    *   Coloque la **Placa Base Superior** sobre los pilares y asegúrela con tornillos M3.
-    *   Fije el ESP32 DevKit V1 en la cuna para la protoboard de 400 puntos sobre la tapa.
-    *   Monte la IMU MPU6050 y el sensor ultrasónico HC-SR04 en la protoboard/cuna y realice el conexionado de señales con jumpers según el pinout de la sección 2.
 
 ---
 
-## 5. Algoritmo de Locomoción: Marcha de Gateo (Crawl Gait)
+## 7. Algoritmo de Locomoción y Marcha de Gateo
 
-### Cinemática del Movimiento Cuadrúpedo
-Para que el robot camine manteniendo estabilidad estática, debe cumplir la regla física del **Polígono de Sustentación**. En cualquier instante en que se levante una pata, las otras tres deben estar firmemente apoyadas en el suelo formando un triángulo de soporte que encierre la proyección vertical del centro de masa (CoM) del chasis.
+Para que el robot avance de forma estable sin volcarse, debe cumplir con la regla física del **Polígono de Sustentación**: la proyección vertical de su centro de masa (CoM) debe caer siempre dentro de la figura geométrica (un triángulo) formada por los tres pies apoyados en el suelo.
 
-El ciclo de la marcha de gateo consta de **5 fases secuenciales**:
+La marcha de gateo (*Crawl Gait*) implementada divide el avance en **5 fases secuenciales**:
+
+```text
+[Inicio: Pose Reposo] ➔ [1. Desplazar Cuerpo (Stance Shift)] ➔ [2. Paso Pata FR] 
+                        ➔ [3. Paso Pata RR] ➔ [4. Paso Pata FL] ➔ [5. Paso Pata RL]
+```
+
+### Inversión Mecánica por Espejo:
+Las patas del lado derecho e izquierdo del robot están orientadas de forma opuesta. Para que ambas avancen en la misma dirección física, el firmware aplica inversiones angulares:
+
+*   **Fémur en Apoyo (Suelo):** Derecha = $60^\circ$ | Izquierda = $120^\circ$.
+*   **Fémur Levantado (Swing):** Ambos fémures se mueven a $90^\circ$ (posición media, levantando el pie del suelo).
+*   **Coxa Adelante (Avanzar):** Derecha = $110^\circ$ | Izquierda = $75^\circ$.
+*   **Coxa Atrás (Empujar):** Derecha = $70^\circ$ | Izquierda = $105^\circ$.
+
+---
+
+## 8. Inteligencia Artificial Sensorial (IA Local)
+
+El script `classifier_ia.py` ejecuta un algoritmo de árbol de decisiones en tiempo real alimentado por las lecturas brutas de aceleración ($a_x, a_y, a_z$) y velocidad angular ($g_x, g_y, g_z$) provistas por la IMU:
+
+```math
+|a| = \sqrt{a_x^2 + a_y^2 + a_z^2}, \quad |g| = \sqrt{g_x^2 + g_y^2 + g_z^2}
+```
 
 ```mermaid
 graph TD
-    A[Bucle de Caminata] --> B[Fase 1: Empuje General del Cuerpo - Stance Shift]
-    B --> C[Fase 2: Paso Pata Delantera Derecha - FR]
-    C --> D[Fase 3: Paso Pata Trasera Derecha - RR]
-    D --> E[Fase 4: Paso Pata Delantera Izquierda - FL]
-    E --> F[Fase 5: Paso Pata Trasera Izquierda - RL]
-    F --> A
+    IMU[Lecturas IMU] --> C1{¿Caída Libre |a| < 0.2g \n o Choque |a| > 2g \n o Inclinación > 45°?}
+    C1 -- Sí --> Fallen[FALLEN - Failsafe Activo]
+    C1 -- No --> C2{¿Reposo y |g| > 120°/s?}
+    C2 -- Sí --> Pushed[PUSHED - Alerta de Empuje]
+    C2 -- No --> C3{¿Comando marcha \n y var ax < 0.08?}
+    C3 -- Sí --> Slipping[SLIPPING - Patinamiento]
+    C3 -- No --> Normal[NORMAL - Estable]
 ```
 
-### Definición de Ángulos del Ciclo
-Para mover una articulación de forma simétrica a la derecha e izquierda, debemos tomar en cuenta la **inversión mecánica de los servos en espejo** en el chasis:
-*   **Fémur en Reposo (Apoyo):** Derecha = $60^\circ$ | Izquierda = $120^\circ$.
-*   **Fémur Levantado (Swing):** Ambas patas van a $90^\circ$ (posición media que levanta el pie del suelo).
-*   **Coxa Adelantado (FWD):** Derecha = $110^\circ$ | Izquierda = $75^\circ$.
-*   **Coxa Atrasado (BWD):** Derecha = $70^\circ$ | Izquierda = $105^\circ$.
-
-### El Ciclo Paso a Paso:
-1.  **Fase de Empuje (Stance Shift):** Con las 4 patas en apoyo ($60^\circ / 120^\circ$), todos los servos Coxa se mueven simultáneamente hacia atrás (Coxa BWD). Esto desplaza el cuerpo del robot hacia adelante.
-2.  **Paso Pata 0 (FR):** Levanta el fémur a $90^\circ$, gira su Coxa a FWD ($110^\circ$), y vuelve a bajar el fémur a su ángulo de apoyo ($60^\circ$).
-3.  **Paso Pata 3 (RR):** Levanta el fémur a $90^\circ$, gira su Coxa a FWD ($110^\circ$), y vuelve a bajar el fémur a su ángulo de apoyo ($60^\circ$).
-4.  **Paso Pata 1 (FL):** Levanta el fémur a $90^\circ$, gira su Coxa a FWD ($75^\circ$), y vuelve a bajar el fémur a su ángulo de apoyo ($120^\circ$).
-5.  **Paso Pata 2 (RL):** Levanta el fémur a $90^\circ$, gira su Coxa a FWD ($75^\circ$), y vuelve a bajar el fémur a su ángulo de apoyo ($120^\circ$).
+### Respuesta Failsafe Reactiva ante `FALLEN`:
+Cuando se clasifica el estado `"FALLEN"`, el robot reacciona de inmediato:
+1.  Interrumpe la caminata de forma prioritaria en `locomotion_loop()`.
+2.  Lleva todos los servomotores a la posición de reposo estática para proteger los engranajes metálicos de impactos continuos.
+3.  Llama a `alarma.alerta_postura()`, emitiendo pitidos continuos de $2000\text{ Hz}$ en el buzzer activo para alertar al operador de un colapso inminente en campo.
 
 ---
 
-## 6. Control y Lazo de Compensación Inercial Activa
+## 9. Protocolo de Puesta en Marcha y Calibración
 
-El control reactivo del robot opera de manera simultánea en el firmware. En cada subdivisión del movimiento:
-1.  Se lee la inclinación en Pitch y Roll desde el acelerómetro **MPU6050**.
-2.  Si la inclinación supera la tolerancia ($\pm 3^\circ$), se calcula un factor de compensación diferencial que se aplica a los ángulos objetivo de los fémures apoyados:
-    $$\text{Ángulo Compensado} = \text{Ángulo Base} \pm (\text{Inclinación} \times \text{Factor de Compensación})$$
-3.  Esta corrección angular levanta las patas del lado inclinado hacia abajo y baja las del lado inclinado hacia arriba, logrando una auto-nivelación en tiempo real.
-4.  Las patas en fase de oscilación (levantadas a $90^\circ$ en swing) se excluyen de la compensación para que su movimiento de avance no interfiera mecánicamente.
+Siga estrictamente esta secuencia para la puesta a punto física inicial en el laboratorio:
 
----
+### Paso 1: Puesta a Cero Mecánica (Calibración Inicial)
+1. Coloque el robot erguido sobre sus patas, sin fijar los tornillos de los horns centrales.
+2. Ejecute `prueba_servos.py` y elija la **Opción 3** para forzar el cero electrónico.
+3. Ajuste los horns manualmente a $90^\circ$ (perpendicular cadera) y $60^\circ / 120^\circ$ (tibia/fémur) y apriete los tornillos.
 
-## 7. Procedimiento de Pruebas y Puesta en Marcha
+### Paso 2: Calibración Inercial de la IMU
+1. Posicione al USS SpiderBot sobre una mesa horizontal perfectamente nivelada y plana.
+2. Ejecute en Thonny el script `calibrate_mpu.py`.
+3. El script tomará 100 muestras consecutivas, promediará los errores estáticos y creará el archivo local `mpu_offsets.txt`.
+4. Al iniciar, `main.py` leerá este archivo de forma automática para restar los errores del MPU6050 y calibrar los $0.0^\circ$ reales.
 
-Para asegurar un armado exitoso y evitar daños en los componentes, ejecute la siguiente secuencia de pruebas antes de colocar el chasis impreso en 3D en el suelo:
-
-### Paso A: Calibración del Cero Mecánico
-1.  Conecte el ESP32 sin montar los brazos de servo (horns) de plástico a los servomotores.
-2.  Cargue el código firmware `main.py` para llevar los servos a la posición de reposo (`pos_reposo()`): caderas a $90^\circ$ y muslos a $60^\circ / 120^\circ$.
-3.  Con los servos energizados y fijos en esa posición de control, coloque mecánicamente los horns plásticos alineados a escuadra de forma manual (perpendiculares para la cadera, y en la inclinación correspondiente para el muslo). Atornille los horns. Esto garantiza que el software y la estructura física compartan la misma referencia angular de origen.
-
-### Paso B: Calibración de Offsets del Acelerómetro
-1.  Posicione el robot en una superficie completamente horizontal y plana de forma estable.
-2.  Ejecute en Thonny el script `calibrate_mpu.py`.
-3.  El programa tomará 100 muestras consecutivas, promediará los offsets de aceleración del chip y guardará estos valores en el archivo local `mpu_offsets.txt`. El programa principal `main.py` cargará este archivo al arrancar para referenciar los $0^\circ$ exactos.
-
-### Paso C: Simulación del Circuito en Wokwi
-Antes de realizar el conexionado físico final con jumpers, puede validar de forma interactiva el circuito y su lógica en el simulador en la nube:
-1.  Vaya a [wokwi.com](https://wokwi.com) y cree un nuevo proyecto de tipo **ESP32 con MicroPython**.
-2.  Sustituya el archivo de conexiones por el contenido de nuestro [diagram.json](file:///mnt/9b846436-0407-4e80-b8af-5417ffbdee8e/Github/Taller%20de%20Programaci%C3%B3n%20I/Unidad%203/USS_SpiderBot/diagram.json).
-3.  Suba los controladores locales (`mpu6050.py`, `sonar_sensor.py`, `buzzer_alert.py`) y el código `main.py`.
-4.  Inicie la simulación, ajuste la distancia del sensor ultrasónico y observe cómo el buzzer y los servos reaccionan dinámicamente.
+### Paso 3: Pruebas de Software Inalámbrico
+1. Desconecte el cable USB del robot.
+2. Encienda la batería del interruptor lógico y el de servos. El buzzer emitirá la melodía de encendido (confirmando el correcto arranque de `main.py`).
+3. En su computador/móvil, conéctese a la red Wi-Fi `USS_SpiderBot_AP`.
+4. Abra su navegador web y digite la IP por defecto: `http://192.168.4.1/`.
+5. Controle el cuadrúpedo usando el panel web y verifique el comportamiento de la IA Sensorial inclinando o empujando el robot.
 
 ---
 
-## 8. Pasos Pendientes para la Finalización del Proyecto
+## 10. Guía de Diagnóstico y Resolución de Problemas (FAQ)
 
-Para llevar el **USS SpiderBot** a su culminación funcional y entrega exitosa en la Solemne 3, se debe seguir la siguiente lista de tareas críticas:
+### P1: El microcontrolador ESP32 se reinicia constantemente al intentar caminar
+*   **Causa:** Caída de tensión por bajo voltaje (*brownout*). Ocurre cuando los servos se alimentan del pin de 5V de la ESP32, si las baterías 18650 están descargadas (voltaje del pack $< 6.5V$), o si olvidó unificar las tierras (GND) de ambos convertidores LM2596.
+*   **Solución:** Mida las salidas de los LM2596 y cargue las baterías. Asegure la unión común de todas las tierras.
 
-### 1. Impresión de Piezas Físicas (FDM)
-*   **Parámetros de Laminación recomendados (Slicing):**
-    *   **Altura de capa:** 0.2 mm.
-    *   **Perímetros:** 3 o 4 (indispensable para la resistencia de los soportes de servos y orificios M2).
-    *   **Relleno (Infill):** 20% a 30% en tipo *Gyroid* (giroidal) para optimizar la relación peso/resistencia.
-    *   **Material:** PLA de buena calidad para el cuerpo y las patas, o PETG si se requiere mayor resistencia a impactos en terrenos rugosos.
-*   **Impresoras Disponibles:** Se recomienda utilizar la **Creality K1** o **Ender 3 V3 KE** para las placas de chasis principales por su velocidad y precisión dimensional, y la **Ender 3 V3 SE** para las tibias y fémures.
+### P2: Los servomotores vibran constantemente o se sobrecalientan en reposo
+*   **Causa:** El voltaje del LM2596 #1 de potencia supera los 6.2V (máximo tolerado por los SG90), o hay un conflicto de fuerza mecánica (el horn se atornilló desalineado con respecto al cero eléctrico y está intentando empujar la pata contra su propio límite físico de plástico).
+*   **Solución:** Desatornille el horn central, encienda la electrónica a cero eléctrico y vuelva a encajar el horn a escuadra manual. Regule el potenciómetro de potencia exactamente a 6.0V.
 
-### 2. Calibración Mecánica y del Lazo de Control (Fase Física)
-*   **Calibración Estática (cero mecánico):** Comprobar que en la pose de reposo estática (`pos_reposo()` en `main.py`), los fémures y tibias queden perfectamente alineados a escuadra. Cualquier desviación física de montaje debe corregirse mediante software modificando las constantes de offset angular individuales o desatornillando el horn y volviéndolo a alinear.
-*   **Calibración Dinámica del MPU6050:** Ejecutar el calibrador inercial `calibrate_mpu.py` sobre una superficie plana para generar el archivo `mpu_offsets.txt`. Esto evitará derivas angulares y errores de auto-nivelación.
+### P3: La lectura del sonar HC-SR04 muestra distancias erráticas o constantes de `-- cm`
+*   **Causa:** Ruido electromagnético en los cables de señal, o el pin Echo no tiene su divisor de voltaje de $1\text{ k}\Omega$ y $2\text{ k}\Omega$ necesario para bajar los 5V de salida del HC-SR04 a los 3.3V tolerados por el pin GPIO de la ESP32.
+*   **Solución:** Revise el cableado del divisor de voltaje y acorte los cables de señal Echo/Trigger.
 
-### 3. Ajuste Fino de la Marcha en Suelo (Gait Tuning)
-*   **Monitoreo de Consumo de Corriente:** Colocar el robot en el suelo y realizar pruebas de caminata monitoreando que los reguladores LM2596 no se sobrecalienten y que los voltajes se mantengan estables en 6.0V (servos) y 5.0V (ESP32).
-*   **Ajuste de Amplitud de Paso:** Si el robot patina o pierde tracción en el suelo, ajustar los rangos angulares de empuje y avance en `caminar_adelante()` dentro de `main.py`. Reducir el ángulo Coxa FWD/BWD (por ejemplo, reducir el swing a $80^\circ - 100^\circ$ en lugar de $70^\circ - 110^\circ$) para suavizar la aceleración.
-*   **Ajuste del Coeficiente de Estabilización:** Variar la constante `FACTOR_COMPENSACION` en `main.py` si la nivelación inercial reacciona de forma muy lenta o muy brusca (con oscilaciones).
-
-### 4. Pruebas de Integración y Casos de Fallo
-*   **Prueba del Sensor de Obstáculos (HC-SR04):** Verificar que el robot se detenga inmediatamente (marcha abortada) y emita la alarma acústica cuando el sensor ultrasónico detecte un obstáculo a menos de 15 cm.
-*   **Prueba de Alarma Inercial:** Validar que el buzzer emita una advertencia si el robot se inclina más de $15^\circ$ en Pitch o Roll, alertando de un posible volcamiento o pérdida de apoyo.
+### P4: El dashboard de control en el navegador indica "DESCONECTADO" y no responde
+*   **Causa:** El computador se desconectó de la red `USS_SpiderBot_AP` (algunos sistemas operativos se desconectan de redes sin internet de forma automática), o la IP de la ESP32 cambió.
+*   **Solución:** Desactive la función "Cambiar automáticamente a redes móviles/con internet" en su dispositivo y verifique en la consola serie de la ESP32 la IP asignada.
