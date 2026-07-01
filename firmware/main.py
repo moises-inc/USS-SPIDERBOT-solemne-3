@@ -112,6 +112,16 @@ COXA_CHANNELS = [0, 1, 2, 3]
 # Registro del estado actual de los ángulos de los servos para interpolaciones
 estado_coxas = [90, 90, 90, 90]
 
+def establecer_angulo_pata(indice, coxa_ang, femur_ang=90):
+    """Establece los ángulos de una pata (Coxa/Cadera)."""
+    if not servos: return
+    
+    # Límites físicos de seguridad para los servos SG90 (15° a 165°)
+    coxa_ang = max(15, min(165, int(coxa_ang)))
+    
+    # Enviar señal PWM al servo de cadera de la pata seleccionada
+    servos.set_servo_angle(COXA_CHANNELS[indice], coxa_ang)
+
 def pos_reposo():
     """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados) secuencialmente."""
     global estado_coxas
@@ -126,17 +136,6 @@ def pos_reposo():
 
 # Establecer pose inicial al arrancar
 pos_reposo()
-
-# ── 4. Compensación e Inferencia de Postura (IA Reactiva) ──────────
-def establecer_angulo_pata(indice, coxa_ang, femur_ang=90):
-    """Establece los ángulos de una pata (Coxa/Cadera)."""
-    if not servos: return
-    
-    # Límites físicos de seguridad para los servos SG90 (15° a 165°)
-    coxa_ang = max(15, min(165, int(coxa_ang)))
-    
-    # Enviar señal PWM al servo de cadera de la pata seleccionada
-    servos.set_servo_angle(COXA_CHANNELS[indice], coxa_ang)
 
 async def mover_suave_ciclo(coxa_targets, femur_targets=None, pasos=4, delay_ms=25):
     """Interpola los ángulos suavemente mientras monitorea obstáculos de forma asíncrona."""
