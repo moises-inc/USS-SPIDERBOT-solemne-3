@@ -53,21 +53,18 @@ El **USS SpiderBot** es un robot móvil terrestre cuadrúpedo articulado con **4
 
 ## 3. Integración Eléctrica y Regulación de Potencia
 
-Al reducir los servomotores a 4 unidades, el consumo máximo del sistema disminuye a aproximadamente **1.5A** en picos mecánicos. Sin embargo, para mantener una estabilidad total de la ESP32, se preserva el **aislamiento galvánico de potencia y lógica**:
+Al reducir los servomotores a 4 unidades, el consumo máximo del sistema disminuye a aproximadamente **1.5A** en picos mecánicos. Esto permite simplificar la electrónica utilizando **un único convertidor step-down LM2596 regulado a 5.0V** y **un único portapilas dual 18650** para alimentar en paralelo tanto la lógica de control como los actuadores:
 
 ```text
-  [Pack Batería A (7.4V)] ──> [LM2596 #1 (Regulado a 6.0V)] ──> Riel VCC Servomotores (Servos 0-3)
-  [Pack Batería B (7.4V)] ──> [LM2596 #2 (Regulado a 5.0V)] ──> Pin Vin ESP32 y Sensores
-  
-  [GND de Salida LM2596 #1] ──┐
-  [GND de Salida LM2596 #2] ──┼──> [NODO DE TIERRA UNIFICADO] ──> Pin GND ESP32
-  [GND de todos los Servos] ──┘
+  [Pack Batería (7.4V)] ──> [LM2596 (Regulado a 5.0V)] ──> Riel VCC (5.0V Común)
+                                                          ├──> Pin Vin ESP32 y Sensores
+                                                          └──> Riel VCC Servomotores (Servos 0-3)
 ```
 
 ### 🛠️ Protocolo Obligatorio de Regulación:
-1.  **Ajuste Inicial:** Use un multímetro para ajustar la salida del **LM2596 #1 (Servos) a 6.0V** y la del **LM2596 #2 (Lógica) a 5.0V** antes de realizar las conexiones.
-2.  **Masa Común (GND):** Es fundamental conectar la tierra de salida de ambos reguladores y el pin GND de la ESP32 en un punto común.
-3.  **Prevención de Retorno (USB + Baterías):** **Nunca** encienda las baterías lógicas (que entregan voltaje a `Vin`) mientras la ESP32 esté conectada al puerto USB del PC. Para cargar código, apague las baterías. Para pruebas, desconecte el USB.
+1.  **Ajuste Inicial:** Use un multímetro para ajustar la salida del **LM2596 a exactamente 5.0V** antes de conectar la ESP32 o los servos.
+2.  **Masa Común (GND):** Conecte el pin GND de la ESP32, la tierra de salida del LM2596 y la tierra de los servos en el mismo riel común.
+3.  **Prevención de Retorno (USB + Baterías):** **Nunca** encienda la alimentación de la batería lógica (que entrega voltaje a `Vin`) mientras la ESP32 esté conectada al puerto USB del PC. Para cargar código, apague las baterías. Para pruebas, desconecte el USB.
 
 ---
 
@@ -77,7 +74,7 @@ El conexionado físico de la ESP32 DevKit V1 se reduce a **4 canales PWM directo
 
 | Pin ESP32 | Componente | Tipo de Señal | Función / Descripción |
 | :---: | :--- | :---: | :--- |
-| **Vin** | Salida LM2596 #2 (5.0V) | Alimentación IN | Entrada de voltaje regulado para la lógica de la ESP32 |
+| **Vin** | Salida LM2596 (5.0V) | Alimentación IN | Entrada de voltaje regulado para la lógica de la ESP32 |
 | **GND** | Nodo de Tierra Común | Referencia | Tierra unificada del sistema |
 | **GPIO 21** | MPU6050 (IMU) | SDA (I2C) | Bus de datos serie de la unidad inercial |
 | **GPIO 22** | MPU6050 (IMU) | SCL (I2C) | Bus de reloj serie de la unidad inercial |

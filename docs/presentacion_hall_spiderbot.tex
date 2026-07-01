@@ -219,13 +219,12 @@
             \end{block}
         \end{column}
         \begin{column}{0.52\textwidth}
-        \begin{alertblock}{Alimentación Dual Independiente (LM2596)}
+        \begin{alertblock}{Alimentación Regulada Simplificada (LM2596)}
             \begin{itemize}
-                \item \textbf{Packs 2x18650 (7.4V c/u):} Dos packs independientes de 2 celdas Li-ion en serie, uno para servos y otro para lógica.
-                \item \textbf{LM2596 \#1 (6.0V servos):} Regulador step-down que alimenta el riel de potencia de los 4 servos SG90/MG90S.
-                \item \textbf{LM2596 \#2 (5.0V lógica):} Regulador step-down que alimenta la ESP32 y los sensores.
-                \item \textbf{Aislamiento Total:} Al operar sobre packs separados, los transitorios de los servos no afectan al microcontrolador.
-                \item \textbf{GND Unificado:} Referencia de voltaje común indispensable.
+                \item \textbf{Pack 2x18650 (7.4V):} Un único portapilas dual provee la tensión de entrada al regulador.
+                \item \textbf{LM2596 (Regulado a 5.0V):} Un único módulo reductor step-down de alta eficiencia.
+                \item \textbf{Alimentación en Paralelo:} Suministro de 5.0V comunes para la ESP32 (lógica), sensores y actuadores (servos).
+                \item \textbf{GND Unificado:} Masa de referencia común para control y potencia.
             \end{itemize}
         \end{alertblock}
         \end{column}
