@@ -13,13 +13,13 @@ from machine import I2C, Pin
 import time
 import math
 
-# Inicializar bus I2C por hardware en pines oficiales (GPIO 21 y 22)
+# Inicializar bus I2C por hardware en pines oficiales (GPIO 21 y 22, Freq=100kHz)
 SDA_PIN = 21
 SCL_PIN = 22
 print("=== Buscando Sensor GY-521 (MPU6050) ===")
 print(f"Inicializando I2C en GPIO {SDA_PIN} (SDA) y GPIO {SCL_PIN} (SCL)...")
 
-i2c = I2C(0, sda=Pin(SDA_PIN), scl=Pin(SCL_PIN), freq=400000)
+i2c = I2C(0, sda=Pin(SDA_PIN), scl=Pin(SCL_PIN), freq=100000)
 
 # Escaneo del bus I2C
 dispositivos = i2c.scan()

@@ -48,8 +48,8 @@ class ESP32ServoDirect:
             self.pwms[channel].duty_u16(duty)
 
 # ── 1. Inicialización de Interfaces ──────────────────────────────
-print("Iniciando bus I2C (SDA=21, SCL=22) para IMU...")
-i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
+print("Iniciando bus I2C (SDA=21, SCL=22, Freq=100kHz) para IMU...")
+i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=100000)
 
 dispositivos = i2c.scan()
 print("Dispositivos I2C detectados: ", [hex(d) for d in dispositivos])

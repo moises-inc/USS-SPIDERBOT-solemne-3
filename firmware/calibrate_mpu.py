@@ -12,18 +12,32 @@
 from machine import I2C, Pin
 from mpu6050 import MPU6050
 import time
+import sys
 
 NUM_MUESTRAS = 100
 OFFSETS_FILE = "mpu_offsets.txt"
 
-print("Iniciando calibración del MPU6050...")
-print("Asegúrate de que el robot esté inmóvil y sobre una superficie plana.")
+print("Iniciando bus I2C (SDA=Pin 21, SCL=Pin 22, Freq=100kHz)...")
+i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=100000)
+
+dispositivos = i2c.scan()
+print("Dispositivos I2C encontrados:", [hex(d) for d in dispositivos])
+
+if not dispositivos:
+    print("\n[ERROR] No se detectó ningún dispositivo I2C en el bus.")
+    print("Revisa:")
+    print("  1. Que el MPU6050 (GY-521) esté energizado (VCC a 3.3V/5V y GND a GND).")
+    print("  2. Que los pines SDA y SCL estén conectados a GPIO 21 y GPIO 22 respectivamente.")
+    print("  3. Que las soldaduras en los pines del MPU6050 hagan buen contacto.")
+    sys.exit(1)
+
+address = dispositivos[0]
+print(f"Usando dispositivo inercial en dirección: {hex(address)}")
+imu = MPU6050(i2c, address=address)
+
+print("\nAsegúrate de que el robot esté inmóvil y sobre una superficie plana.")
 print(f"Tomando {NUM_MUESTRAS} muestras...\n")
-
-i2c = I2C(0, sda=Pin(21), scl=Pin(22), freq=400000)
-imu = MPU6050(i2c, address=0x68)
-
-time.sleep_ms(500)
+time.sleep_ms(1000)
 
 sum_x = 0
 sum_y = 0
