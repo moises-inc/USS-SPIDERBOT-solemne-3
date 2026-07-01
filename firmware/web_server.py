@@ -69,9 +69,6 @@ async def serve_html_file(writer, filename):
 async def handle_client(reader, writer):
     """Procesa las peticiones HTTP entrantes de forma asíncrona y no bloqueante."""
     try:
-        # Forzar recolección de basura al inicio de la petición para evitar fragmentación de RAM
-        gc.collect()
-        
         request_line = await reader.readline()
         if not request_line:
             return
@@ -152,6 +149,9 @@ async def handle_client(reader, writer):
             await writer.close()
         except:
             pass
+        # Ejecutar GC al finalizar la petición si la memoria RAM libre es baja
+        if gc.mem_free() < 15000:
+            gc.collect()
 
 async def start_server_task(ip):
     """Inicia el socket del servidor HTTP asíncrono en la ESP32."""

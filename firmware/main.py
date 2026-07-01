@@ -122,22 +122,23 @@ def establecer_angulo_pata(indice, coxa_ang, femur_ang=90):
     # Enviar señal PWM al servo de cadera de la pata seleccionada
     servos.set_servo_angle(COXA_CHANNELS[indice], coxa_ang)
 
-def pos_reposo():
-    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados) secuencialmente."""
+def pos_reposo(secuencial=False):
+    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados)."""
     global estado_coxas
     if not servos: return
     
     estado_coxas = [90, 90, 90, 90]
     
-    # Mover las 4 caderas a 90 grados de forma secuencial para evitar picos de corriente (brownouts)
+    # Mover las 4 caderas a 90 grados
     for i in range(4):
         establecer_angulo_pata(i, 90)
-        time.sleep_ms(250)
+        if secuencial:
+            time.sleep_ms(250)
 
-# Establecer pose inicial al arrancar
-pos_reposo()
+# Establecer pose inicial al arrancar de forma secuencial (para evitar brownouts)
+pos_reposo(secuencial=True)
 
-async def mover_suave_ciclo(coxa_targets, femur_targets=None, pasos=4, delay_ms=25):
+async def mover_suave_ciclo(coxa_targets, femur_targets=None, pasos=4, delay_ms=12):
     """Interpola los ángulos suavemente mientras monitorea obstáculos de forma asíncrona."""
     global estado_coxas
     for paso in range(1, pasos + 1):
@@ -284,9 +285,10 @@ async def locomotion_loop():
             while state.comando_actual == "reposo":
                 await asyncio.sleep_ms(100)
         else:
-            # Comando "stop" o apagado: aplicar pose de reposo (auto-estabilizada en loop)
+            # Comando "stop" o apagado: aplicar pose de reposo y esperar a que cambie el comando
             pos_reposo()
-            await asyncio.sleep_ms(100)
+            while state.comando_actual in ("stop", ""):
+                await asyncio.sleep_ms(100)
 
 async def serial_listener():
     """Escucha comandos de consola serie (Thonny/Wokwi) de forma no bloqueante."""
