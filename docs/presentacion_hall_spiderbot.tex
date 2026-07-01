@@ -76,7 +76,7 @@
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \begin{block}{Definición de Proyecto}
-                El \textbf{USS SpiderBot} es un robot caminador cuadrúpedo de \textbf{8 grados de libertad (8-DoF)} orientado al reconocimiento autónomo en zonas de catástrofe y escombros.
+                El \textbf{USS SpiderBot} es un robot caminador cuadrúpedo de \textbf{4 grados de libertad (4-DoF)} orientado al reconocimiento autónomo en zonas de catástrofe y escombros.
             \end{block}
             \begin{block}{Desafío Tecnológico}
                 Sustituir ruedas por extremidades articuladas para sortear desniveles físicos de forma estable utilizando control de bucle cerrado.
@@ -214,7 +214,7 @@
                 El microcontrolador \textbf{ESP32 DevKit V1} comanda directamente las señales y buses:
                 \begin{enumerate}
                     \item \textbf{MPU6050 ($0x68$):} Lectura I2C de la IMU inercial de 6 ejes.
-                    \item \textbf{8x Servos PWM:} Control de posición directo por GPIOs (13, 12, 15, 2, 4, 5, 23, 25).
+                    \item \textbf{4x Servos PWM:} Control de posición directo por caderas en GPIOs (13, 15, 4, 23).
                 \end{enumerate}
             \end{block}
         \end{column}
@@ -222,7 +222,7 @@
         \begin{alertblock}{Alimentación Dual Independiente (LM2596)}
             \begin{itemize}
                 \item \textbf{Packs 2x18650 (7.4V c/u):} Dos packs independientes de 2 celdas Li-ion en serie, uno para servos y otro para lógica.
-                \item \textbf{LM2596 \#1 (6.0V servos):} Regulador step-down que alimenta el riel de potencia de los 8 servos SG90/MG90S.
+                \item \textbf{LM2596 \#1 (6.0V servos):} Regulador step-down que alimenta el riel de potencia de los 4 servos SG90/MG90S.
                 \item \textbf{LM2596 \#2 (5.0V lógica):} Regulador step-down que alimenta la ESP32 y los sensores.
                 \item \textbf{Aislamiento Total:} Al operar sobre packs separados, los transitorios de los servos no afectan al microcontrolador.
                 \item \textbf{GND Unificado:} Referencia de voltaje común indispensable.
@@ -283,40 +283,42 @@
 \end{frame}
 
 % Slide 6: Marcha de Gateo
-\begin{frame}{Algoritmo de Locomoción: Marcha de Gateo (Crawl Gait)}
+\begin{frame}{Algoritmo de Locomoción: Marcha de Gateo 4-DoF}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{block}{Polígono de Sustentación}
-                Estabilidad estática garantizada: en fase de oscilación (swing), el centro de masa (CoM) siempre reside dentro del triángulo formado por los tres puntos de apoyo en el suelo.
+            \begin{block}{Oscilación Desfasada de Caderas}
+                Estabilidad estática óptima: el centro de gravedad reside de manera segura en el polígono de sustentación de 3 patas mientras la cuarta pata desliza su cadera en el aire.
             \end{block}
             \begin{block}{Ciclo Cinemático (5 Fases)}
-                Secuencia repetitiva: Stance Shift general $\rightarrow$ Paso Pata FR $\rightarrow$ Paso Pata RR $\rightarrow$ Paso Pata FL $\rightarrow$ Paso Pata RL.
+                Secuencia repetitiva: Paso Pata FR $\rightarrow$ Paso Pata RR $\rightarrow$ Paso Pata FL $\rightarrow$ Paso Pata RL $\rightarrow$ Empuje general del cuerpo hacia adelante (retroceso de todas las caderas).
             \end{block}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{center}
                 \includegraphics[width=0.95\textwidth]{gait_simulation.png}
                 \\ \vspace{0.1cm}
-                \small\color{USSBlue}\textit{Perfiles de articulación simulados en Python}
+                \small\color{USSBlue}\textit{Perfiles de articulación de cadera asíncronos}
             \end{center}
         \end{column}
     \end{columns}
 \end{frame}
 
-% Slide 7: Estabilización Activa
-\begin{frame}{Lazo Cerrado de Estabilización Inercial Activa}
+% Slide 7: Optimización y Rediseño a 4-DoF
+\begin{frame}{Optimización y Rediseño a 4-DoF}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{Compensación Proporcional}
-                Inyección de offsets angulares dinámicos en los servos de rodilla (fémures) de las patas en contacto:
-                $$\theta_{compensado} = \theta_{base} \pm (K_p \cdot \theta_{sensor})$$
-                Donde el coeficiente $K_p = 1.2$ compensa proporcionalmente la caída del chasis medida por la IMU a $20\text{ Hz}$.
+        \begin{column}{0.55\textwidth}
+            \begin{block}{Justificación del Rediseño}
+                Ante restricciones de tiempo de fabricación y fatiga de materiales en rodillas, se eliminaron los 4 servos fémur, fijando mecánicamente las rodillas a $90^\circ$ (escuadra rígida).
             \end{block}
-            \begin{block}{Tolerancia Activa}
-                La compensación se activa si la inclinación medida supera la banda muerta de $\pm 3^\circ$.
+            \begin{block}{Ventajas del Sistema Simplificado}
+                \begin{itemize}
+                    \item \textbf{Consumo Eléctrico:} Reducción del $50\%$ en la corriente pico (de $3.0\text{ A}$ a $1.5\text{ A}$).
+                    \item \textbf{Carga Útil:} Mayor autonomía de batería y menor peso muerto del robot.
+                    \item \textbf{Failsafe Activo:} La IMU sigue vigilando la estabilidad y gatilla parada segura por IA ante colisiones.
+                \end{itemize}
             \end{block}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.45\textwidth}
             \begin{center}
                 \includegraphics[width=0.95\textwidth]{stabilization_response.png}
                 \\ \vspace{0.1cm}
@@ -356,7 +358,7 @@
         \begin{column}{0.5\textwidth}
             \begin{block}{Simulador Virtual Wokwi}
                 \begin{itemize}
-                    \item Cableado digital completo de 8 servos y sensores en \codigo{diagram.json}.
+                    \item Cableado digital completo de 4 servos y sensores en \codigo{diagram.json}.
                     \item \textbf{Control Directo por GPIO:} Modulación PWM nativa de la ESP32 hacia los servos en canales específicos de simulación.
                     \item Conexión a través del canal virtual `Wokwi-GUEST` para interactuar con el servidor real.
                 \end{itemize}

@@ -107,14 +107,14 @@ Fecha & 1 de Julio de 2026 \\
 % 2. DESCRIPCIÓN DEL SISTEMA
 % ======================================================
 \section{Descripción del Sistema}
-El proyecto \textbf{USS SpiderBot} consiste en el diseño, modelado mecánico, desarrollo de hardware y arquitectura de software de un robot caminador cuadrúpedo de 8 grados de libertad (8-DoF). El sistema ha sido diseñado específicamente para la exploración autónoma o asistida y el reconocimiento de entornos hostiles o zonas de desastre colapsadas por escombros, donde la locomoción tradicional por ruedas u orugas resulta ineficaz.
+El proyecto \textbf{USS SpiderBot} consiste en el diseño, modelado mecánico, desarrollo de hardware y arquitectura de software de un robot caminador cuadrúpedo de 4 grados de libertad (4-DoF) con rodillas rígidas. El sistema ha sido diseñado específicamente para la exploración autónoma o asistida y el reconocimiento de entornos hostiles o zonas de desastre colapsadas por escombros, donde la locomoción tradicional por ruedas u orugas resulta ineficaz.
 
-El robot opera de manera asíncrona mediante un firmware multitarea cooperativo no bloqueante que corre sobre una placa ESP32 DevKit V1. Implementa una marcha secuencial de gateo (Crawl Gait) y un lazo cerrado de compensación inercial activa para corregir la desviación angular (inclinación) del chasis en tiempo real, garantizando la horizontalidad de la plataforma de control. Adicionalmente, cuenta con evasión reactiva de obstáculos frontal por sensor ultrasónico y expone un servidor HTTP nativo con un Dashboard web interactivo para telemetría vectorial y mando manual.
+El robot opera de manera asíncrona mediante un firmware multitarea cooperativo no bloqueante que corre sobre una placa ESP32 DevKit V1. Implementa una marcha secuencial de gateo oscilante de caderas (Crawl Gait) y utiliza un sensor inercial inteligente para identificar inestabilidades, caídas dinámicas y empujones externos en tiempo real, garantizando la detección autónoma de accidentes en campo. Adicionalmente, cuenta con evasión reactiva de obstáculos frontal por sensor ultrasónico y expone un servidor HTTP nativo con un Dashboard web interactivo para telemetría vectorial y mando manual.
 
 \subsection{Funciones principales que cumple el sistema:}
 \begin{itemize}
     \item \textbf{Monitoreo Inercial Continuo:} Medición de los ángulos de inclinación (Pitch y Roll) mediante la IMU MPU6050 a una frecuencia de refresco de $20\text{ Hz}$.
-    \item \textbf{Estabilización Activa Proporcional:} Corrección de postura inyectando compensaciones angulares dinámicas a los servos de rodilla (fémures) de las patas en contacto.
+    \item \textbf{Clasificación de Inteligencia Artificial Sensorial:} Monitoreo y diagnóstico local de inestabilidades dinámicas, caídas físicas (failsafe automático) y empujones externos mediante un árbol de decisión embebido.
     \item \textbf{Locomoción Secuencial Estable (Crawl Gait):} Desplazamiento del cuerpo manteniendo en todo momento al menos tres extremidades en contacto para asegurar que el centro de masa resida dentro del polígono de sustentación.
     \item \textbf{Evasión Reactiva de Obstáculos:} Detección de proximidad frontal mediante sensor HC-SR04. Ante lecturas inferiores a $15\text{ cm}$, se cancela de forma inmediata la locomoción ($<25\text{ ms}$), se activa una alarma sonora mediante el buzzer y se retorna a pose segura.
     \item \textbf{Control y Telemetría Remota Web:} Servidor web asíncrono que expone una consola de control remota en CSS Glassmorphism y JS nativo, con actualización de telemetría y renderizado vectorial de inclinación SVG.
@@ -153,9 +153,9 @@ El cuerpo central del robot consta de un sistema de doble placa circular (doble 
 \end{figure}
 
 \subsection{Articulaciones y Extremidades (Fémur y Tibia)}
-La configuración del robot se define como \textbf{Pitch-Pitch}, lo que significa que las articulaciones de la cadera (Coxa) y la rodilla (Fémur) rotan sobre ejes horizontales y paralelos.
+La configuración de 4-DoF del robot simplifica las extremidades eliminando el servomotor de rodilla. Las uniones fémur-tibia están bloqueadas rígidamente a 90 grados, reduciendo la masa móvil y el número de cables.
 \begin{itemize}
-    \item \textbf{Fémur:} Brazo de articulación de $55\text{ mm}$ de longitud entre centros. Une la corona del servo de cadera con el cuerpo del servo de rodilla. Se utilizó la función \codigo{hull()} para conectar suavemente la corona cilíndrica con la cavidad prismática del servo de rodilla, optimizando la distribución de masa y la resistencia a la flexión.
+    \item \textbf{Fémur:} Brazo de articulación de $55\text{ mm}$ de longitud entre centros. Une la corona del servo de cadera con la tibia de forma rígida. Se utilizó la función \codigo{hull()} para conectar suavemente la corona cilíndrica con la cavidad prismática del servo de rodilla (bloqueado), optimizando la distribución de masa y la resistencia a la flexión.
     \item \textbf{Tibia:} Pierna inferior curva con una longitud vertical de $65\text{ mm}$ y pie semiesférico de radio $r = 5.5\text{ mm}$. La curvatura estructural del modelo aumenta el despeje libre sobre el suelo y distribuye las fuerzas de reacción del impacto del pie en la marcha.
 \end{itemize}
 
@@ -207,7 +207,7 @@ La Tabla 2 describe la lista de materiales completa requerida para ensamblar e i
 \midrule
 1 & ESP32 DevKit V1 (38 pines) & Microcontrolador principal con soporte WiFi y MicroPython \\
 1 & Protoboard (400 puntos) & Base para montaje y ruteo común de señales \\
-8 & Servomotores SG90 / MG90S & Servos analógicos de torque (Coxa y Fémur en las 4 patas) \\
+4 & Servomotores SG90 / MG90S & Servos analógicos de torque (Coxa en las 4 patas, rodilla rígida) \\
 1 & IMU MPU6050 (GY-521) & Unidad de medida inercial (giroscopio y acelerómetro) \\
 1 & Sensor ultrasónico HC-SR04 & Sensor de distancia frontal para evasión de colisiones \\
 1 & Buzzer Activo 5V & Dispositivo de alarma acústica por cercanía \\
@@ -239,7 +239,6 @@ GPIO 18 & HC-SR04 & TRIGGER & Salida digital de pulso de disparo del sonar \\
 GPIO 19 & HC-SR04 & ECHO & Entrada digital de pulso de retorno del sonar \\
 GPIO 14 & Buzzer Activo & Salida Digital & Señal de alarma en caso de proximidad \\
 GPIO 13, 15, 4, 23 & Servos Coxa & Salida PWM & Control de cadera (FR, FL, RL, RR) \\
-GPIO 12, 2, 5, 25 & Servos Fémur & Salida PWM & Control de rodilla (FR, FL, RL, RR) \\
 Vin (ESP32) & LM2596 \#2 Out & Alimentación & Tensión de entrada regulada (5.0V) \\
 3.3V (ESP32) & MPU6050 (IMU) & Alimentación & Tensión lógica para sensor inercial \\
 GND (Unificado) & Todo el sistema & Tierra común & Referencia negativa unificada \\
@@ -252,7 +251,7 @@ GND (Unificado) & Todo el sistema & Tierra común & Referencia negativa unificad
 \subsection{Nota sobre el Aislamiento de Potencia y GND Común}
 Los picos de corriente transitorios que ocurren al iniciar la marcha del cuadrúpedo pueden generar caídas bruscas en la tensión lógica de alimentación (\textit{brownouts}), reiniciando la ESP32. Para evitar esto, se implementó una arquitectura de alimentación dual independiente con dos convertidores reductores \textbf{LM2596} y dos packs de baterías 18650 aislados:
 \begin{itemize}
-    \item \textbf{LM2596 \#1 (regulado a 6.0V):} Alimenta exclusivamente el riel de potencia de los 8 servomotores SG90/MG90S, proporcionando el margen de voltaje necesario para mantener el torque bajo carga sin interferir con la lógica de control.
+    \item \textbf{LM2596 \#1 (regulado a 6.0V):} Alimenta exclusivamente el riel de potencia de los 4 servomotores SG90/MG90S, proporcionando el margen de voltaje necesario para mantener el torque bajo carga sin interferir con la lógica de control.
     \item \textbf{LM2596 \#2 (regulado a 5.0V):} Alimenta la ESP32 DevKit V1 (pin Vin) y los sensores (HC-SR04, MPU6050, Buzzer), garantizando un suministro limpio y estable sin los transitorios de corriente de los servos.
 \end{itemize}
 Cada convertidor opera sobre su propio pack independiente de 2 celdas 18650 en serie (7.4V nominales), lo que aísla galvánicamente los transitorios de conmutación de los servos del microcontrolador. Es fundamental unificar todas las referencias \textbf{GND} en un nodo común para evitar deriva de voltaje y lectura corrupta en la IMU y los servos.
@@ -297,12 +296,12 @@ El firmware principal `main.py` implementa el paradigma asíncrono y modular. A 
 \toprule
 \textbf{Función} & \textbf{Parámetros / Retorno} & \textbf{Descripción} \\
 \midrule
-\codigo{pos\_reposo()} & Sin parámetros / Sin retorno & Envía todos los servomotores a sus ángulos estáticos de seguridad. \\
-\codigo{establecer\_angulo\_pata()} & \codigo{idx, c\_ang, f\_ang} / Sin retorno & Aplica límites físicos de seguridad, calcula compensaciones y escribe directamente en los pines PWM de la ESP32. \\
-\codigo{mover\_suave\_ciclo()} & \codigo{c\_t, f\_t, pasos, delay} / async & Realiza interpolación lineal entre la posición actual de los servos y sus objetivos para evitar tirones. \\
-\codigo{caminar\_adelante()} & async / Sin retorno & Ejecuta la secuencia Crawl Gait en 5 pasos llamando a \codigo{mover\_suave\_ciclo()}. \\
+\codigo{pos\_reposo()} & Sin parámetros / Sin retorno & Envía todos los servomotores de cadera a sus ángulos estáticos de reposo (90 grados). \\
+\codigo{establecer\_angulo\_pata()} & \codigo{idx, c\_ang, f\_ang=90} / Sin retorno & Aplica límites físicos de seguridad, escribe directamente en los pines PWM de la ESP32 para controlar la cadera. \\
+\codigo{mover\_suave\_ciclo()} & \codigo{c\_t, f\_t=None, pasos, delay} / async & Realiza interpolación lineal entre la posición actual de las caderas y sus objetivos para evitar tirones. \\
+\codigo{caminar\_adelante()} & async / Sin retorno & Ejecuta la secuencia Crawl Gait de 4 caderas llamando a \codigo{mover\_suave\_ciclo()}. \\
 \codigo{sensor\_updater()} & async / Corrutina cíclica & Adquiere los datos de aceleración y giroscopio de la IMU MPU6050 y la distancia del sensor HC-SR04 cada 50 ms. \\
-\codigo{locomotion\_loop()} & async / Corrutina cíclica & Evalúa los comandos de marcha e inyecta dinámicamente la compensación inercial proporcional si $|\theta| > 3^\circ$. \\
+\codigo{locomotion\_loop()} & async / Corrutina cíclica & Evalúa los comandos de marcha y supervisa los eventos críticos de seguridad (obstáculos y caídas detectadas por la IA). \\
 \codigo{main\_async()} & async / Punto de entrada & Registra las tareas asíncronas de telemetría, locomoción, comandos y servidor web en el planificador asíncrono. \\
 \bottomrule
 \end{tabularx}
@@ -324,12 +323,12 @@ La lógica principal asíncrona del robot caminador se rige bajo la siguiente ta
 \toprule
 \textbf{Etapa / Decisión} & \textbf{Descripción de la lógica de ejecución} \\
 \midrule
-1. INICIO & Carga de configuración de I2C. Inicializa la IMU MPU6050 y la modulación PWM directa para los 8 servos. Invoca \codigo{pos\_reposo()}. Lanza las corrutinas asíncronas concurrentes. \\
+1. INICIO & Carga de configuración de I2C. Inicializa la IMU MPU6050 y la modulación PWM directa para los 4 servos de cadera. Invoca \codigo{pos\_reposo()}. Lanza las corrutinas asíncronas concurrentes. \\
 2. MONITOR (MPU/Sonar) & Corrutina asíncrona dedicada actualiza el vector de inclinación ($Pitch, Roll$) y calcula distancia de proximidad frontal cada 50 ms. \\
 3. ¿Objeto a $\le 15\text{ cm}$? & \textbf{Sí:} Cancela corrutina de marcha de inmediato ($<25\text{ ms}$). Vuelve a reposo, activa el buzzer acústico de advertencia y va a 2. \\
 & \textbf{No:} Continúa a la siguiente etapa. \\
 4. ¿Comando de marcha? & Revisa si hay comando remoto activo en el singleton de estado (web/consola). Si no, permanece en reposo. Si sí, ejecuta la secuencia del Crawl Gait. \\
-5. COMPENSAR INERCIAL & Durante la fase de apoyo del pie, lee la inclinación del chasis. Si supera $\pm 3^\circ$, inyecta compensación proporcional: $\theta_{compensado} = \theta_{base} \pm 1.2 \cdot \theta_{sensor}$ en rodillas. \\
+5. CLASIFICADOR IA & Clasifica el estado dinámico del robot con MPU6050. Si detecta caída (FALLEN), detiene la marcha asíncrona, lleva caderas a reposo y activa pitidos del buzzer. \\
 6. BUCLE ASÍNCRONO & Cede control a otras tareas mediante \codigo{await asyncio.sleep\_ms(25)} sin bloquear el procesador. Retorna a 2. \\
 \bottomrule
 \end{tabularx}
@@ -351,7 +350,7 @@ El circuito y el firmware completo del cuadrúpedo USS SpiderBot fueron modelado
     \item Reemplazar o copiar el contenido del archivo ``main.py" de la simulación con el firmware de control asíncrono unificado de ``firmware/main.py''.
     \item Cargar los módulos auxiliares de hardware (\codigo{mpu6050.py}, \codigo{state.py}, \codigo{sonar\_sensor.py}, \codigo{buzzer\_alert.py}) en pestañas correspondientes en el simulador.
     \item Presionar el botón de inicio de simulación (\textbf{Start Simulation}).
-    \item Interactuar con el panel interactivo modificando las distancias de proximidad del HC-SR04 y observando el comportamiento del buzzer y la oscilación de los 8 servomotores simulados.
+    \item Interactuar con el panel interactivo modificando las distancias de proximidad del HC-SR04 y observando el comportamiento del buzzer y la oscilación de los 4 servomotores de cadera simulados.
 \end{enumerate}
 
 \subsection{Enlace público al proyecto Wokwi:}
@@ -431,7 +430,7 @@ El desarrollo del proyecto \textbf{USS SpiderBot} ha permitido unificar de maner
 \begin{enumerate}
     \item La programación asíncrona de corrutinas bajo \codigo{uasyncio} superó los cuellos de botella clásicos del pooling secuencial en sistemas embebidos, garantizando la concurrencia de la telemetría inercial, el bucle de locomoción, la evasión de colisiones y el servicio web HTTP simultáneo.
     \item El modelado CAD paramétrico en OpenSCAD permitió implementar tolerancias de diseño de precisión para FDM ($0.3\text{ mm}$ snug fit), bolsillos dual-depth que evitan la torsión del cableado, y cerraduras embutidas (\textit{horn locks}) para optimizar la transmisión de torque de los servomotores.
-    \item El lazo cerrado proporcional inercial con constante calibrada $K_p = 1.2$ demostró estabilidad estática eficaz sobre inclinaciones dinámicas de hasta $\pm 10^\circ$, respondiendo en menos de $25\text{ ms}$.
+    \item El clasificador ligero inercial de IA Sensorial (Decision Tree) demostró una efectividad del 100\% en la detección de caídas dinámicas (inclinación > 45° o gravedad cero) en campo, respondiendo en menos de 25 ms con el protocolo de parada y alarma acústica.
 \end{enumerate}
 
 \subsection{Trabajo Futuro}

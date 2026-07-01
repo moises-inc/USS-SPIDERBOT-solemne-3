@@ -55,15 +55,15 @@ dispositivos = i2c.scan()
 print("Dispositivos I2C detectados: ", [hex(d) for d in dispositivos])
 
 # ── 2. Inicialización de Drivers ────────────────────────────────
-# Mapeo de canales a pines GPIO físicos en la ESP32 (Control Directo)
+# Mapeo de canales a pines GPIO físicos en la ESP32 (Control Directo 4-DoF)
 channels_pins = {
-    0: 13, 1: 12, # Pata 0 (FR)
-    2: 15, 3: 2,  # Pata 1 (FL)
-    4: 4,  5: 5,  # Pata 2 (RL)
-    6: 23, 7: 25  # Pata 3 (RR)
+    0: 13, # Pata 0 (FR) - Coxa
+    1: 15, # Pata 1 (FL) - Coxa
+    2: 4,  # Pata 2 (RL) - Coxa
+    3: 23  # Pata 3 (RR) - Coxa
 }
 
-print("Inicializando controlador de servos directo por GPIO...")
+print("Inicializando controlador de servos directo por GPIO (4 canales)...")
 servos = ESP32ServoDirect(channels_pins)
 
 # Auto-detectar si estamos corriendo en el simulador Wokwi buscando la red virtual
@@ -106,74 +106,40 @@ clasificador_ia = IASensorClassifier()
 
 alarma.play_startup() # Melodía rítmica de inicio para buzzer activo
 
-# ── 3. Definición de Canales de Servos y Poses ─────────────────────
-COXA_CHANNELS = [0, 2, 4, 6]
-FEMUR_CHANNELS = [1, 3, 5, 7]
-
-# Ángulos base para posición de reposo (Standing Pose)
-ANGULO_COXA_BASE = 90  # Todos centrados
-
-# Los servos de la izquierda están invertidos mecánicamente respecto a la derecha
-ANGULO_FEMUR_DER_BASE = 60   # Patas 0 y 3 (Canales 1 y 7)
-ANGULO_FEMUR_IZQ_BASE = 120  # Patas 1 y 2 (Canales 3 y 5)
+# ── 3. Definición de Canales de Servos y Poses (4-DoF) ──────────────
+COXA_CHANNELS = [0, 1, 2, 3]
 
 # Registro del estado actual de los ángulos de los servos para interpolaciones
 estado_coxas = [90, 90, 90, 90]
-estado_femures = [60, 120, 120, 60]
 
 def pos_reposo():
-    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático aplicando estabilización activa."""
-    global estado_coxas, estado_femures
+    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados)."""
+    global estado_coxas
     if not servos: return
     
     estado_coxas = [90, 90, 90, 90]
-    estado_femures = [60, 120, 120, 60]
     
-    # Mover patas aplicando la función de estabilización inercial activa
-    establecer_angulo_pata(0, 90, 60)
-    establecer_angulo_pata(1, 90, 120)
-    establecer_angulo_pata(2, 90, 120)
-    establecer_angulo_pata(3, 90, 60)
+    # Mover las 4 caderas a 90 grados
+    for i in range(4):
+        establecer_angulo_pata(i, 90)
 
 # Establecer pose inicial al arrancar
 pos_reposo()
 
 # ── 4. Compensación e Inferencia de Postura (IA Reactiva) ──────────
-PITCH_TOLERANCIA = 3.0      # Tolerancia de grados antes de actuar
-ROLL_TOLERANCIA = 3.0
-FACTOR_COMPENSACION = 1.2   # Escala de respuesta correctora por grado de inclinación
-
-def establecer_angulo_pata(indice, coxa_ang, femur_ang):
-    """Establece los ángulos de una pata aplicando compensación inercial si está en apoyo."""
+def establecer_angulo_pata(indice, coxa_ang, femur_ang=90):
+    """Establece los ángulos de una pata (Coxa/Cadera)."""
     if not servos: return
     
-    # Si el fémur está en posición de apoyo (no levantado en swing), se aplica la compensación
-    es_apoyo = abs(femur_ang - 90) > 10
-    
-    if state.estabilizacion_activa and es_apoyo and (abs(state.pitch_actual) > PITCH_TOLERANCIA or abs(state.roll_actual) > ROLL_TOLERANCIA):
-        correc_pitch = state.pitch_actual * FACTOR_COMPENSACION
-        correc_roll = state.roll_actual * FACTOR_COMPENSACION
-        
-        # Aplicar correcciones según la posición física de la pata
-        if indice == 0:    # Delantera Derecha (FR)
-            femur_ang = femur_ang - correc_pitch - correc_roll
-        elif indice == 1:  # Delantera Izquierda (FL)
-            femur_ang = femur_ang + correc_pitch - correc_roll
-        elif indice == 2:  # Trasera Izquierda (RL)
-            femur_ang = femur_ang - correc_pitch + correc_roll
-        elif indice == 3:  # Trasera Derecha (RR)
-            femur_ang = femur_ang + correc_pitch + correc_roll
-            
     # Límites físicos de seguridad para los servos SG90 (15° a 165°)
-    femur_ang = max(15, min(165, int(femur_ang)))
     coxa_ang = max(15, min(165, int(coxa_ang)))
     
+    # Enviar señal PWM al servo de cadera de la pata seleccionada
     servos.set_servo_angle(COXA_CHANNELS[indice], coxa_ang)
-    servos.set_servo_angle(FEMUR_CHANNELS[indice], femur_ang)
 
-async def mover_suave_ciclo(coxa_targets, femur_targets, pasos=4, delay_ms=25):
+async def mover_suave_ciclo(coxa_targets, femur_targets=None, pasos=4, delay_ms=25):
     """Interpola los ángulos suavemente mientras monitorea obstáculos de forma asíncrona."""
-    global estado_coxas, estado_femures
+    global estado_coxas
     for paso in range(1, pasos + 1):
         # Monitorear sensor ultrasónico por seguridad
         if 0.0 < state.distancia_actual < 15.0:
@@ -182,154 +148,52 @@ async def mover_suave_ciclo(coxa_targets, femur_targets, pasos=4, delay_ms=25):
         t = paso / pasos
         for i in range(4):
             c_ang = estado_coxas[i] + (coxa_targets[i] - estado_coxas[i]) * t
-            f_ang = estado_femures[i] + (femur_targets[i] - estado_femures[i]) * t
-            establecer_angulo_pata(i, c_ang, f_ang)
+            establecer_angulo_pata(i, c_ang)
         await asyncio.sleep_ms(delay_ms)
         
     estado_coxas = list(coxa_targets)
-    estado_femures = list(femur_targets)
     return True
 
 # ── 5. Definición de Marchas de Locomoción Asíncronas ──────────────
 
 async def caminar_adelante():
-    """Ejecuta un ciclo completo de marcha de gateo (Crawl Gait) hacia adelante."""
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 60], pasos=5):
-        return False
-        
-    if not await mover_suave_ciclo([70, 110, 110, 70], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 70], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 110, 110, 70], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 110, 110], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 110, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 70, 110, 110], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
+    """Ejecuta un ciclo de marcha de gateo para 4 caderas hacia adelante."""
+    # Paso 1: Adelantar Pata FR (Delantera Derecha)
+    if not await mover_suave_ciclo([110, 90, 90, 90], None, pasos=3): return False
+    # Paso 2: Adelantar Pata RR (Trasera Derecha)
+    if not await mover_suave_ciclo([110, 90, 90, 110], None, pasos=3): return False
+    # Paso 3: Adelantar Pata FL (Delantera Izquierda)
+    if not await mover_suave_ciclo([90, 70, 90, 110], None, pasos=3): return False
+    # Paso 4: Adelantar Pata RL (Trasera Izquierda)
+    if not await mover_suave_ciclo([90, 70, 70, 90], None, pasos=3): return False
+    # Paso 5: Empuje del cuerpo hacia adelante (todos los apoyos retroceden)
+    if not await mover_suave_ciclo([70, 110, 110, 70], None, pasos=4): return False
     return True
 
 async def caminar_atras():
-    """Ejecuta un ciclo completo de marcha de gateo (Crawl Gait) hacia atrás."""
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 60], pasos=5):
-        return False
-        
-    if not await mover_suave_ciclo([110, 70, 70, 110], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 110], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 70, 70, 110], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 70, 70], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 70, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 110, 70, 70], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
+    """Ejecuta un ciclo de marcha de gateo para 4 caderas hacia atrás."""
+    # Paso 1: Retroceder Pata FR
+    if not await mover_suave_ciclo([70, 90, 90, 90], None, pasos=3): return False
+    # Paso 2: Retroceder Pata RR
+    if not await mover_suave_ciclo([70, 90, 90, 70], None, pasos=3): return False
+    # Paso 3: Retroceder Pata FL
+    if not await mover_suave_ciclo([90, 110, 90, 70], None, pasos=3): return False
+    # Paso 4: Retroceder Pata RL
+    if not await mover_suave_ciclo([90, 110, 110, 90], None, pasos=3): return False
+    # Paso 5: Empuje del cuerpo hacia atrás (todos los apoyos avanzan)
+    if not await mover_suave_ciclo([110, 70, 70, 110], None, pasos=4): return False
     return True
 
 async def girar_izquierda():
-    """Ejecuta un ciclo de rotación sobre su propio eje en sentido antihorario."""
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 60], pasos=5):
-        return False
-        
-    if not await mover_suave_ciclo([70, 70, 70, 70], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 70], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 70, 70, 70], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 70, 70, 110], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 70, 110], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 70, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([110, 110, 70, 110], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
+    """Ejecuta rotación sobre su propio eje en sentido antihorario."""
+    if not await mover_suave_ciclo([110, 110, 70, 70], None, pasos=4): return False
+    if not await mover_suave_ciclo([70, 70, 110, 110], None, pasos=4): return False
     return True
 
 async def girar_derecha():
-    """Ejecuta un ciclo de rotación sobre su propio eje en sentido horario."""
-    if not await mover_suave_ciclo([110, 110, 110, 110], [60, 120, 120, 60], pasos=5):
-        return False
-        
-    if not await mover_suave_ciclo([110, 110, 110, 110], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 110], [90, 120, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 110], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 110, 110, 110], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 90], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 110, 110, 70], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 110, 70], [60, 90, 120, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 110, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
-    if not await mover_suave_ciclo([70, 70, 110, 70], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 90, 60], pasos=3):
-        return False
-    if not await mover_suave_ciclo([70, 70, 70, 70], [60, 120, 120, 60], pasos=3):
-        return False
-        
+    """Ejecuta rotación sobre su propio eje en sentido horario."""
+    if not await mover_suave_ciclo([70, 70, 110, 110], None, pasos=4): return False
+    if not await mover_suave_ciclo([110, 110, 70, 70], None, pasos=4): return False
     return True
 
 # ── 6. Tareas Coactivas Asíncronas (Tasks) ─────────────────────────

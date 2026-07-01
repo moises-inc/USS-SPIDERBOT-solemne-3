@@ -1,8 +1,7 @@
 # ============================================================
-# USS SPIDERBOT — Prueba de 8 Servomotores Individuales (ESP32)
-# Diseñado para probar servos en los pines GPIO directos de la ESP32:
-# FR_C (13), FR_F (12), FL_C (15), FL_F (2)
-# RL_C (4), RL_F (5), RR_C (23), RR_F (25)
+# USS SPIDERBOT — Prueba de 4 Servomotores Individuales (ESP32)
+# Diseñado para probar servos en los pines GPIO directos de la ESP32 (4-DoF):
+# FR_C (13), FL_C (15), RL_C (4), RR_C (23)
 # Ejecutar en Thonny e ingresar los comandos en la consola.
 # ============================================================
 
@@ -10,16 +9,12 @@ from machine import Pin, PWM
 import time
 import sys
 
-# Mapeo de pines físicos de la ESP32
+# Mapeo de pines físicos de la ESP32 (4-DoF)
 PINES_ACTIVOS = {
     "FR_C": 13,  # FR Coxa/Cadera
-    "FR_F": 12,  # FR Fémur/Rodilla
     "FL_C": 15,  # FL Coxa/Cadera
-    "FL_F": 2,   # FL Fémur/Rodilla
     "RL_C": 4,   # RL Coxa/Cadera
-    "RL_F": 5,   # RL Fémur/Rodilla
-    "RR_C": 23,  # RR Coxa/Cadera
-    "RR_F": 25   # RR Fémur/Rodilla
+    "RR_C": 23   # RR Coxa/Cadera
 }
 
 servos = {}
@@ -73,14 +68,14 @@ def main():
         return
         
     print("\n=======================================================")
-    print("  Prueba Controladora de 8 Servos Individual - ESP32   ")
+    print("  Prueba Controladora de 4 Servos Individual - ESP32   ")
     print("=======================================================")
     print("Opciones de comando:")
     print("  1. Escribe un ángulo (0-180) para mover TODOS los servos (ej: 90).")
     print("  2. Escribe '<PATA_SERVO> <ANGULO>' para mover uno solo.")
     print("     Opciones de PATA_SERVO:")
     print(f"       {list(PINES_ACTIVOS.keys())}")
-    print("     Ejemplos: FR_C 45, RR_F 120")
+    print("     Ejemplos: FR_C 45, RR_C 120")
     print("  3. Escribe 'b' para iniciar un barrido secuencial de prueba.")
     print("  4. Escribe 'salir' para terminar.")
     

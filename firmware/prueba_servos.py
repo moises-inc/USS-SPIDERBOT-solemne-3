@@ -7,24 +7,20 @@ from machine import I2C, Pin, PWM
 import time
 import sys
 
-# Mapeo descriptivo de canales y nombres
+# Mapeo descriptivo de canales y nombres (4-DoF)
 NOMBRES_SERVOS = {
     0: "Canal 0 (Pata FR - Coxa/Cadera)",
-    1: "Canal 1 (Pata FR - Fémur/Rodilla)",
-    2: "Canal 2 (Pata FL - Coxa/Cadera)",
-    3: "Canal 3 (Pata FL - Fémur/Rodilla)",
-    4: "Canal 4 (Pata RL - Coxa/Cadera)",
-    5: "Canal 5 (Pata RL - Fémur/Rodilla)",
-    6: "Canal 6 (Pata RR - Coxa/Cadera)",
-    7: "Canal 7 (Pata RR - Fémur/Rodilla)"
+    1: "Canal 1 (Pata FL - Coxa/Cadera)",
+    2: "Canal 2 (Pata RL - Coxa/Cadera)",
+    3: "Canal 3 (Pata RR - Coxa/Cadera)"
 }
 
-# Mapeo de pines GPIO directos de la ESP32 (por si se prueba sin PCA9685 o en Wokwi)
+# Mapeo de pines GPIO directos de la ESP32 (Control Directo 4-DoF)
 PINE_GPIO_DIRECTOS = {
-    0: 13, 1: 12, # Pata FR
-    2: 15, 3: 2,  # Pata FL
-    4: 4,  5: 5,  # Pata RL
-    6: 23, 7: 25  # Pata RR
+    0: 13, # Pata FR
+    1: 15, # Pata FL
+    2: 4,  # Pata RL
+    3: 23  # Pata RR
 }
 
 
@@ -86,15 +82,15 @@ def main():
         seleccion = "1" # Fallback si Thonny no recibe stdin interactiva en la primera
         
     if seleccion == "3":
-        print("\nColocando todos los servos (0-7) a 90 grados...")
-        for ch in range(8):
+        print("\nColocando todos los servos (0-3) a 90 grados...")
+        for ch in range(4):
             driver.set_angle(ch, 90)
             time.sleep_ms(100)
         print("[OK] Todos los servos centrados a 90°. ¡Listo para el acople mecánico!")
         
     elif seleccion == "2":
         print("\n--- PRUEBA INTERACTIVA PASO A PASO ---")
-        for ch in range(8):
+        for ch in range(4):
             nombre = NOMBRES_SERVOS.get(ch, f"Canal {ch}")
             print(f"\nSiguiente servo a probar: {nombre}")
             input("Presione ENTER para iniciar el barrido del servo...")
@@ -103,7 +99,7 @@ def main():
         
     else:
         print("\n--- PRUEBA AUTOMÁTICA DE BARRIDO ---")
-        for ch in range(8):
+        for ch in range(4):
             nombre = NOMBRES_SERVOS.get(ch, f"Canal {ch}")
             realizar_barrido(driver, ch, nombre)
             time.sleep_ms(200)
