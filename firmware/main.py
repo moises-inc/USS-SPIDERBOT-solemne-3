@@ -57,10 +57,10 @@ print("Dispositivos I2C detectados: ", [hex(d) for d in dispositivos])
 # ── 2. Inicialización de Drivers ────────────────────────────────
 # Mapeo de canales a pines GPIO físicos en la ESP32 (Control Directo 4-DoF)
 channels_pins = {
-    0: 13, # Pata 0 (FR) - Coxa
-    1: 15, # Pata 1 (FL) - Coxa
-    2: 4,  # Pata 2 (RL) - Coxa
-    3: 23  # Pata 3 (RR) - Coxa
+    0: 23, # Pata 0 (FR) - Coxa
+    1: 17, # Pata 1 (FL) - Coxa
+    2: 15, # Pata 2 (RL) - Coxa
+    3: 13  # Pata 3 (RR) - Coxa
 }
 
 print("Inicializando controlador de servos directo por GPIO (4 canales)...")

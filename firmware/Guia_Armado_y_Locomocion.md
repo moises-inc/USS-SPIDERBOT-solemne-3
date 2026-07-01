@@ -81,10 +81,10 @@ El conexionado físico de la ESP32 DevKit V1 se reduce a **4 canales PWM directo
 | **GPIO 18** | HC-SR04 (Sonar) | TRIGGER | Pulso digital de disparo del ultrasonido |
 | **GPIO 19** | HC-SR04 (Sonar) | ECHO | Entrada de lectura del tiempo de eco |
 | **GPIO 14** | Buzzer Activo | Salida Digital | Activación y modulación de tonos acústicos |
-| **GPIO 13** | Servo FR - Coxa (Canal 0) | Salida PWM | Articulación cadera delantera derecha |
-| **GPIO 15** | Servo FL - Coxa (Canal 1) | Salida PWM | Articulación cadera delantera izquierda |
-| **GPIO 4** | Servo RL - Coxa (Canal 2) | Salida PWM | Articulación cadera trasera izquierda |
-| **GPIO 23** | Servo RR - Coxa (Canal 3) | Salida PWM | Articulación cadera trasera derecha |
+| **GPIO 23** | Servo FR - Coxa (Canal 0) | Salida PWM | Articulación cadera delantera derecha |
+| **GPIO 17** | Servo FL - Coxa (Canal 1) | Salida PWM | Articulación cadera delantera izquierda |
+| **GPIO 15** | Servo RL - Coxa (Canal 2) | Salida PWM | Articulación cadera trasera izquierda |
+| **GPIO 13** | Servo RR - Coxa (Canal 3) | Salida PWM | Articulación cadera trasera derecha |
 
 ---
 

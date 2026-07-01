@@ -1,7 +1,7 @@
 # ============================================================
 # USS SPIDERBOT — Prueba de 4 Servomotores Individuales (ESP32)
 # Diseñado para probar servos en los pines GPIO directos de la ESP32 (4-DoF):
-# FR_C (13), FL_C (15), RL_C (4), RR_C (23)
+# FR_C (23), FL_C (17), RL_C (15), RR_C (13)
 # Ejecutar en Thonny e ingresar los comandos en la consola.
 # ============================================================
 
@@ -11,10 +11,10 @@ import sys
 
 # Mapeo de pines físicos de la ESP32 (4-DoF)
 PINES_ACTIVOS = {
-    "FR_C": 13,  # FR Coxa/Cadera
-    "FL_C": 15,  # FL Coxa/Cadera
-    "RL_C": 4,   # RL Coxa/Cadera
-    "RR_C": 23   # RR Coxa/Cadera
+    "FR_C": 23,  # FR Coxa/Cadera
+    "FL_C": 17,  # FL Coxa/Cadera
+    "RL_C": 15,  # RL Coxa/Cadera
+    "RR_C": 13   # RR Coxa/Cadera
 }
 
 servos = {}

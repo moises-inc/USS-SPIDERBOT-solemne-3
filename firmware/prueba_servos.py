@@ -17,10 +17,10 @@ NOMBRES_SERVOS = {
 
 # Mapeo de pines GPIO directos de la ESP32 (Control Directo 4-DoF)
 PINE_GPIO_DIRECTOS = {
-    0: 13, # Pata FR
-    1: 15, # Pata FL
-    2: 4,  # Pata RL
-    3: 23  # Pata RR
+    0: 23, # Pata FR
+    1: 17, # Pata FL
+    2: 15, # Pata RL
+    3: 13  # Pata RR
 }
 
 
