@@ -113,15 +113,16 @@ COXA_CHANNELS = [0, 1, 2, 3]
 estado_coxas = [90, 90, 90, 90]
 
 def pos_reposo():
-    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados)."""
+    """Lleva a todos los servos del cuadrúpedo a su pose de reposo estático (90 grados) secuencialmente."""
     global estado_coxas
     if not servos: return
     
     estado_coxas = [90, 90, 90, 90]
     
-    # Mover las 4 caderas a 90 grados
+    # Mover las 4 caderas a 90 grados de forma secuencial para evitar picos de corriente (brownouts)
     for i in range(4):
         establecer_angulo_pata(i, 90)
+        time.sleep_ms(250)
 
 # Establecer pose inicial al arrancar
 pos_reposo()
