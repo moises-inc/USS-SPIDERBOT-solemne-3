@@ -24,7 +24,7 @@ class SonarSensor:
         # 3. Esperar inicio de pulso (ECHO = 1)
         timeout_start = time.ticks_us()
         while self.echo.value() == 0:
-            if time.ticks_diff(time.ticks_us(), timeout_start) > 30000: # 30ms timeout
+            if time.ticks_diff(time.ticks_us(), timeout_start) > 5000: # 5ms timeout (suficiente para ~85cm)
                 return -1.0
                 
         t_start = time.ticks_us()
@@ -32,7 +32,7 @@ class SonarSensor:
         # 4. Esperar fin de pulso (ECHO = 0)
         timeout_end = time.ticks_us()
         while self.echo.value() == 1:
-            if time.ticks_diff(time.ticks_us(), timeout_end) > 30000: # 30ms timeout
+            if time.ticks_diff(time.ticks_us(), timeout_end) > 5000: # 5ms timeout
                 return -1.0
                 
         t_end = time.ticks_us()

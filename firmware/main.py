@@ -203,9 +203,20 @@ async def sensor_updater():
     """Actualiza continuamente los valores de telemetría de sensores a 20Hz."""
     print("Iniciando tarea de monitoreo de sensores (20Hz)...")
     loop_count = 0
+    sonar_fail_count = 0
     while True:
         # 1. Medir distancia ultrasónica
-        state.distancia_actual = sonar.medir_distancia()
+        # Si el sonar falla de forma consecutiva, reducimos el muestreo a 0.5Hz para evitar bloquear la CPU con timeouts
+        if sonar_fail_count < 5 or loop_count % 40 == 0:
+            dist = sonar.medir_distancia()
+            if dist < 0:
+                sonar_fail_count += 1
+            else:
+                sonar_fail_count = 0
+            state.distancia_actual = dist
+        else:
+            # Mantener telemetría en error pero evitar la llamada bloqueante
+            state.distancia_actual = -1.0
         
         # 2. Medir inclinación MPU6050 y clasificar estado IA
         if imu:
