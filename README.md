@@ -4,7 +4,7 @@
 [![MicroPython](https://img.shields.io/badge/MicroPython-ESP32-15a9ffa.svg)](https://micropython.org/)
 [![CAD: OpenSCAD](https://img.shields.io/badge/CAD-OpenSCAD-orange.svg)](https://openscad.org/)
 
-**USS SpiderBot** es un prototipo de robot cuadrúpedo articulado de 8 grados de libertad (8-DoF) controlado de forma inalámbrica por una ESP32 y desarrollado bajo un modelo de programación asíncrona en **MicroPython**. El robot está diseñado para operar en entornos hostiles de búsqueda y rescate, detectando obstáculos e inestabilidades físicas de forma inteligente en el borde (Edge AI).
+**USS SpiderBot** es un prototipo de robot cuadrúpedo articulado de 4 grados de libertad (4-DoF) controlado de forma inalámbrica por una ESP32 y desarrollado bajo un modelo de programación asíncrona en **MicroPython**. El robot está diseñado para operar en entornos hostiles de búsqueda y rescate, detectando obstáculos e inestabilidades físicas de forma inteligente en el borde (Edge AI) y empleando una estructura cinemática simplificada y de bajo consumo.
 
 ---
 
@@ -23,29 +23,29 @@ Toda la fundamentación teórica, análisis físico y guías se encuentran compi
 
 ---
 
-## 🛠️ Arquitectura de Hardware y Potencia
-El diseño electrónico prioriza la estabilidad de la lógica de control aislando galvánicamente el ruido electromecánico inducido por los actuadores:
+## 🛠️ Arquitectura de Hardware y Potencia (4-DoF Simplificada)
+El diseño electrónico final prioriza la ligereza física y la eficiencia en el consumo de corriente, operando con una fuente de alimentación común estabilizada:
 
-*   **Lógica de Control:** ESP32 DevKit V1 (38 pines) + IMU MPU6050 + Sensor de ultrasonido HC-SR04 + Zumbador activo de 5V.
-*   **Actuación:** 8 servomotores SG90 / MG90S conectados a puertos GPIO directos con PWM.
-*   **Alimentación Aislada (Dual LM2596):**
-    *   **Pack A (2S 18650, 7.4V) ➔ LM2596 #1 (Ajustado a 6.0V):** Alimentación exclusiva del riel de potencia de los 8 servomotores.
-    *   **Pack B (2S 18650, 7.4V) ➔ LM2596 #2 (Ajustado a 5.0V):** Alimentación limpia para la ESP32 (pin Vin) y los sensores.
-    *   *Nota:* Las tierras (GND) de ambos convertidores se unifican en un nodo de referencia común.
+*   **Lógica de Control:** ESP32 DevKit V1 (38 pines) + IMU MPU6050 + Sensor de ultrasonido HC-SR04 + Zumbador activo de 5V (GPIO 14).
+*   **Actuación:** 4 servomotores SG90 / MG90S conectados de forma directa a la ESP32 (sin multiplexor PCA9685).
+*   **Alimentación Común Regulada (1x LM2596):**
+    *   **Pack Baterías (2x 18650 Li-ion, 7.4V) ➔ LM2596 (Ajustado a 5.2V):** Un solo convertidor regulador que suministra 5.2V estables en paralelo tanto a la ESP32 (pin Vin) como a los rieles de potencia de los 4 servomotores de caderas.
+    *   *Nota:* Para mitigar caídas de tensión (brownouts) por los picos de corriente, el firmware realiza un encendido secuencial espaciado por software.
 
 ### 📌 Mapa de Conexiones Físicas (Pinout)
 
 | GPIO ESP32 | Componente | Tipo de Señal | Descripción |
 | :--- | :--- | :--- | :--- |
-| **GPIO 21** | MPU6050 (IMU) | SDA (I2C) | Bus de datos serie de la unidad inercial. |
-| **GPIO 22** | MPU6050 (IMU) | SCL (I2C) | Bus de reloj serie de la unidad inercial. |
+| **GPIO 21** | MPU6050 (IMU) | SDA (I2C) | Bus de datos serie de la unidad inercial (100kHz). |
+| **GPIO 22** | MPU6050 (IMU) | SCL (I2C) | Bus de reloj serie de la unidad inercial (100kHz). |
 | **GPIO 18** | HC-SR04 (Sonar) | TRIGGER | Salida digital de pulso de disparo. |
 | **GPIO 19** | HC-SR04 (Sonar) | ECHO | Entrada digital de pulso de retorno. |
 | **GPIO 14** | Buzzer Activo | Salida Digital | Señal de alarma en caso de proximidad. |
-| **GPIO 13, 15, 4, 23** | Servos Coxa | Salida PWM | Control de articulaciones de cadera (FR, FL, RL, RR). |
-| **GPIO 12, 2, 5, 25** | Servos Fémur | Salida PWM | Control de articulaciones de rodilla (FR, FL, RL, RR). |
-| **Vin (ESP32)** | LM2596 #2 Out | Alimentación | Tensión lógica de entrada regulada (5.0V). |
-| **3.3V (ESP32)** | MPU6050 (IMU) | Alimentación | Tensión de funcionamiento para sensor inercial. |
+| **GPIO 23** | Servo FR - Coxa | Salida PWM | Articulación cadera delantera derecha (Canal 0). |
+| **GPIO 17** | Servo FL - Coxa | Salida PWM | Articulación cadera delantera izquierda (Canal 1). |
+| **GPIO 15** | Servo RL - Coxa | Salida PWM | Articulación cadera trasera izquierda (Canal 2). |
+| **GPIO 13** | Servo RR - Coxa | Salida PWM | Articulación cadera trasera derecha (Canal 3). |
+| **Vin (ESP32)** | LM2596 Out | Alimentación | Tensión de entrada regulada (5.2V). |
 | **GND (Unificado)** | Todo el sistema | Tierra común | Referencia negativa común unificada. |
 
 ---
@@ -87,9 +87,9 @@ La ESP32 inicia un Access Point Wi-Fi (`USS_SpiderBot_AP`) y levanta un servidor
 
 ## ⚠️ Protocolo de Seguridad y Operación Eléctrica
 Al realizar pruebas y depuraciones físicas:
-1.  **Nunca conectes el puerto USB al PC mientras el interruptor de las baterías esté encendido**. Si alimentas por el pin `Vin` (vía LM2596) y conectas el USB simultáneamente, puedes dañar el puerto de tu computadora o el regulador de la ESP32 por corriente de retorno.
-2.  **Desconecta la línea Vin** si vas a cargar o depurar código por puerto USB.
-3.  **Calibra siempre los potenciómetros de los LM2596** con un multímetro a los voltajes indicados (6.0V y 5.0V) *antes* de conectarlos a la ESP32 y a los servomotores.
+1.  **Nunca enciendas el interruptor de las baterías si el cable micro-USB está conectado al PC**. Si alimentas por el pin `Vin` (vía LM2596) y mantienes conectado el USB simultáneamente, puedes dañar el puerto de tu computadora o la ESP32 por corriente de retorno.
+2.  **Desconecta la línea Vin o mantén apagadas las baterías** si vas a cargar o depurar código por puerto USB.
+3.  **Calibra siempre la salida del LM2596** con un multímetro a exactamente **5.2V** en vacío *antes* de conectarlo a la ESP32 y a los servomotores.
 
 ---
 
