@@ -3,59 +3,82 @@
   "author": "Antigravity",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-mpu6050", "id": "imu", "top": 120, "left": -120, "attrs": {} },
-    { "type": "wokwi-hc-sr04", "id": "sonar", "top": -150, "left": 0, "attrs": {} },
-    { "type": "wokwi-buzzer", "id": "buzzer", "top": 150, "left": 120, "attrs": { "volume": "1.0", "mode": "smooth" } },
-    
-    { "type": "wokwi-servo", "id": "servo0", "top": -80, "left": -280, "attrs": { "hornColor": "white" } },
-    { "type": "wokwi-servo", "id": "servo1", "top": -180, "left": -280, "attrs": { "hornColor": "blue" } },
-    { "type": "wokwi-servo", "id": "servo2", "top": -80, "left": 280, "attrs": { "hornColor": "white" } },
-    { "type": "wokwi-servo", "id": "servo3", "top": -180, "left": 280, "attrs": { "hornColor": "blue" } },
-    { "type": "wokwi-servo", "id": "servo4", "top": 80, "left": 280, "attrs": { "hornColor": "white" } },
-    { "type": "wokwi-servo", "id": "servo5", "top": 180, "left": 280, "attrs": { "hornColor": "blue" } },
-    { "type": "wokwi-servo", "id": "servo6", "top": 80, "left": -280, "attrs": { "hornColor": "white" } },
-    { "type": "wokwi-servo", "id": "servo7", "top": 180, "left": -280, "attrs": { "hornColor": "blue" } }
+    { "type": "wokwi-breadboard-half", "id": "bb1", "top": -31.8, "left": -822.8, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -57.6, "left": 580.84, "attrs": {} },
+    { "type": "wokwi-mpu6050", "id": "imu", "top": 109.42, "left": 731.92, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sonar", "top": -104.1, "left": 754.3, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 194.4,
+      "left": 712.2,
+      "attrs": { "volume": "1.0", "mode": "smooth" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo9",
+      "top": 265,
+      "left": -1045.4,
+      "rotate": 90,
+      "attrs": {}
+    },
+    { "type": "wokwi-mpu6050", "id": "imu1", "top": 42.22, "left": -458.48, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "sonar1", "top": -171.3, "left": -733.7, "attrs": {} },
+    {
+      "type": "wokwi-servo",
+      "id": "servo8",
+      "top": 274.6,
+      "left": -853.4,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo10",
+      "top": 274.6,
+      "left": -632.6,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo11",
+      "top": 274.6,
+      "left": -459.8,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp1",
+      "top": -105.6,
+      "left": -983.96,
+      "attrs": {}
+    }
   ],
   "connections": [
-    [ "esp:GND.1", "imu:GND", "black", [] ],
-    [ "esp:3V3", "imu:VCC", "red", [] ],
-    [ "esp:21", "imu:SDA", "blue", [] ],
-    [ "esp:22", "imu:SCL", "yellow", [] ],
-    
-    [ "esp:GND.2", "sonar:GND", "black", [] ],
-    [ "esp:5V", "sonar:VCC", "red", [] ],
-    [ "esp:18", "sonar:TRIG", "green", [] ],
-    [ "esp:19", "sonar:ECHO", "orange", [] ],
-    
-    [ "esp:GND.2", "buzzer:1", "black", [] ],
-    [ "esp:14", "buzzer:2", "purple", [] ],
-
-    [ "esp:GND.2", "servo0:GND", "black", [] ],
-    [ "esp:GND.2", "servo1:GND", "black", [] ],
-    [ "esp:GND.2", "servo2:GND", "black", [] ],
-    [ "esp:GND.2", "servo3:GND", "black", [] ],
-    [ "esp:GND.2", "servo4:GND", "black", [] ],
-    [ "esp:GND.2", "servo5:GND", "black", [] ],
-    [ "esp:GND.2", "servo6:GND", "black", [] ],
-    [ "esp:GND.2", "servo7:GND", "black", [] ],
-
-    [ "esp:5V", "servo0:V+", "red", [] ],
-    [ "esp:5V", "servo1:V+", "red", [] ],
-    [ "esp:5V", "servo2:V+", "red", [] ],
-    [ "esp:5V", "servo3:V+", "red", [] ],
-    [ "esp:5V", "servo4:V+", "red", [] ],
-    [ "esp:5V", "servo5:V+", "red", [] ],
-    [ "esp:5V", "servo6:V+", "red", [] ],
-    [ "esp:5V", "servo7:V+", "red", [] ],
-
-    [ "esp:13", "servo0:PWM", "green", [] ],
-    [ "esp:12", "servo1:PWM", "green", [] ],
-    [ "esp:15", "servo2:PWM", "green", [] ],
-    [ "esp:2", "servo3:PWM", "green", [] ],
-    [ "esp:4", "servo4:PWM", "green", [] ],
-    [ "esp:5", "servo5:PWM", "green", [] ],
-    [ "esp:23", "servo6:PWM", "green", [] ],
-    [ "esp:25", "servo7:PWM", "green", [] ]
-  ]
+    [ "servo11:GND", "bb1:bn.25", "black", [ "v0" ] ],
+    [ "servo9:GND", "bb1:bn.1", "black", [ "v0" ] ],
+    [ "servo8:GND", "bb1:bn.10", "black", [ "v0" ] ],
+    [ "servo10:GND", "bb1:bn.17", "black", [ "v0" ] ],
+    [ "servo8:V+", "bb1:bp.10", "red", [ "v0" ] ],
+    [ "servo9:V+", "bb1:bp.1", "red", [ "v0" ] ],
+    [ "servo10:V+", "bb1:bp.17", "red", [ "v0" ] ],
+    [ "servo11:V+", "bb1:bp.25", "red", [ "v0" ] ],
+    [ "sonar1:VCC", "bb1:tp.12", "red", [ "v0" ] ],
+    [ "sonar1:GND", "bb1:tp.15", "black", [ "v0" ] ],
+    [ "servo9:PWM", "esp1:25", "green", [ "v0", "h-19.4", "v-240" ] ],
+    [ "servo8:PWM", "esp1:12", "orange", [ "v-19.2", "h-221", "v-9.6" ] ],
+    [ "servo10:PWM", "esp1:13", "magenta", [ "v-28.8", "h-451.4", "v-153.6" ] ],
+    [ "esp1:15", "servo11:PWM", "purple", [ "v144", "h499.2" ] ],
+    [ "sonar1:TRIG", "esp1:19", "yellow", [ "v0" ] ],
+    [ "sonar1:ECHO", "esp1:18", "cyan", [ "v0" ] ],
+    [ "esp1:GND.2", "bb1:tn.25", "black", [ "v-115.2", "h364.8" ] ],
+    [ "esp1:3V3", "bb1:tp.24", "red", [ "h9.75", "v-124.8", "h441.6" ] ],
+    [ "imu1:VCC", "bb1:tp.21", "red", [ "v-96", "h-172.72" ] ],
+    [ "imu1:GND", "bb1:tn.22", "black", [ "v-86.4", "h-153.52" ] ],
+    [ "imu1:SCL", "esp1:22", "white", [ "v-259.2", "h-470.32", "v153.6" ] ],
+    [ "imu1:SDA", "esp1:21", "gray", [ "v-268.8", "h-451.12", "v192" ] ]
+  ],
+  "dependencies": {}
 }
