@@ -9,7 +9,7 @@
 ---
 
 <p align="center">
-  <img src="docs/spiderbot_render.png" alt="USS SpiderBot Render 3D" width="550">
+  <img src="assets/spiderbot_render.png" alt="USS SpiderBot Render 3D" width="550">
 </p>
 
 ---

@@ -1,8 +1,8 @@
 # USS SpiderBot — Wiki Técnica de Código
 
-Bienvenido a la wiki técnica del **USS SpiderBot**, un robot caminador cuadrúpedo de **8 grados de libertad (8-DoF)** desarrollado para la asignatura de **Taller de Programación I (Universidad San Sebastián)**. 
+Bienvenido a la wiki técnica del **USS SpiderBot**, un robot caminador cuadrúpedo simplificado de **4 grados de libertad (4-DoF)** desarrollado para la asignatura de **Taller de Programación I (Universidad San Sebastián)**. 
 
-Este robot ha sido diseñado con estabilidad inercial activa para desplazarse de forma segura sobre terrenos rugosos o inclinados, prevención reactiva de colisiones frontales y un panel de control remoto web asíncrono y offline accesible desde cualquier navegador.
+Este robot ha sido diseñado con estabilidad inercial activa para desplazarse de forma segura sobre terrenos rugosos o inclinados, prevención reactiva de colisiones frontales y un panel de control remoto web asíncrono y offline accesible desde cualquier navegador. Las rodillas se fijan mecánicamente a 90°, reduciendo la complejidad eléctrica y de firmware sin sacrificar la marcha de gateo funcional.
 
 ---
 
@@ -12,7 +12,7 @@ El proyecto integra tecnologías de hardware embebido, desarrollo web nativo y m
 
 *   **Microcontrolador principal:** ESP32 DevKit V1 (38 pines) ejecutando **MicroPython v1.20+**.
 *   **Locomoción y multitarea:** Concurrencia cooperativa no bloqueante mediante la librería estándar **`uasyncio` (asyncio)** de MicroPython.
-*   **Actuadores:** 8x Servomotores analógicos SG90/MG90S controlados directamente mediante señales PWM por pines GPIO de la ESP32.
+*   **Actuadores:** 4x Servomotores analógicos SG90/MG90S (solo caderas) controlados directamente mediante señales PWM por pines GPIO de la ESP32, sin multiplexor PCA9685. Las rodillas se fijan mecánicamente a 90°.
 *   **Sensores:**
     *   Unidad de Medida Inercial (IMU) **MPU6050** de 6 ejes para el cálculo dinámico de inclinación (Pitch y Roll).
     *   Sensor ultrasónico de distancia **HC-SR04** para evasión de obstáculos.
@@ -25,7 +25,7 @@ El proyecto integra tecnologías de hardware embebido, desarrollo web nativo y m
 
 Navega a través de las secciones de documentación técnica de este repositorio:
 
-1.  **[Arquitectura General e Inferencia de Postura](ARCHITECTURE.md):** Conoce el flujo de ejecución asíncrono, la teoría de la marcha de gateo (Crawl Gait) y la lógica matemática de la estabilización inercial activa.
+1.  **[Arquitectura General e Inferencia de Postura](ARCHITECTURE.md):** Conoce el flujo de ejecución asíncrono, la teoría de la marcha de gateo (Crawl Gait) para 4 caderas y la lógica matemática de la estabilización inercial activa.
 2.  **[Diccionario de Componentes y Módulos](MODULES.md):** Detalle de cada archivo de código fuente, sus responsabilidades, funciones principales, variables físicas y dependencias internas de importación.
 3.  **[Guía de Impresión 3D y Creality Print](guia_impresion_3d.md):** Parámetros de laminación (infill, perfiles de PLA/PETG, recuentos de pared) y distribución de piezas por platos de impresión en la cama.
 4.  **[Guía Completa de OpenSCAD: Del Cubo al Robot Cuadrúpedo](guia_openscad.md):** Tutorial exhaustivo de OpenSCAD desde cero usando el SpiderBot como caso de estudio real, con ejemplos funcionales extraídos de `cad/`.
